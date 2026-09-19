@@ -183,28 +183,6 @@
                     <button id="nextMonth" class="month-nav-btn"><i class="fas fa-chevron-right"></i></button>
                 </div>
 
-                <section class="dashboard-intro" aria-labelledby="dashboardGreeting">
-                    <div class="dashboard-intro-copy">
-                        <span class="section-eyebrow">PARANIZIN KONTROLÜ</span>
-                        <h2 id="dashboardGreeting">Hoş geldin</h2>
-                        <p id="dashboardSummaryNote">Bu ayın finansal gidişatını tek bakışta izle.</p>
-                    </div>
-                    <div class="dashboard-quick-actions" aria-label="Hızlı işlemler">
-                        <button id="dashboardAddTransaction" class="quick-action quick-action-primary" type="button">
-                            <i class="fas fa-plus"></i>
-                            <span><strong>Yeni işlem</strong><small>Gelir veya masraf ekle</small></span>
-                        </button>
-                        <button id="dashboardAddAccount" class="quick-action" type="button">
-                            <i class="fas fa-wallet"></i>
-                            <span><strong>Hesap ekle</strong><small>Bakiyeni düzenle</small></span>
-                        </button>
-                        <button id="dashboardAddGoal" class="quick-action" type="button">
-                            <i class="fas fa-bullseye"></i>
-                            <span><strong>Hedef oluştur</strong><small>Bir sonraki adımı planla</small></span>
-                        </button>
-                    </div>
-                </section>
-
                 <div class="exchange-rates-container">
                     <div class="exchange-rates-header">
                         <h3>Güncel Kurlar<span id="ratesStatusDot" class="rates-status-dot" title="Kur durumu"></span></h3>
@@ -876,10 +854,26 @@
         </main>
     </div>
 
-    <!-- Sprint 1: Quick-Add Widget (Floating Action Button) -->
-    <button id="quickAddBtn" class="quick-add-fab" title="Yeni İşlem" aria-label="Yeni işlem ekle">
-        <i class="fas fa-plus"></i>
-    </button>
+    <!-- Sprint 1: Quick-Add Widget (Floating Action Button with Menu) -->
+    <div class="quick-add-wrapper">
+        <button id="quickAddBtn" class="quick-add-fab" title="Yeni İşlem" aria-label="Yeni işlem ekle">
+            <i class="fas fa-plus"></i>
+        </button>
+        <div id="quickAddMenu" class="quick-add-menu" hidden>
+            <button type="button" id="quickAddTransaction" class="quick-add-menu-item">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Yeni işlem</span>
+            </button>
+            <button type="button" id="quickAddAccount" class="quick-add-menu-item">
+                <i class="fas fa-wallet"></i>
+                <span>Hesap ekle</span>
+            </button>
+            <button type="button" id="quickAddGoal" class="quick-add-menu-item">
+                <i class="fas fa-bullseye"></i>
+                <span>Hedef oluştur</span>
+            </button>
+        </div>
+    </div>
 
     <!-- Sprint 1: Quick-Add Modal -->
     <div id="quickAddModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="quickAddTitle">
