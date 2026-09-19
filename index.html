@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f5fb" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#171827" media="(prefers-color-scheme: dark)">
+    <title>Parnex | Kişisel Finans ve Bütçe Yönetimi</title>
+    <meta name="description" content="Parnex ile gelir-gider takibi, bütçe yönetimi, birikim hedefleri ve yatırım takibinizi ücretsiz yapın. Hemen başlayın.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://bizzness4711.github.io/Muhasebe/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Parnex | Kişisel Finans ve Bütçe Yönetimi">
+    <meta property="og:description" content="Gelir-gider takibi, bütçe yönetimi, birikim hedefleri ve yatırım takibi. Ücretsiz kişisel finans aracı.">
+    <meta property="og:url" content="https://bizzness4711.github.io/Muhasebe/">
+    <meta property="og:site_name" content="Parnex">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:image" content="https://bizzness4711.github.io/Muhasebe/icons/logo-512.png">
+    <meta property="og:image:alt" content="Parnex kişisel finans uygulaması logosu">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Parnex | Kişisel Finans ve Bütçe Yönetimi">
+    <meta name="twitter:image" content="https://bizzness4711.github.io/Muhasebe/icons/logo-512.png">
+    <meta name="twitter:image:alt" content="Parnex kişisel finans uygulaması logosu">
+    <meta name="twitter:description" content="Gelir-gider takibi, bütçe yönetimi, birikim hedefleri ve yatırım takibi. Ücretsiz kişisel finans aracı.">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Parnex",
+        "url": "https://bizzness4711.github.io/Muhasebe/",
+        "description": "Kişisel finans ve bütçe yönetimi için ücretsiz araç"
+        ,"inLanguage": "tr"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Parnex",
+        "operatingSystem": "Web",
+        "applicationCategory": "FinanceApplication",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TRY" },
+        "description": "Ücretsiz kişisel finans ve bütçe yönetimi uygulaması"
+    }
+    </script>
+
+    <link rel="icon" type="image/svg+xml" href="icons/logo.svg">
+    <link rel="apple-touch-icon" href="icons/logo-192.png">
+    <link rel="stylesheet" href="css/base.css?v=20260918">
+    <link rel="stylesheet" href="css/layout.css?v=20260918">
+    <link rel="stylesheet" href="css/components.css?v=20260918">
+    <link rel="stylesheet" href="css/pages.css?v=20260918">
+    <link rel="stylesheet" href="css/theme.css?v=20260918">
+    <link rel="stylesheet" href="css/ux-refresh.css?v=20260919">
+    <script>
+        document.documentElement.dataset.theme = localStorage.getItem('theme-v2') === 'dark' ? 'dark' : 'light';
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" integrity="sha384-3B6NwesSXE7YJlcLI9RpRqGf2p/EgVH8BgoKTaUrmKNDkHPStTQ3EyoYjCGXaOTS" crossorigin="anonymous">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js" integrity="sha384-uyngu7JmX24odOsUPWtGzWn/THUCYljS5j3QsUHXOorFt8lGewdm48KFqzf+EO57" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js" integrity="sha384-7SdE1bAXKr8aaVB/j4T7quLrIVSSrJmML/wez2Nv/YNYC2nyrXqaCpbWtkUOD8Ei" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js" integrity="sha384-236Qsi50Cfiyh5yq5BjuLOR6idkRnVPwndlzVidP0hXUCzbmBCuz5D3zAP8DLNxF" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-messaging-compat.js" integrity="sha384-ZJGOWQWCYS/5qJ/ePSyL28cbbi8zzGVfkzclh++V7x4SZeJDdt5rNR1RjaYpqUpE" crossorigin="anonymous"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous"></script>
+    <!-- SheetJS (Excel okuma/yazma) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+    <!-- EmailJS (e-posta bildirimleri) -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" integrity="sha384-SALc35EccAf6RzGw4iNsyj7kTPr33K7RoGzYu+7heZhT8s0GZouafRiCg1qy44AS" crossorigin="anonymous"></script>
+</head>
+<body>
+    <a href="#dashboard" class="skip-link">İçeriğe atla</a>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal auth-modal">
+        <div class="auth-shell">
+            <section class="auth-visual" id="authVisualPanel">
+                <div class="auth-visual-top">
+                    <div class="auth-brand"><span class="parnex-logo-mark" aria-hidden="true"><img src="icons/logo.svg" alt="" width="36" height="36"></span><span>Parnex</span></div>
+                </div>
+                <div class="auth-visual-copy">
+                    <span class="auth-eyebrow">PARANIZIN KONTROLÜ SİZDE</span>
+                    <h2>Finansınızı<br><em>daha bilinçli</em> yönetin.</h2>
+                    <p>Gelirlerinizi, hesaplarınızı ve hedeflerinizi tek bir sade ekranda takip edin.</p>
+                </div>
+            </section>
+            <section class="auth-panel">
+                <div class="auth-panel-header">
+                    <span class="auth-panel-kicker" id="authPanelKicker">HOŞ GELDİNİZ</span>
+                    <h2 id="authPanelTitle">Tekrar hoş geldin</h2>
+                    <p id="authPanelSubtitle">Hesabınıza giriş yaparak devam edin.</p>
+                </div>
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="login">Giriş Yap</button>
+                    <button class="auth-tab" data-tab="register">Yeni hesap oluştur</button>
+                </div>
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group"><label for="loginEmail">E-posta adresi</label><input type="email" id="loginEmail" required placeholder="ornek@email.com" autocomplete="email"></div>
+                    <div class="form-group"><label for="loginPassword">Şifre</label><div class="auth-password-field"><input type="password" id="loginPassword" required placeholder="Şifrenizi yazın" autocomplete="current-password"><button type="button" class="auth-password-toggle" data-target="loginPassword" aria-label="Şifreyi göster"><i class="fas fa-eye"></i></button></div></div>
+                    <button type="submit" class="auth-btn"><span>Giriş yap</span><i class="fas fa-arrow-right"></i></button>
+                </form>
+                <form id="registerForm" class="auth-form" style="display:none;">
+                    <div class="form-group"><label for="registerName">Ad soyad</label><input type="text" id="registerName" required placeholder="Adınız Soyadınız" autocomplete="name"></div>
+                    <div class="form-group"><label for="registerEmail">E-posta adresi</label><input type="email" id="registerEmail" required placeholder="ornek@email.com" autocomplete="email"></div>
+                    <div class="form-group"><label for="registerPassword">Şifre</label><div class="auth-password-field"><input type="password" id="registerPassword" required minlength="6" placeholder="En az 6 karakter" autocomplete="new-password"><button type="button" class="auth-password-toggle" data-target="registerPassword" aria-label="Şifreyi göster"><i class="fas fa-eye"></i></button></div></div>
+                    <button type="submit" class="auth-btn"><span>Hesap oluştur</span><i class="fas fa-arrow-right"></i></button>
+                </form>
+                <div class="divider"><span>veya</span></div>
+                <button id="googleLogin" class="google-btn"><i class="fab fa-google"></i> Google ile devam et</button>
+                <p class="auth-security-note"><i class="fas fa-shield-halved"></i> Verileriniz güvenli şekilde saklanır.</p>
+            </section>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="app-container" style="display:none;">
+        <div id="emailVerifyBanner" class="email-verify-banner" hidden>
+            <i class="fas fa-envelope-open-text"></i>
+            <span>E-posta adresinizi doğrulayın. Doğrulama linki gelen kutunuzda.</span>
+            <button id="resendVerifyBtn" class="verify-resend-btn">Tekrar Gönder</button>
+            <button id="dismissVerifyBtn" class="verify-dismiss-btn" aria-label="Kapat"><i class="fas fa-times"></i></button>
+        </div>
+        <header class="header">
+            <div class="header-left">
+                <button id="menuBtn" class="menu-btn" aria-label="Menüyü aç"><i class="fas fa-bars"></i></button>
+                <span class="parnex-logo-mark header-logo-mark" aria-hidden="true"><svg viewBox="0 0 36 36" width="36" height="36" aria-hidden="true" focusable="false"><defs><linearGradient id="parnexGrad-index-html" x1="3" y1="3" x2="33" y2="33"><stop offset="0" stop-color="#6d5dfc"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><rect x="1" y="1" width="34" height="34" rx="10" fill="url(#parnexGrad-index-html)"/><path d="M10 25V10h8.2c4.5 0 7.2 2.2 7.2 5.8 0 3.7-2.7 5.9-7.2 5.9H15V25h-5Zm5-7.5h3c1.5 0 2.4-.6 2.4-1.7s-.9-1.7-2.4-1.7h-3v3.4Z" fill="white"/><path d="M21.5 27.5 25 24l2.4 2.4 4.1-5.1" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="m28.8 21.3 2.7-.2-.2 2.7" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <h1>Parnex</h1>
+            </div>
+            <div class="header-right">
+                <div class="notification-wrap">
+                    <button id="notificationBtn" class="notification-btn" title="Bildirimler" aria-label="Bildirimler">
+                        <i class="fas fa-bell"></i><span id="notificationCount" class="notification-count" hidden>0</span>
+                    </button>
+                    <div id="notificationPanel" class="notification-panel" hidden>
+                        <div class="notification-panel-header"><strong>Bildirimler</strong><span><button id="clearAllNotificationsBtn" type="button">Temizle</button> <button id="clearNotificationsBtn" type="button">Tümünü okundu işaretle</button></span></div>
+                        <div id="notificationList"></div>
+                        <button id="enableNotificationsBtn" class="notification-permission-btn" type="button">Masaüstü bildirimlerini aç</button>
+                    </div>
+                </div>
+                <button id="privacyModeBtn" class="privacy-btn" title="Gizlilik Modu" aria-label="Gizlilik modunu aç/kapat">
+                    <i class="fas fa-eye-slash"></i>
+                </button>
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
+                    <span id="userName" class="user-name"></span>
+                    <button id="logoutBtn" class="logout-btn" aria-label="Çıkış yap"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+                <button id="themeBtn" class="theme-btn" aria-label="Temayı değiştir"><i class="fas fa-moon"></i></button>
+                <button id="commandPaletteBtn" class="command-palette-trigger" type="button" aria-label="Komut menüsünü aç" title="Komut menüsü (Ctrl+K)">
+                    <i class="fas fa-command" aria-hidden="true"></i><kbd>⌘K</kbd>
+                </button>
+            </div>
+        </header>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-brand"><span class="parnex-logo-mark" aria-hidden="true"><img src="icons/logo.svg" alt="" width="36" height="36"></span><strong>Parnex</strong></div>
+            <div class="sidebar-menu">
+                <a href="#dashboard" class="sidebar-link active" data-page="dashboard"><i class="fas fa-home"></i><span>Dashboard</span></a>
+                <a href="#accounts" class="sidebar-link" data-page="accounts"><i class="fas fa-university"></i><span>Hesaplar</span></a>
+                <a href="#transfer" class="sidebar-link" data-page="transfer"><i class="fas fa-exchange-alt"></i><span>Transfer</span></a>
+                <a href="#transactions" class="sidebar-link" data-page="transactions"><i class="fas fa-list"></i><span>İşlemler</span></a>
+                <a href="#goals" class="sidebar-link" data-page="goals"><i class="fas fa-bullseye"></i><span>Hedefler</span></a>
+                <a href="#budgets" class="sidebar-link" data-page="budgets"><i class="fas fa-wallet"></i><span>Bütçeler</span></a>
+                <a href="#reports" class="sidebar-link" data-page="reports"><i class="fas fa-chart-bar"></i><span>Raporlar</span></a>
+                <a href="#settings" class="sidebar-link" data-page="settings"><i class="fas fa-cog"></i><span>Ayarlar</span></a>
+                <a href="#admin" class="sidebar-link" data-page="admin" id="adminLink" style="display:none;"><i class="fas fa-user-shield"></i><span>Admin</span></a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <!-- Dashboard -->
+            <div id="dashboard" class="page active">
+                <div class="month-selector">
+                    <button id="prevMonth" class="month-nav-btn"><i class="fas fa-chevron-left"></i></button>
+                    <h2 id="currentMonthDisplay">Ocak 2024</h2>
+                    <button id="nextMonth" class="month-nav-btn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <section class="dashboard-intro" aria-labelledby="dashboardGreeting">
+                    <div class="dashboard-intro-copy">
+                        <span class="section-eyebrow">PARANIZIN KONTROLÜ</span>
+                        <h2 id="dashboardGreeting">Hoş geldin</h2>
+                        <p id="dashboardSummaryNote">Bu ayın finansal gidişatını tek bakışta izle.</p>
+                    </div>
+                    <div class="dashboard-quick-actions" aria-label="Hızlı işlemler">
+                        <button id="dashboardAddTransaction" class="quick-action quick-action-primary" type="button">
+                            <i class="fas fa-plus"></i>
+                            <span><strong>Yeni işlem</strong><small>Gelir veya masraf ekle</small></span>
+                        </button>
+                        <button id="dashboardAddAccount" class="quick-action" type="button">
+                            <i class="fas fa-wallet"></i>
+                            <span><strong>Hesap ekle</strong><small>Bakiyeni düzenle</small></span>
+                        </button>
+                        <button id="dashboardAddGoal" class="quick-action" type="button">
+                            <i class="fas fa-bullseye"></i>
+                            <span><strong>Hedef oluştur</strong><small>Bir sonraki adımı planla</small></span>
+                        </button>
+                    </div>
+                </section>
+
+                <div class="exchange-rates-container">
+                    <div class="exchange-rates-header">
+                        <h3>Güncel Kurlar<span id="ratesStatusDot" class="rates-status-dot" title="Kur durumu"></span></h3>
+                        <button id="updateRatesBtn" class="refresh-btn"><i class="fas fa-sync"></i></button>
+                    </div>
+                    <div class="exchange-rates-grid">
+                        <div class="exchange-rate-card"><span class="currency-label">💵 Dolar</span><span class="currency-value" id="rateUSD">-</span></div>
+                        <div class="exchange-rate-card"><span class="currency-label">💶 Euro</span><span class="currency-value" id="rateEUR">-</span></div>
+                        <div class="exchange-rate-card"><span class="currency-label">🪙 Gram Altın</span><span class="currency-value" id="rateGRAM">-</span></div>
+                        <div class="exchange-rate-card"><span class="currency-label">🪙 Çeyrek Altın</span><span class="currency-value" id="rateCEYREK">-</span></div>
+                    </div>
+                    <p class="last-update">Son güncelleme: <span id="lastRateUpdate">-</span></p>
+                </div>
+
+                <!-- Bakiye Kartı: Toplam Bakiye + Birikim kutusu -->
+                <div class="balance-cards">
+                <div class="balance-card" id="balanceCard">
+                    <div class="balance-info">
+                        <h2>Toplam Bakiye</h2>
+                        <p class="balance-amount" id="totalBalance">₺0.00</p>
+                    </div>
+                    <button id="toggleBalanceBtn" class="eye-btn" style="display: none;" title="Bakiyeyi Göster/Gizle" aria-label="Bakiyeyi göster/gizle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="balance-card savings-card">
+                        <div class="balance-info">
+                            <h2>Birikim</h2>
+                            <p class="balance-amount" id="investmentSummary">₺0.00</p>
+                            <small id="investmentProfitLoss" class="investment-profit-loss">Kâr/Zarar: ₺0.00</small>
+                    </div>
+                </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card income"><h3>Bu Ay Gelir</h3><p id="totalIncome">₺0.00</p><i class="fas fa-arrow-up"></i></div>
+                    <div class="stat-card expense"><h3>Bu Ay Masraf</h3><p id="totalExpense">₺0.00</p><i class="fas fa-arrow-down"></i></div>
+                    <div class="stat-card savings"><h3>Tasarruf</h3><p id="savingsRate">%0</p><i class="fas fa-piggy-bank"></i></div>
+                    <div class="stat-card net"><h3>Net Durum</h3><p id="statNet">₺0.00</p><i class="fas fa-scale-balanced"></i></div>
+                    <div class="stat-card accounts"><h3>Hesap Sayısı</h3><p id="statAccountCount">0</p><i class="fas fa-wallet"></i></div>
+                    <div class="stat-card installment stat-card-action" id="upcomingInstallmentsCard" role="button" tabindex="0" aria-label="Bu ay gelecek taksitleri görüntüle"><h3>Bu Ay Gelecek Taksit</h3><p id="upcomingInstallments">₺0.00</p><small>Kredi kartlarına göre görüntüle</small><i class="fas fa-calendar-check"></i></div>
+                </div>
+
+                <section class="financial-health-card" aria-labelledby="financialHealthTitle">
+                    <div class="financial-health-copy">
+                        <span class="section-eyebrow">FİNANSAL RİTİM</span>
+                        <h2 id="financialHealthTitle">Finans Sağlık Skoru</h2>
+                        <p id="financialHealthHint">Gelir, harcama ve bütçe alışkanlıklarından oluşan kişisel bir özet.</p>
+                    </div>
+                    <div class="financial-health-score" id="financialHealthRing" style="--score:0deg" aria-label="Finans sağlık skoru">
+                        <div><strong id="financialHealthScore">--</strong><small>/100</small></div>
+                    </div>
+                    <div class="financial-health-breakdown" aria-label="Skor dağılımı">
+                        <div class="health-meter"><span><b>Tasarruf</b><small id="healthSavingsLabel">--</small></span><i><em id="healthSavingsBar"></em></i></div>
+                        <div class="health-meter"><span><b>Denge</b><small id="healthBalanceLabel">--</small></span><i><em id="healthBalanceBar"></em></i></div>
+                        <div class="health-meter"><span><b>Bütçe</b><small id="healthBudgetLabel">--</small></span><i><em id="healthBudgetBar"></em></i></div>
+                    </div>
+                </section>
+
+                <!-- Sprint 1: Monthly Comparison Card -->
+                <section class="monthly-comparison" id="monthlyComparisonCard" style="display:none;margin-bottom:20px;" aria-label="Aylık karşılaştırma">
+                    <div class="section-header"><h3><i class="fas fa-chart-line"></i> Aylık Karşılaştırma</h3></div>
+                    <div class="comparison-grid">
+                        <div class="comparison-item">
+                            <span class="comparison-label">Bu Ay Harcama</span>
+                            <strong id="currentMonthExpense">₺0.00</strong>
+                        </div>
+                        <div class="comparison-item">
+                            <span class="comparison-label">Geçen Ay Harcama</span>
+                            <strong id="lastMonthExpense">₺0.00</strong>
+                        </div>
+                        <div class="comparison-item">
+                            <span class="comparison-label">Fark</span>
+                            <strong id="expenseDiff" class="comparison-diff">₺0.00</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Harcama Radar Grafiği -->
+                <section class="spending-radar" id="spendingRadarCard" style="display:none;margin-bottom:20px;" aria-label="Harcama radar grafiği">
+                    <div class="section-header"><h3><i class="fas fa-spider"></i> Harcama Radarı</h3></div>
+                    <div class="radar-wrap">
+                        <div class="radar-chart-container">
+                            <canvas id="spendingRadarChart"></canvas>
+                        </div>
+                        <div id="radarLegend" class="radar-legend"></div>
+                    </div>
+                </section>
+
+                <!-- Sprint 1: Spending Velocity Alert -->
+                <section class="spending-velocity" id="spendingVelocityCard" style="display:none;margin-bottom:20px;" aria-label="Harcama hızı uyarısı">
+                    <div class="velocity-content">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <div class="velocity-text">
+                            <p id="velocityMessage">Bugün ₺0 harcadın — bu hızla ay sonu ₺0 olacak.</p>
+                            <small id="velocityWarning"></small>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Hedef İlerleme Halkaları -->
+                <section class="goal-rings" id="goalRingsCard" style="display:none;margin-bottom:20px;" aria-label="Hedefler">
+                    <div class="section-header"><h3><i class="fas fa-bullseye"></i> Hedefler</h3></div>
+                    <div class="rings-grid" id="goalRings"></div>
+                </section>
+
+                <section class="recent-transactions" id="budgetOverviewCard" style="display:none;margin-bottom:20px;" aria-label="Bütçe özeti">
+                    <div class="section-header"><h3>Bütçe Durumu</h3></div>
+                    <div id="budgetOverview"></div>
+                </section>
+
+                <section class="balance-forecast" aria-labelledby="balanceForecastTitle">
+                    <div class="forecast-header">
+                        <div>
+                            <span class="section-eyebrow">GELECEK BAKİYE</span>
+                            <h2 id="balanceForecastTitle">30 günlük bakiye tahmini</h2>
+                            <p>Planlanmış gelir ve ödemeler mevcut bakiyenize göre hesaplanır.</p>
+                        </div>
+                        <div class="forecast-result">
+                            <span id="forecastDateLabel">30 gün sonra</span>
+                            <strong id="forecastBalance">₺0.00</strong>
+                        </div>
+                    </div>
+                    <div class="forecast-flow">
+                        <div class="forecast-start"><span>Bugün</span><strong id="forecastStartingBalance">₺0.00</strong></div>
+                        <div class="forecast-line" aria-hidden="true"><i></i></div>
+                        <div class="forecast-events" id="forecastEvents"><p class="empty-state">Önümüzdeki 30 gün için planlanmış hareket yok.</p></div>
+                        <div class="forecast-end"><span>Tahmini bakiye</span><strong id="forecastEndingBalance">₺0.00</strong></div>
+                    </div>
+                </section>
+
+                <section class="finance-calendar" aria-labelledby="financeCalendarTitle">
+                    <div class="calendar-header">
+                        <div>
+                            <span class="section-eyebrow">AYLIK PLAN</span>
+                            <h2 id="financeCalendarTitle">Finans Takvimi</h2>
+                        </div>
+                        <div class="calendar-legend" aria-label="Takvim açıklaması">
+                            <span><i class="calendar-dot current"></i> Mevcut</span>
+                            <span><i class="calendar-dot recurring"></i> Tekrarlayan</span>
+                            <span><i class="calendar-dot installment"></i> Taksit</span>
+                        </div>
+                    </div>
+                    <div id="financeCalendar" class="calendar-grid" role="grid" aria-label="Aylık finans takvimi"></div>
+                    <div class="calendar-day-detail">
+                        <h3 id="calendarSelectedDate">Gün seçin</h3>
+                        <div id="calendarDayItems"><p class="empty-state">Takvimden bir gün seçerek işlemleri görüntüleyin.</p></div>
+                    </div>
+                </section>
+
+                <div class="account-selector">
+                    <h3>Bakiyede Gösterilecek TL Hesapları</h3>
+                    <div id="accountSelector" class="account-selector-list"></div>
+                </div>
+
+                <div class="recent-transactions">
+                    <div class="section-header"><h3>Son İşlemler</h3></div>
+                    <div id="recentTransactionsList"></div>
+                </div>
+            </div>
+
+            <!-- Accounts -->
+            <div id="accounts" class="page">
+                <div class="page-header">
+                    <h2>Hesaplar</h2>
+                    <button id="addAccountBtn" class="add-btn"><i class="fas fa-plus"></i> Yeni Hesap</button>
+                </div>
+                <div id="accountsList" class="accounts-list"></div>
+            </div>
+
+            <!-- Transfer -->
+            <div id="transfer" class="page">
+                <div class="page-header"><h2>Hesaplar Arası Transfer</h2></div>
+                <form id="transferForm" class="transaction-form">
+                    <div class="form-group"><label>Kaynak Hesap</label><select id="fromAccount" required><option value="">Hesap Seçin</option></select></div>
+                    <div class="form-group"><label>Hedef Hesap</label><select id="toAccount" required><option value="">Hesap Seçin</option></select></div>
+                    <div class="form-group"><label>Tutar</label><input type="number" id="transferAmount" required min="0.01" step="0.01" placeholder="0.00"></div>
+                    <div class="form-group"><label>Açıklama</label><input type="text" id="transferDescription" placeholder="Transfer açıklaması"></div>
+                    <div class="form-group"><label>Tarih</label><input type="date" id="transferDate" required></div>
+                    <button type="submit" class="submit-btn"><i class="fas fa-exchange-alt"></i> Transfer Yap</button>
+                </form>
+            </div>
+
+            <!-- Transactions -->
+            <div id="transactions" class="page">
+                <div class="page-header">
+                    <h2>İşlemler</h2>
+                    <div class="filters">
+                        <select id="filterType" class="filter-select">
+                            <option value="all">Tümü</option>
+                            <option value="income">Gelirler</option>
+                            <option value="expense">Masraflar</option>
+                            <option value="sell">Satışlar</option>
+                            <option value="transfer">Transferler</option>
+                        </select>
+                        <select id="filterAccount" class="filter-select"><option value="all">Tüm Hesaplar</option></select>
+                        <label class="transaction-search" for="transactionSearch">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input id="transactionSearch" type="search" placeholder="İşlem ara..." autocomplete="off">
+                        </label>
+                    </div>
+                </div>
+                <div class="admin-toolbar">
+                    <span class="download-wrap">
+                        <button id="downloadBtn" class="admin-mini-btn" type="button" aria-haspopup="true" aria-expanded="false"><i class="fas fa-download"></i> İndir</button>
+                        <span id="downloadMenu" class="download-menu" hidden>
+                            <button class="admin-mini-btn" type="button" data-format="xlsx"><i class="fas fa-file-excel"></i> Excel (.xlsx)</button>
+                            <button class="admin-mini-btn" type="button" data-format="csv"><i class="fas fa-file-csv"></i> CSV</button>
+                        </span>
+                    </span>
+                    <button id="importTemplateBtn" class="admin-mini-btn" type="button"><i class="fas fa-table"></i> Şablon indir</button>
+                    <label for="importTableFile" class="admin-mini-btn" style="cursor:pointer;"><i class="fas fa-upload"></i> CSV/Excel yükle</label>
+                    <input type="file" id="importTableFile" accept=".csv,.xlsx,.xls" hidden>
+                    <small id="tablexferStatus" class="hint-text"></small>
+                    <small id="transactionResultCount" class="hint-text" aria-live="polite"></small>
+                </div>
+                <div id="allTransactionsList" class="transactions-modern"></div>
+                <div class="recurring-panel">
+                    <h3>Tekrarlayan İşlemler</h3>
+                    <div id="recurringTransactionsList"></div>
+                </div>
+            </div>
+
+            <!-- Add Transaction -->
+            <div id="add-transaction" class="page">
+                <div class="page-header"><h2>Yeni İşlem</h2></div>
+                <form id="transactionForm" class="transaction-form">
+                    <div class="form-group">
+                        <label>İşlem Tipi</label>
+                        <div class="transaction-type-buttons">
+                            <button type="button" class="type-btn active" data-type="expense"><i class="fas fa-minus"></i> Masraf</button>
+                            <button type="button" class="type-btn" data-type="income"><i class="fas fa-plus"></i> Gelir</button>
+                            <button type="button" class="type-btn" data-type="sell" id="sellTypeBtn" style="display:none;"><i class="fas fa-exchange-alt"></i> Satış</button>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Hesap</label><select id="accountSelect" required><option value="">Hesap Seçin</option></select><small id="accountRateInfo" class="hint-text" hidden></small></div>
+                    <div class="form-group"><label>Tutar</label><input type="number" id="amount" required min="0" step="0.01" placeholder="0.00"></div>
+                    <div id="transactionPurchaseDetails" class="form-group" hidden>
+                        <label id="transactionPurchaseLabel">Bu miktarı kaça aldınız? (₺)</label>
+                        <input type="number" id="transactionPurchaseRate" min="0.01" step="0.01" placeholder="Örn: 54.00">
+                        <small id="transactionPurchaseHint">Güncel kur ile aradaki fark kâr/zarar olarak hesaplanır.</small>
+                    </div>
+                    <div id="transactionSellDetails" class="form-group" hidden>
+                        <label id="transactionSellLabel">Bu miktarı kaça sattınız? (₺)</label>
+                        <input type="number" id="transactionSellRate" min="0.01" step="0.01" placeholder="Örn: 55.00">
+                        <small id="transactionSellHint">Satış kuru ile alış fiyatı arasındaki fark kâr/zarar olarak hesaplanır.</small>
+                    </div>
+                    <div id="transactionSellTargetGroup" class="form-group" hidden>
+                        <label>TRY geliri eklenecek hesap</label>
+                        <select id="transactionSellTarget" required>
+                            <option value="">Hesap seçin</option>
+                        </select>
+                        <small>Satıştan elde edilen TL bu hesaba aktarılır.</small>
+                    </div>
+                    <div class="form-group"><label>Kategori</label><select id="category" required><option value="">Kategori Seçin</option></select></div>
+                    <div class="form-group"><label>Açıklama</label><input type="text" id="description" placeholder="Açıklama girin" list="merchantSuggestions" autocomplete="off"></div>
+                    <div class="form-group"><label>Tarih</label><input type="date" id="date" required></div>
+                    <div id="creditInstallmentDetails" class="credit-card-details" hidden>
+                        <strong class="credit-section-title">Taksitli işlem</strong>
+                        <label class="checkbox-label"><input type="checkbox" id="isInstallment"> Bu işlemi taksitlendir</label>
+                        <div id="installmentOptions" class="installment-options" hidden>
+                            <div class="form-group"><label>Taksit sayısı</label><input type="number" id="installmentCount" min="2" max="60" value="2"></div>
+                            <div class="form-group"><label>Faiz oranı (%)</label><input type="number" id="installmentInterestRate" min="0" max="100" step="0.01" value="0" placeholder="Örn: 2.50"></div>
+                            <small>Faiz, alışveriş tutarına tek seferlik toplam oran olarak uygulanır.</small>
+                        </div>
+                    </div>
+                    <div class="recurring-section">
+                        <label class="checkbox-label"><input type="checkbox" id="isRecurring"> Tekrarlayan işlem olarak kaydet</label>
+                        <div id="recurringOptions" class="recurring-options" hidden>
+                            <div class="form-group"><label>Tekrar sıklığı</label><select id="recurringFrequency">
+                                <option value="monthly">Her ay</option>
+                                <option value="weekly">Her hafta</option>
+                                <option value="yearly">Her yıl</option>
+                            </select></div>
+                            <div class="form-group"><label>Bitiş tarihi (isteğe bağlı)</label><input type="date" id="recurringEndDate"></div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="transactionSubmitBtn" class="submit-btn"><i class="fas fa-save"></i> Kaydet</button>
+                </form>
+            </div>
+
+            <!-- Goals -->
+            <div id="goals" class="page">
+                <div class="page-header">
+                    <h2>Birikim Hedefleri</h2>
+                    <button id="addGoalBtn" class="add-btn"><i class="fas fa-plus"></i> Yeni Hedef</button>
+                </div>
+                <div id="goalsList" class="goals-list"></div>
+            </div>
+
+            <!-- Budgets -->
+            <div id="budgets" class="page">
+                <div class="page-header"><h2>Aylık Bütçeler</h2></div>
+                <form id="budgetForm" class="transaction-form">
+                    <div class="form-group"><label>Kategori (masraf)</label><select id="budgetCategory" required><option value="">Kategori Seçin</option></select></div>
+                    <div class="form-group"><label>Aylık limit (₺)</label><input type="number" id="budgetLimit" required min="1" step="0.01" placeholder="Örn: 5000"></div>
+                    <div class="form-group"><label>Ay</label><input type="month" id="budgetMonth" required></div>
+                    <button type="submit" class="submit-btn"><i class="fas fa-save"></i> Bütçe Kaydet</button>
+                </form>
+                <div class="page-header" style="margin-top:22px;"><h2>Bu Ayın Bütçeleri</h2></div>
+                <div id="budgetsList" class="goals-list"></div>
+            </div>
+
+            <!-- Add Goal Modal -->
+            <div id="addGoalModal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-header"><h2>Yeni Hedef Ekle</h2></div>
+                    <form id="goalForm">
+                        <div class="form-group"><label>Hedef Adı</label><input type="text" id="goalName" required placeholder="Örn: Yeni Telefon"></div>
+                        <div class="form-group"><label>Hedef Tutar</label><input type="number" id="goalAmount" required min="1" step="0.01" placeholder="0.00"></div>
+                        <div class="form-group"><label>Mevcut Birikim</label><input type="number" id="goalCurrent" min="0" step="0.01" placeholder="0.00" value="0"></div>
+                        <div class="form-group"><label>Bağlı Hesap (isteğe bağlı)</label><select id="goalAccount"><option value="">Hesap bağlama</option></select><small>Hedefe para eklediğinizde bu hesabın bakiyesi azalır.</small></div>
+                        <div class="form-actions">
+                            <button type="button" id="cancelGoal" class="cancel-btn">İptal</button>
+                            <button type="submit" class="submit-btn">Hedef Ekle</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Add Account Modal -->
+            <div id="addAccountModal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-header"><h2>Yeni Hesap Ekle</h2></div>
+                    <form id="accountForm">
+                        <div class="form-group"><label>Hesap Adı</label><input type="text" id="accountName" required placeholder="Örn: Ziraat Bankası"></div>
+                        <div class="form-group"><label>Hesap Türü</label><select id="accountType" required>
+                            <option value="bank">🏦 Banka</option>
+                            <option value="cash">💵 Nakit</option>
+                            <option value="credit">💳 Kredi Kartı</option>
+                            <option value="ewallet">📱 E-cüzdan</option>
+                            <option value="investment">📈 Yatırım</option>
+                            <option value="crypto">₿ Kripto</option>
+                            <option value="debt">🤝 Borç</option>
+                        </select></div>
+                        <div class="form-group"><label>Para Birimi</label><select id="accountCurrency" required>
+                            <option value="TRY">₺ - Türk Lirası</option>
+                            <option value="USD">$ - Dolar</option>
+                            <option value="EUR">€ - Euro</option>
+                            <option value="GRAM_ALTIN">🪙 Gram Altın</option>
+                            <option value="CEYREK_ALTIN">🪙 Çeyrek Altın</option>
+                        </select></div>
+                        <div class="account-customization-fields">
+                            <div class="form-group"><label>Etiket</label><input type="text" id="accountLabel" maxlength="24" placeholder="Örn: Maaş, Birikim"></div>
+                            <div class="form-group"><label>Hesap Rengi</label><input type="color" id="accountColor" value="#4CAF50"></div>
+                        </div>
+                        <div class="form-group" id="accountBalanceGroup"><label>Başlangıç Bakiyesi</label><input type="number" id="accountBalance" step="0.01" placeholder="0.00"><small id="balanceHint">Pozitif bakiye girin (0 olabilir)</small></div>
+                        <div id="creditCardDetails" class="credit-card-details" hidden>
+                            <strong class="credit-section-title">Kart ayarları</strong>
+                            <div class="form-group"><label>Kart Limiti (₺)</label><input type="number" id="accountCreditLimit" min="0.01" step="0.01" placeholder="Örn: 25000"></div>
+                            <div class="form-group"><label>Ekstre kesim günü</label><input type="number" id="accountStatementDay" min="1" max="31" placeholder="15"></div>
+                            <div class="form-group"><label>Son ödeme günü</label><input type="number" id="accountDueDay" min="1" max="31" placeholder="25"></div>
+                            <div class="form-group"><label>Asgari ödeme oranı (%)</label><input type="number" id="accountMinimumPaymentRate" min="0" max="100" step="0.1" value="20"></div>
+                            <small>Kart borcu işlemlerle oluşur. Taksit ve faiz bilgilerini hesabı oluşturduktan sonra <strong>Yeni İşlem</strong> ekranında, bu kartı seçerek girebilirsiniz.</small>
+                        </div>
+                        <!-- Döviz/Altın için alış maliyeti bilgileri -->
+                        <div id="investmentDetails" style="display:none;">
+                            <div class="form-group"><label>Aldığınız Miktar / Adet</label><input type="number" id="accountQuantity" step="0.0001" min="0.0001" placeholder="Örn: 100"></div>
+                            <div class="form-group"><label>Hesap Açılış Kuru / Birim Alış Fiyatı (₺)</label><input type="number" id="accountBuyPrice" step="0.01" min="0.01" placeholder="Örn: 31.25"><small>Gelir ve giderlerde bu açılış kuru saklanır.</small></div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancelAccount" class="cancel-btn">İptal</button>
+                            <button type="submit" class="submit-btn">Hesap Ekle</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Edit Account Modal -->
+            <div id="editAccountModal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-header"><h2>Hesabı Düzenle</h2></div>
+                    <form id="editAccountForm">
+                        <input type="hidden" id="editAccountId">
+                        <div class="form-group"><label>Hesap Adı</label><input type="text" id="editAccountName" required></div>
+                        <div class="form-group"><label>Hesap Türü</label><select id="editAccountType" required>
+                            <option value="bank">🏦 Banka</option>
+                            <option value="cash">💵 Nakit</option>
+                            <option value="credit">💳 Kredi Kartı</option>
+                            <option value="ewallet">📱 E-cüzdan</option>
+                            <option value="investment">📈 Yatırım</option>
+                            <option value="crypto">₿ Kripto</option>
+                            <option value="debt">🤝 Borç</option>
+                        </select></div>
+                        <div class="form-group"><label>Para Birimi</label><select id="editAccountCurrency" required>
+                            <option value="TRY">₺ - Türk Lirası</option>
+                            <option value="USD">$ - Dolar</option>
+                            <option value="EUR">€ - Euro</option>
+                            <option value="GRAM_ALTIN">🪙 Gram Altın</option>
+                            <option value="CEYREK_ALTIN">🪙 Çeyrek Altın</option>
+                        </select></div>
+                        <div class="account-customization-fields">
+                            <div class="form-group"><label>Etiket</label><input type="text" id="editAccountLabel" maxlength="24"></div>
+                            <div class="form-group"><label>Hesap Rengi</label><input type="color" id="editAccountColor" value="#4CAF50"></div>
+                        </div>
+                        <div class="form-group" id="editAccountBalanceGroup"><label>Bakiye</label><input type="number" id="editAccountBalance" step="0.01" placeholder="0.00"></div>
+                        <div id="editCreditCardDetails" class="credit-card-details" hidden>
+                            <div class="form-group"><label>Kart Limiti (₺)</label><input type="number" id="editAccountCreditLimit" min="0.01" step="0.01"></div>
+                            <div class="form-group"><label>Ekstre kesim günü</label><input type="number" id="editAccountStatementDay" min="1" max="31"></div>
+                            <div class="form-group"><label>Son ödeme günü</label><input type="number" id="editAccountDueDay" min="1" max="31"></div>
+                            <div class="form-group"><label>Asgari ödeme oranı (%)</label><input type="number" id="editAccountMinimumPaymentRate" min="0" max="100" step="0.1"></div>
+                        </div>
+                        <div id="editInvestmentDetails" style="display:none;">
+                            <div class="form-group"><label>Aldığınız Miktar / Adet</label><input type="number" id="editAccountQuantity" step="0.0001" min="0.0001"></div>
+                            <div class="form-group"><label>Birim Alış Fiyatı (₺)</label><input type="number" id="editAccountBuyPrice" step="0.01" min="0.01"></div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancelEditAccount" class="cancel-btn">İptal</button>
+                            <button type="submit" class="submit-btn">Değişiklikleri Kaydet</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Account Summary Modal -->
+            <div id="accountSummaryModal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Hesap Bakiyeleri</h2>
+                        <button id="closeAccountSummary" class="close-btn">&times;</button>
+                    </div>
+
+                    <div id="installmentSummaryModal" class="modal" style="display:none;">
+                        <div class="modal-content installment-summary-modal">
+                            <div class="modal-header">
+                                <h2>Bu Ay Gelecek Taksitler</h2>
+                                <button id="closeInstallmentSummary" class="close-btn">&times;</button>
+                            </div>
+                            <div id="installmentSummaryList" class="installment-summary-list"></div>
+                        </div>
+                    </div>
+                    <div id="accountSummaryList" class="account-summary-list"></div>
+                </div>
+            </div>
+
+            <!-- Modern Input Modal -->
+            <div id="modernInputModal" class="modal input-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modernInputTitle">
+                <div class="modal-content input-modal-content">
+                    <div class="input-modal-icon"><i id="modernInputIcon" class="fas fa-lock"></i></div>
+                    <div class="modal-header input-modal-header">
+                        <h2 id="modernInputTitle">Bilgi Girin</h2>
+                        <p id="modernInputDescription" class="modal-subtitle"></p>
+                    </div>
+                    <form id="modernInputForm">
+                        <div class="form-group">
+                            <label id="modernInputLabel" for="modernInputField">Değer</label>
+                            <div class="input-with-action">
+                                <input id="modernInputField" autocomplete="off" required>
+                                <button type="button" id="toggleModernInputVisibility" class="input-action-btn" title="Girişi göster/gizle" aria-label="Girişi göster/gizle">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small id="modernInputError" class="input-error" role="alert"></small>
+                        </div>
+                        <div class="form-actions input-modal-actions">
+                            <button type="button" id="cancelModernInput" class="cancel-btn">İptal</button>
+                            <button type="submit" id="confirmModernInput" class="submit-btn"><i class="fas fa-check"></i> Onayla</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Reports -->
+            <div id="reports" class="page">
+                <div class="page-header"><h2>Raporlar</h2><button id="printReportBtn" class="export-btn" type="button"><i class="fas fa-print"></i> Yazdır / PDF</button></div>
+                <div class="report-controls report-card">
+                    <div>
+                        <span class="section-eyebrow">GELİŞMİŞ RAPOR</span>
+                        <h3>Dönem analizi</h3>
+                        <p id="reportPeriodDescription" class="report-control-hint">Bu ayın finansal hareketleri</p>
+                    </div>
+                    <label class="report-period-field" for="reportPeriod">
+                        <span>Dönem</span>
+                        <select id="reportPeriod">
+                            <option value="day">Günlük</option>
+                            <option value="week">Haftalık</option>
+                            <option value="month" selected>Aylık</option>
+                            <option value="year">Yıllık</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="report-comparison-grid" aria-live="polite">
+                    <div class="report-comparison-card"><span id="reportCurrentLabel">Bu dönem</span><strong id="reportCurrentNet">₺0.00</strong><small>Net nakit akışı</small></div>
+                    <div class="report-comparison-card previous"><span id="reportPreviousLabel">Önceki dönem</span><strong id="reportPreviousNet">₺0.00</strong><small>Net nakit akışı</small></div>
+                    <div class="report-comparison-card change"><span>Değişim</span><strong id="reportNetChange">%0</strong><small>Önceki döneme göre</small></div>
+                </div>
+                <div class="advanced-report-grid">
+                    <div class="advanced-stat-card"><span>Toplam Net Varlık</span><strong id="advancedNetWorth">₺0.00</strong></div>
+                    <div class="advanced-stat-card"><span>Seçili Dönem Nakit Akışı</span><strong id="advancedCashFlow">₺0.00</strong></div>
+                    <div class="advanced-stat-card"><span>Birikim Toplam Kâr/Zarar</span><strong id="advancedProfitLoss">₺0.00</strong></div>
+                </div>
+                <div class="report-card full-width net-worth-explanation">
+                    <div class="net-worth-heading">
+                        <div>
+                            <span class="section-eyebrow">FİNANSAL ÖZET</span>
+                            <h3>Net varlık</h3>
+                        </div>
+                        <span class="net-worth-formula">Varlıklar − borçlar</span>
+                    </div>
+                    <p>Sahip olduğunuz toplam değerlerden borçlarınız çıkarıldığında kalan tutar.</p>
+                    <div id="netWorthBreakdown" class="net-worth-breakdown" aria-live="polite"></div>
+                </div>
+                <div class="report-card full-width advanced-table-card">
+                    <h3>Aylık Nakit Akışı</h3>
+                    <div class="table-scroll"><table class="advanced-report-table"><thead><tr><th>Dönem</th><th>Gelir</th><th>Masraf</th><th>Net</th></tr></thead><tbody id="cashFlowReportBody"></tbody></table></div>
+                </div>
+                <div class="report-card full-width advanced-table-card">
+                    <h3>Kategori Karşılaştırması</h3>
+                    <div class="table-scroll"><table class="advanced-report-table"><thead><tr><th>Kategori</th><th>Önceki dönem</th><th>Bu dönem</th><th>Değişim</th></tr></thead><tbody id="categoryComparisonBody"></tbody></table></div>
+                </div>
+                <div class="report-container report-detail-grid">
+                    <div class="report-card advanced-table-card">
+                        <h3>Kategori Dağılımı</h3>
+                        <div id="categoryDistribution" class="report-distribution-list"></div>
+                    </div>
+                    <div class="report-card advanced-table-card">
+                        <h3>Hesap Karşılaştırması</h3>
+                        <div class="table-scroll"><table class="advanced-report-table"><thead><tr><th>Hesap</th><th>Gelir</th><th>Gider</th><th>Net</th></tr></thead><tbody id="accountComparisonBody"></tbody></table></div>
+                    </div>
+                </div>
+                <div class="report-container">
+                    <div class="report-card"><h3>Kategori Bazlı Harcama</h3><div class="chart-container"><canvas id="expenseChart"></canvas></div></div>
+                    <div class="report-card"><h3>Aylık Gelir/Masraf</h3><div class="chart-container"><canvas id="monthlyChart"></canvas></div></div>
+                    <!-- Hesap Bazlı Dağılım: tam genişlik -->
+                    <div class="report-card full-width"><h3>Hesap Bazlı Dağılım</h3><div class="chart-container"><canvas id="accountChart"></canvas></div></div>
+
+                    <!-- Döviz ve Altın Ayrı Grafikler -->
+                    <div class="report-card"><h3>💵 Dolar Varlığı</h3><div class="chart-container"><canvas id="usdChart"></canvas></div></div>
+                    <div class="report-card"><h3>💶 Euro Varlığı</h3><div class="chart-container"><canvas id="eurChart"></canvas></div></div>
+                    <div class="report-card"><h3>🪙 Gram Altın Varlığı</h3><div class="chart-container"><canvas id="gramChart"></canvas></div></div>
+                    <div class="report-card"><h3>🪙 Çeyrek Altın Varlığı</h3><div class="chart-container"><canvas id="ceyrekChart"></canvas></div></div>
+                    <div class="report-card full-width profit-loss-report">
+                        <h3>Detaylı Kâr / Zarar</h3>
+                        <div class="table-scroll">
+                            <table class="profit-loss-table">
+                                <thead><tr><th>Varlık</th><th>Miktar</th><th>Alış Maliyeti</th><th>Güncel Değer</th><th>Gerçekleşmemiş</th><th>Gerçekleşen</th><th>Toplam</th></tr></thead>
+                                <tbody id="profitLossReportBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div id="settings" class="page">
+                <div class="page-header"><h2>Ayarlar</h2></div>
+                <div class="settings-container">
+                    <div class="setting-item">
+                        <div class="setting-head"><span class="setting-icon"><i class="fas fa-user-lock"></i></span><div><strong>Uygulama Güvenliği</strong><small>PIN kilidi ve otomatik kilit süresi</small></div></div>
+                        <label class="sr-only" for="securityPin">PIN kodu</label>
+                        <div class="security-setting-row">
+                            <input id="securityPin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" placeholder="4-8 haneli PIN" autocomplete="new-password">
+                            <button id="saveSecurityPin" class="export-btn" type="button"><i class="fas fa-key"></i> PIN'i kaydet</button>
+                            <button id="removeSecurityPin" class="cancel-btn" type="button">PIN'i kaldır</button>
+                        </div>
+                        <select id="securityTimeout" aria-label="Otomatik kilit süresi">
+                            <option value="0">Otomatik kilit kapalı</option>
+                            <option value="15">15 dakika hareketsizlik</option>
+                            <option value="30">30 dakika hareketsizlik</option>
+                            <option value="60">60 dakika hareketsizlik</option>
+                        </select>
+                        <button id="lockNow" class="export-btn security-lock-btn" type="button"><i class="fas fa-lock"></i> Şimdi kilitle</button>
+                        <small class="hint-text">PIN bu cihazdaki ekran kilidini yönetir; verileriniz Firebase erişim kurallarıyla korunur.</small>
+                    </div>
+                    <div class="setting-item"><div class="setting-head"><span class="setting-icon"><i class="fas fa-calendar-plus"></i></span><div><strong>Dönem Sistemi</strong><small>Yeni ay başlatma</small></div></div><p class="hint-text">Aktif dönem: <strong id="settingsPeriodLabel">-</strong></p><p class="hint-text">Yeni ay başlatınca özetler ve bütçeler yeni döneme geçer, eski veriler korunur.</p><button id="startNewMonth" class="export-btn"><i class="fas fa-play"></i> Yeni Ay Başlat</button></div>
+                    <div class="setting-item">
+                        <div class="setting-head"><span class="setting-icon"><i class="fas fa-bell"></i></span><div><strong>Bildirimler</strong><small>Masaüstü izni ve ses</small></div></div>
+                        <button id="enableNotificationsSettingBtn" class="export-btn" type="button"><i class="fas fa-bell"></i> Masaüstü bildirimlerini aç</button>
+                        <label class="checkbox-label"><input type="checkbox" id="notifSoundToggle" checked> Bildirim sesi çalsın</label>
+                        <label class="checkbox-label"><input type="checkbox" id="emailNotificationsToggle" checked> E-posta bildirimleri gönderilsin</label>
+                        <button id="testNotifSoundBtn" class="export-btn" type="button"><i class="fas fa-volume-up"></i> Sesi test et</button>
+                        <small class="hint-text">Site kapalıyken bildirim gelmez; bildirimler uygulama açıkken üretilir.</small>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-head"><span class="setting-icon"><i class="fas fa-tags"></i></span><div><strong>Kategoriler</strong><small>Özel gelir/gider kategorileri</small></div></div>
+                        <form id="categoryForm" class="security-setting-row">
+                            <input id="newCategoryName" type="text" maxlength="40" placeholder="Örn: 🐾 Evcil Hayvan" autocomplete="off" required>
+                            <select id="newCategoryType" aria-label="Kategori türü">
+                                <option value="expense">Masraf</option>
+                                <option value="income">Gelir</option>
+                            </select>
+                            <button class="export-btn" type="submit"><i class="fas fa-plus"></i> Ekle</button>
+                        </form>
+                        <button id="toggleCategoriesBtn" class="export-btn" type="button" aria-expanded="false"><i class="fas fa-list"></i> <span id="toggleCategoriesText">Kategorileri göster</span></button>
+                        <div id="categoriesList" class="transactions-modern" hidden></div>
+                        <small class="hint-text">Silinen kategorideki eski işlemler korunur.</small>
+                    </div>
+                    <div class="setting-item danger"><div class="setting-head"><span class="setting-icon danger"><i class="fas fa-triangle-exclamation"></i></span><div><strong>Tehlikeli Bölge</strong><small>Geri alınamaz</small></div></div><button id="clearData" class="danger-btn"><i class="fas fa-trash"></i> Tüm Verileri Sil</button></div>
+                </div>
+            </div>
+
+            <!-- Admin -->
+            <div id="admin" class="page">
+                <div class="page-header">
+                    <h2>Admin Paneli</h2>
+                    <button id="refreshAdminBtn" class="export-btn"><i class="fas fa-sync"></i> Yenile</button>
+                </div>
+                <div class="admin-tabs">
+                    <button class="admin-tab active" data-admin-tab="users">Kullanıcılar</button>
+                    <button class="admin-tab" data-admin-tab="stats">İstatistikler</button>
+                    <button class="admin-tab" data-admin-tab="activity">Aktivite</button>
+                    <button class="admin-tab" data-admin-tab="system">Sistem</button>
+                </div>
+                <div class="admin-tab-panels">
+                    <div class="admin-tab-panel active" data-admin-panel="users">
+                        <div class="report-card full-width advanced-table-card">
+                            <h3>Kullanıcılar</h3>
+                            <div class="admin-toolbar">
+                                <input type="search" id="adminSearch" placeholder="E-posta veya isim ara...">
+                                <select id="adminRoleFilter" class="filter-select" aria-label="Rol filtresi">
+                                    <option value="all">Tümü</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="user">User</option>
+                                </select>
+                                <small id="adminCount"></small>
+                            </div>
+                            <div class="table-scroll"><table class="advanced-report-table"><thead><tr><th>Kullanıcı</th><th>E-posta</th><th>Rol</th><th>Hesap sayısı</th><th>İşlem sayısı</th><th>Kayıt</th><th>İşlemler</th></tr></thead><tbody id="adminUsersBody"></tbody></table></div>
+                            <p class="hint-text">Rol bilgisi <code>users/{uid}</code> dokümanındaki <code>role</code> alanından okunur (<code>admin</code> / <code>user</code>). İlk admini Firestore Console'dan manuel verin.</p>
+                        </div>
+                    </div>
+                    <div class="admin-tab-panel" data-admin-panel="stats">
+                        <div id="adminStats" class="advanced-report-grid"></div>
+                        <div class="report-card full-width advanced-table-card">
+                            <h3>Kullanıcı bazında dağılım</h3>
+                            <div class="table-scroll"><table class="advanced-report-table"><thead><tr><th>Kullanıcı</th><th>Hesap</th><th>İşlem</th><th>Transfer</th></tr></thead><tbody id="adminBreakdownBody"></tbody></table></div>
+                        </div>
+                        <div class="report-card full-width advanced-table-card">
+                            <h3>Kayıt trendi (son 12 hafta)</h3>
+                            <div class="chart-container"><canvas id="adminSignupChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="admin-tab-panel" data-admin-panel="activity">
+                        <div class="report-card full-width">
+                            <h3>Son kayıtlar</h3>
+                            <div id="adminActivityList"></div>
+                        </div>
+                    </div>
+                    <div class="admin-tab-panel" data-admin-panel="system">
+                        <div class="report-card full-width">
+                            <h3>Ortam</h3>
+                            <div id="adminSysInfo"></div>
+                        </div>
+                        <div class="report-card full-width">
+                            <h3>Kurlar</h3>
+                            <div id="adminRatesBox"></div>
+                            <button id="adminRefreshRatesBtn" class="export-btn"><i class="fas fa-sync"></i> Şimdi güncelle</button>
+                        </div>
+                        <div class="report-card full-width">
+                            <h3>Tarayıcı</h3>
+                            <div id="adminBrowserInfo"></div>
+                        </div>
+                        <div class="report-card full-width">
+                            <h3>Tehlikeli işlemler</h3>
+                            <div class="admin-row-actions">
+                                <button id="adminClearCacheBtn" class="danger-btn"><i class="fas fa-trash"></i> Tüm önbelleği temizle</button>
+                                <button id="adminReloadBtn" class="export-btn"><i class="fas fa-sync"></i> Cache'i yenile ve yeniden başlat</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="adminDetailModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="adminDetailTitle">
+                    <div class="modal-content">
+                        <div class="modal-header"><h2 id="adminDetailTitle">Kullanıcı detayı</h2><button id="closeAdminDetail" class="close-btn" aria-label="Kapat">&times;</button></div>
+                        <div id="adminDetailBody"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Sprint 1: Quick-Add Widget (Floating Action Button) -->
+    <button id="quickAddBtn" class="quick-add-fab" title="Yeni İşlem" aria-label="Yeni işlem ekle">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Sprint 1: Quick-Add Modal -->
+    <div id="quickAddModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="quickAddTitle">
+        <div class="modal-content quick-add-modal">
+            <div class="modal-header">
+                <h2 id="quickAddTitle"><i class="fas fa-plus-circle"></i> Yeni İşlem</h2>
+                <button id="closeQuickAdd" class="close-btn" aria-label="Kapat">&times;</button>
+            </div>
+            <form id="quickAddForm" class="transaction-form">
+                <div class="quick-add-type-toggle">
+                    <button type="button" class="type-btn active" data-type="expense"><i class="fas fa-arrow-down"></i> Masraf</button>
+                    <button type="button" class="type-btn" data-type="income"><i class="fas fa-arrow-up"></i> Gelir</button>
+                    <button type="button" class="type-btn" data-type="sell" id="quickAddSellBtn" style="display:none;"><i class="fas fa-exchange-alt"></i> Satış</button>
+                </div>
+                <div class="form-group">
+                    <label for="quickAddAccount">Hesap</label>
+                    <select id="quickAddAccount" required><option value="">Hesap Seçin</option></select>
+                    <small id="quickAddAccountRateInfo" class="hint-text" hidden></small>
+                </div>
+                <div class="form-group">
+                    <label for="quickAddAmount">Tutar (₺)</label>
+                    <input type="number" id="quickAddAmount" required min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+                </div>
+                <div id="quickAddPurchaseDetails" class="form-group" hidden>
+                    <label for="quickAddPurchaseRate">Bu miktarı kaça aldınız? (₺)</label>
+                    <input type="number" id="quickAddPurchaseRate" min="0.01" step="0.01" placeholder="Örn: 54.00">
+                    <small>Güncel kur ile aradaki fark kâr/zarar olarak hesaplanır.</small>
+                </div>
+                <div id="quickAddSellDetails" hidden>
+                    <div class="form-group">
+                        <label for="quickAddSellRate">Satış kuru (₺)</label>
+                        <input type="number" id="quickAddSellRate" min="0.01" step="0.01" placeholder="Örn: 55.50">
+                        <small id="quickAddSellHint" class="hint-text"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="quickAddSellTarget">Gelir hesabını seçin (TRY)</label>
+                        <select id="quickAddSellTarget" required></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="quickAddCategory">Kategori</label>
+                    <select id="quickAddCategory" required><option value="">Kategori Seçin</option></select>
+                </div>
+                <div class="form-group">
+                    <label for="quickAddDescription">Açıklama</label>
+                    <input type="text" id="quickAddDescription" placeholder="Açıklama girin" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="quickAddDate">Tarih</label>
+                    <input type="date" id="quickAddDate" required>
+                </div>
+                <div id="quickAddCreditInstallmentDetails" class="credit-card-details" hidden>
+                    <strong class="credit-section-title">Taksitli işlem</strong>
+                    <label class="checkbox-label"><input type="checkbox" id="quickAddIsInstallment"> Bu işlemi taksitlendir</label>
+                    <div id="quickAddInstallmentOptions" class="installment-options" hidden>
+                        <div class="form-group"><label>Taksit sayısı</label><input type="number" id="quickAddInstallmentCount" min="2" max="60" value="2"></div>
+                        <div class="form-group"><label>Faiz oranı (%)</label><input type="number" id="quickAddInstallmentInterestRate" min="0" max="100" step="0.01" value="0" placeholder="Örn: 2.50"></div>
+                        <small>Faiz, alışveriş tutarına tek seferlik toplam oran olarak uygulanır.</small>
+                    </div>
+                </div>
+                <div class="recurring-section">
+                    <label class="checkbox-label"><input type="checkbox" id="quickAddIsRecurring"> Tekrarlayan işlem olarak kaydet</label>
+                    <div id="quickAddRecurringOptions" class="recurring-options" hidden>
+                        <div class="form-group"><label>Tekrar sıklığı</label><select id="quickAddRecurringFrequency">
+                            <option value="monthly">Her ay</option>
+                            <option value="weekly">Her hafta</option>
+                            <option value="yearly">Her yıl</option>
+                        </select></div>
+                        <div class="form-group"><label>Bitiş tarihi (isteğe bağlı)</label><input type="date" id="quickAddRecurringEndDate"></div>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn quick-add-submit"><i class="fas fa-check"></i> Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sprint 1: Merchant Autocomplete Datalist -->
+    <datalist id="merchantSuggestions"></datalist>
+
+    <!-- Yazdırılabilir aylık özet (ekranda gizli, baskıda görünür) -->
+    <div id="printReport" aria-hidden="true"></div>
+
+    <div id="securityLock" class="security-lock" hidden>        <div class="security-lock-card">
+            <div class="security-lock-icon"><i class="fas fa-lock"></i></div>
+            <h2>Uygulama kilitlendi</h2>
+            <p>Devam etmek için PIN kodunuzu girin.</p>
+            <form id="unlockForm">
+                <input id="unlockPin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" maxlength="8" placeholder="PIN kodu" autocomplete="off" required>
+                <small id="unlockError" class="security-error" role="alert"></small>
+                <button type="submit" class="submit-btn"><i class="fas fa-unlock"></i> Kilidi aç</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="commandPalette" class="command-palette" hidden>
+        <div class="command-palette-backdrop" data-command-close></div>
+        <section class="command-palette-dialog" role="dialog" aria-modal="true" aria-labelledby="commandPaletteTitle">
+            <div class="command-palette-search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input id="commandPaletteInput" type="search" autocomplete="off" placeholder="Ne yapmak istiyorsun?" aria-label="Komut ara">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="command-palette-heading">
+                <span id="commandPaletteTitle">Hızlı erişim</span>
+                <small>↑↓ seç · Enter aç</small>
+            </div>
+            <div id="commandPaletteList" class="command-palette-list"></div>
+        </section>
+    </div>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/categories.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/budgets.js"></script>
+    <script src="js/security.js"></script>
+    <script src="js/health.js"></script>
+    <script src="js/command-palette.js"></script>
+    <script src="js/rates.js"></script>
+    <script src="js/accounts.js"></script>
+    <script src="js/transactions.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/sprint1.js"></script>
+    <script src="js/email-notify.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/tablexfer.js"></script>
+    <script src="js/printreport.js"></script>
+    <script src="js/push.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
