@@ -2163,12 +2163,8 @@ select option {
 }
 
 /* ============================================================
-   SPRINT 1: Quick-Add FAB (Floating Action Button) with Menu
+   SPRINT 1: Quick-Add FAB (Floating Action Button)
    ============================================================ */
-.quick-add-wrapper {
-  position: relative;
-  display: inline-block;
-}
 .quick-add-fab {
   position: fixed;
   bottom: 24px;
@@ -2182,7 +2178,7 @@ select option {
   font-size: 1.5rem;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(98, 86, 217, 0.4);
-  z-index: 1001;
+  z-index: 1000;
   transition: transform 0.2s, box-shadow 0.2s, background 0.35s ease;
   display: flex;
   align-items: center;
@@ -2194,40 +2190,6 @@ select option {
 }
 .quick-add-fab:active {
   transform: scale(0.95);
-}
-.quick-add-menu {
-  position: fixed;
-  bottom: 90px;
-  right: 24px;
-  background: var(--card-bg, #fff);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  padding: 8px 0;
-  z-index: 1000;
-  min-width: 180px;
-  overflow: hidden;
-}
-.quick-add-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 16px;
-  border: none;
-  background: transparent;
-  color: var(--text-color, #333);
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background 0.2s;
-  text-align: left;
-}
-.quick-add-menu-item:hover {
-  background: var(--hover-bg, rgba(98, 86, 217, 0.08));
-}
-.quick-add-menu-item i {
-  width: 20px;
-  text-align: center;
-  color: var(--primary-color, #6256d9);
 }
 
 /* ============================================================
@@ -2637,5 +2599,4 @@ select option {
   font-size: 0.9rem;
   transition: color 0.2s;
 }
-.verify-dismiss-btn:hover { color: #fff; }
-
+.verify-dismiss-btn:hover { color: #fff; }

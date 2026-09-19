@@ -147,47 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('sidebar').classList.remove('open');
         document.getElementById('sidebarOverlay').classList.remove('show');
     });
-
-    // Quick-Add FAB menu toggle
-    const quickAddBtn = document.getElementById('quickAddBtn');
-    const quickAddMenu = document.getElementById('quickAddMenu');
-    if (quickAddBtn && quickAddMenu) {
-        quickAddBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            quickAddMenu.hidden = !quickAddMenu.hidden;
-        });
-        document.addEventListener('click', () => {
-            quickAddMenu.hidden = true;
-        });
-        quickAddMenu.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    }
-
-    // Quick-Add menu actions
-    const quickAddActions = [
-        ['quickAddTransaction', 'quickAddBtn'],
-        ['quickAddAccount', 'addAccountBtn'],
-        ['quickAddGoal', 'addGoalBtn']
+    const dashboardQuickActions = [
+        ['dashboardAddTransaction', 'newTransactionBtn'],
+        ['dashboardAddAccount', 'addAccountBtn'],
+        ['dashboardAddGoal', 'addGoalBtn']
     ];
-    quickAddActions.forEach(([sourceId, targetId]) => {
+    dashboardQuickActions.forEach(([sourceId, targetId]) => {
         document.getElementById(sourceId)?.addEventListener('click', () => {
-            if (targetId === 'quickAddBtn') {
-                // Open the quick add modal directly
-                const modal = document.getElementById('quickAddModal');
-                if (modal) {
-                    populateQuickAddSelects?.();
-                    const dateEl = document.getElementById('quickAddDate');
-                    if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
-                    modal.style.display = 'flex';
-                    updateQuickAddSellFields?.();
-                    const amt = document.getElementById('quickAddAmount');
-                    if (amt) amt.focus();
-                }
-            } else {
-                document.getElementById(targetId)?.click();
-            }
-            quickAddMenu.hidden = true;
+            document.getElementById(targetId)?.click();
         });
     });
 
