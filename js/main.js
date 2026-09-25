@@ -893,7 +893,18 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) { showToast('İşlem hatası: ' + error.message, 'error'); }
     });
 
-    // Transfer formu - kredi kartına ödemeyi masraf olarak ekle
+    // FAB menü: Transfer -> modal
+    document.getElementById('fabOpenTransfer')?.addEventListener('click', () => {
+        const modal = document.getElementById('addTransferModal');
+        const dateEl = document.getElementById('transferDate');
+        if (dateEl && !dateEl.value) dateEl.value = formatLocalDate(new Date());
+        if (modal) modal.style.display = 'flex';
+    });
+    document.getElementById('cancelTransferModal')?.addEventListener('click', () => {
+        document.getElementById('addTransferModal').style.display = 'none';
+    });
+
+    // Transfer formu (modal) - kredi kartına ödemeyi masraf olarak ekle
     document.getElementById('transferForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!currentUser) return;
@@ -942,12 +953,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             await batch.commit();
+            document.getElementById('addTransferModal').style.display = 'none';
             document.getElementById('transferForm').reset();
             document.getElementById('transferDate').value = formatLocalDate(new Date());
             showToast('Transfer başarılı!', 'success');
             await loadUserData();
         } catch (error) { showToast('Transfer hatası: ' + error.message, 'error'); }
     });
+
+    // Transfer listesi filtresi (ay) — değişince listeyi tazele
+    document.getElementById('transferFilterMonth')?.addEventListener('change', updateMonthlyTransfersUI);
 
     // Filtreler
     document.getElementById('filterType').addEventListener('change', updateTransactionsUI);

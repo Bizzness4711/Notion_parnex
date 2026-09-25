@@ -59,6 +59,10 @@ window.changeMonth = function(delta) {
     const monthDisplay = document.getElementById('currentMonthDisplay');
     if (monthDisplay) monthDisplay.textContent = formatMonth(currentMonth);
     updateDashboard();
+    // Transfer sayfasindaki ay filtresini de senkronize et
+    const transferFilter = document.getElementById('transferFilterMonth');
+    if (transferFilter && transferFilter.value) transferFilter.value = currentMonth;
+    updateMonthlyTransfersUI();
     if (currentUser) saveSettings();
 };
 
@@ -369,13 +373,24 @@ function updateAllUI() {
     if (monthDisplay) monthDisplay.textContent = formatMonth(currentMonth);
 }
 
-// Transfer sayfasi: bu ay yapilan transferlerin listesi
+// Transfer sayfasi: filtrelenen ayin transferleri + toplam ozet
 function updateMonthlyTransfersUI() {
     const list = document.getElementById('monthlyTransfersList');
     if (!list) return;
+    const filterInput = document.getElementById('transferFilterMonth');
+    if (filterInput && !filterInput.value) filterInput.value = currentMonth;
+    const month = (filterInput && filterInput.value) ? filterInput.value : currentMonth;
     const monthTransfers = transfers
-        .filter(t => String(t.date || '').startsWith(currentMonth))
+        .filter(t => String(t.date || '').startsWith(month))
         .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+    // Ozet kart: toplam tutar + adet
+    const totalEl = document.getElementById('transferMonthlyTotal');
+    const countEl = document.getElementById('transferMonthlyCount');
+    const total = monthTransfers.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    if (totalEl) totalEl.textContent = isHidden ? '₺••••••' : `₺${total.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (countEl) countEl.textContent = `${monthTransfers.length} transfer`;
+
     if (isHidden) { list.innerHTML = '<p class="empty-state">Gizlilik modu açık.</p>'; return; }
     if (!monthTransfers.length) {
         list.innerHTML = '<p class="empty-state">Bu ay transfer yapılmamış. Sağdaki + butonundan transfer ekleyebilirsiniz.</p>';

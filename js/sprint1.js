@@ -74,9 +74,9 @@ function initQuickAdd() {
         },
         addAccount: () => document.getElementById('addAccountBtn')?.click(),
         transfer: () => {
+            // Transfer formu artik modalde; sayfayi da ac (liste gorunsun).
             navigateToPage('transfer');
-            const from = document.getElementById('fromAccount');
-            if (from) from.focus();
+            document.getElementById('fabOpenTransfer')?.click();
         },
         addGoal: () => document.getElementById('addGoalBtn')?.click(),
         addBudget: () => {

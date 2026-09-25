@@ -2704,6 +2704,32 @@ select option {
 }
 
 /* ============================================================
+   TRANSFER LISTESI: ay filtresi + toplam ozet karti
+   ============================================================ */
+.transfer-filter-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.transfer-filter-month { flex: 0 0 190px; }
+.transfer-summary-card {
+  flex: 1;
+  min-width: 170px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(109, 93, 252, 0.1);
+  border: 1px solid rgba(109, 93, 252, 0.22);
+}
+.transfer-summary-card span { font-size: 0.75rem; color: var(--text-secondary, #6e7190); font-weight: 600; letter-spacing: 0.03em; }
+.transfer-summary-card strong { font-size: 1.3rem; letter-spacing: -0.02em; }
+.transfer-summary-card small { font-size: 0.78rem; color: var(--text-secondary, #6e7190); }
+
+/* ============================================================
    ONBOARDING TURU: ilk giriste kisa tanitim (spotlight + kart)
    ============================================================ */
 .onboarding-overlay {
