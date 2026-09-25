@@ -357,6 +357,7 @@ function updateAllUI() {
     updateRecurringTransactionsUI();
     updateGoalsUI();
     updateBudgetsUI();
+    updateMonthlyTransfersUI();
     updateCategorySelect();
     updateNotificationsUI();
     updateCharts();
@@ -366,6 +367,30 @@ function updateAllUI() {
     updateGoalAccountSelect();
     const monthDisplay = document.getElementById('currentMonthDisplay');
     if (monthDisplay) monthDisplay.textContent = formatMonth(currentMonth);
+}
+
+// Transfer sayfasi: bu ay yapilan transferlerin listesi
+function updateMonthlyTransfersUI() {
+    const list = document.getElementById('monthlyTransfersList');
+    if (!list) return;
+    const monthTransfers = transfers
+        .filter(t => String(t.date || '').startsWith(currentMonth))
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    if (isHidden) { list.innerHTML = '<p class="empty-state">Gizlilik modu açık.</p>'; return; }
+    if (!monthTransfers.length) {
+        list.innerHTML = '<p class="empty-state">Bu ay transfer yapılmamış. Sağdaki + butonundan transfer ekleyebilirsiniz.</p>';
+        return;
+    }
+    list.innerHTML = monthTransfers.map(t => `
+        <div class="transaction-card-modern">
+            <div class="transaction-icon-modern transfer"><i class="fas fa-exchange-alt"></i></div>
+            <div class="transaction-info-modern">
+                <div class="transaction-title-modern">${escapeHtml(t.fromAccountName || '')} → ${escapeHtml(t.toAccountName || '')}</div>
+                <div class="transaction-subtitle-modern">${escapeHtml(t.description || 'Hesap Transferi')} • ${escapeHtml(t.date || '')}</div>
+            </div>
+            <div class="transaction-amount-modern transfer">↔ ₺${Number(t.amount || 0).toFixed(2)}</div>
+            <button class="delete-btn" onclick="deleteTransfer('${t.id}')" title="Transferi sil"><i class="fas fa-trash"></i></button>
+        </div>`).join('');
 }
 
 function updateAdminVisibility() {

@@ -13,7 +13,8 @@ function updateCategorySelect() {
         });
         if (getCategories(typeof selectedType !== 'undefined' ? selectedType : 'expense').includes(keep)) select.value = keep;
     }
-    const budgetSelect = document.getElementById('budgetCategory');
+    // Bütçe kategorisi: ana sayfa formu VEYA modal (FAB menü) hangisi varsa
+    const budgetSelect = document.getElementById('budgetCategory') || document.getElementById('budgetModalCategory');
     if (budgetSelect) {
         const keepB = budgetSelect.value;
         budgetSelect.innerHTML = '<option value="">Kategori Seçin</option>';

@@ -398,6 +398,8 @@
                     <div class="form-group"><label>Tarih</label><input type="date" id="transferDate" required></div>
                     <button type="submit" class="submit-btn"><i class="fas fa-exchange-alt"></i> Transfer Yap</button>
                 </form>
+                <div class="page-header" style="margin-top:22px;"><h2>Bu Ayın Transferleri</h2></div>
+                <div id="monthlyTransfersList" class="goals-list"></div>
             </div>
 
             <!-- Transactions -->
@@ -510,14 +512,24 @@
             <!-- Budgets -->
             <div id="budgets" class="page">
                 <div class="page-header"><h2>Aylık Bütçeler</h2></div>
-                <form id="budgetForm" class="transaction-form">
-                    <div class="form-group"><label>Kategori (masraf)</label><select id="budgetCategory" required><option value="">Kategori Seçin</option></select></div>
-                    <div class="form-group"><label>Aylık limit (₺)</label><input type="number" id="budgetLimit" required min="1" step="0.01" placeholder="Örn: 5000"></div>
-                    <div class="form-group"><label>Ay</label><input type="month" id="budgetMonth" required></div>
-                    <button type="submit" class="submit-btn"><i class="fas fa-save"></i> Bütçe Kaydet</button>
-                </form>
-                <div class="page-header" style="margin-top:22px;"><h2>Bu Ayın Bütçeleri</h2></div>
+                <div class="page-header"><h2>Bu Ayın Bütçeleri</h2></div>
                 <div id="budgetsList" class="goals-list"></div>
+            </div>
+
+            <!-- Add Budget Modal (FAB menüden açılır) -->
+            <div id="addBudgetModal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-header"><h2>Yeni Bütçe Ekle</h2></div>
+                    <form id="budgetModalForm">
+                        <div class="form-group"><label>Kategori (masraf)</label><select id="budgetModalCategory" required><option value="">Kategori Seçin</option></select></div>
+                        <div class="form-group"><label>Aylık limit (₺)</label><input type="number" id="budgetModalLimit" required min="1" step="0.01" placeholder="Örn: 5000"></div>
+                        <div class="form-group"><label>Ay</label><input type="month" id="budgetModalMonth" required></div>
+                        <div class="form-actions">
+                            <button type="button" id="cancelBudgetModal" class="cancel-btn">İptal</button>
+                            <button type="submit" class="submit-btn">Bütçe Kaydet</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <!-- Add Goal Modal -->
@@ -782,6 +794,7 @@
                         <small class="hint-text">PIN bu cihazdaki ekran kilidini yönetir; verileriniz Firebase erişim kurallarıyla korunur.</small>
                     </div>
                     <div class="setting-item"><div class="setting-head"><span class="setting-icon"><i class="fas fa-calendar-plus"></i></span><div><strong>Dönem Sistemi</strong><small>Yeni ay başlatma</small></div></div><p class="hint-text">Aktif dönem: <strong id="settingsPeriodLabel">-</strong></p><p class="hint-text">Yeni ay başlatınca özetler ve bütçeler yeni döneme geçer, eski veriler korunur.</p><button id="startNewMonth" class="export-btn"><i class="fas fa-play"></i> Yeni Ay Başlat</button></div>
+                    <div class="setting-item"><div class="setting-head"><span class="setting-icon"><i class="fas fa-map-signs"></i></span><div><strong>Tanıtım Turu</strong><small>Uygulama gezintisi</small></div></div><p class="hint-text">Uygulamayı tanıtan kısa turu tekrar izleyin.</p><button id="replayOnboardingBtn" class="export-btn" type="button"><i class="fas fa-route"></i> Turu tekrar göster</button></div>
                     <div class="setting-item">
                         <div class="setting-head"><span class="setting-icon"><i class="fas fa-bell"></i></span><div><strong>Bildirimler</strong><small>Masaüstü izni ve ses</small></div></div>
                         <button id="enableNotificationsSettingBtn" class="export-btn" type="button"><i class="fas fa-bell"></i> Masaüstü bildirimlerini aç</button>
@@ -917,7 +930,7 @@
             <button class="fab-menu-item" id="fabAddGoal" data-fab-action="addGoal" type="button">
                 <i class="fas fa-bullseye"></i><span><strong>Yeni Hedef</strong><small>Birikim hedefi oluştur</small></span>
             </button>
-            <button class="fab-menu-item" data-fab-action="addBudget" type="button">
+            <button class="fab-menu-item" id="fabAddBudget" data-fab-action="addBudget" type="button">
                 <i class="fas fa-chart-pie"></i><span><strong>Bütçe Ekle</strong><small>Aylık harcama limiti</small></span>
             </button>
         </div>

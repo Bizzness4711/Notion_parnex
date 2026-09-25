@@ -490,27 +490,68 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.setAttribute('aria-expanded', String(!list.hidden));
     });
 
-    // Bütçe formu
-    const budgetMonthInput = document.getElementById('budgetMonth');
-    if (budgetMonthInput && !budgetMonthInput.value) budgetMonthInput.value = currentMonth;
-    document.getElementById('budgetForm')?.addEventListener('submit', async (e) => {
+    // Bütçe formu FAB menüden açılan modalde; burada modal yoksa ana sayfa formu desteklenir.
+    const budgetFormEl = document.getElementById('budgetForm');
+    if (budgetFormEl) {
+        const budgetMonthInput = document.getElementById('budgetMonth');
+        if (budgetMonthInput && !budgetMonthInput.value) budgetMonthInput.value = currentMonth;
+        budgetFormEl.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            const category = document.getElementById('budgetCategory').value;
+            const limit = parseFloat(document.getElementById('budgetLimit').value);
+            const month = document.getElementById('budgetMonth').value || currentMonth;
+            if (!category || !(limit > 0)) { showToast('Kategori ve limit girin.', 'error'); return; }
+            try {
+                await db.collection('users').doc(currentUser.uid).collection('budgets').add({
+                    category, limit, month,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                budgetFormEl.reset();
+                if (budgetMonthInput) budgetMonthInput.value = currentMonth;
+                showToast('Bütçe kaydedildi!', 'success');
+                await loadBudgets();
+                updateBudgetsUI();
+            } catch (error) { showToast('Bütçe kaydedilemedi: ' + error.message, 'error'); }
+        });
+    }
+
+    // FAB menü: Bütçe Ekle -> modal formu
+    document.getElementById('fabAddBudget')?.addEventListener('click', () => {
+        const modal = document.getElementById('addBudgetModal');
+        const monthInput = document.getElementById('budgetModalMonth');
+        if (monthInput && !monthInput.value) monthInput.value = currentMonth;
+        if (modal) modal.style.display = 'flex';
+        updateCategorySelect();
+    });
+    document.getElementById('cancelBudgetModal')?.addEventListener('click', () => {
+        document.getElementById('addBudgetModal').style.display = 'none';
+    });
+    document.getElementById('budgetModalForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!currentUser) return;
-        const category = document.getElementById('budgetCategory').value;
-        const limit = parseFloat(document.getElementById('budgetLimit').value);
-        const month = document.getElementById('budgetMonth').value || currentMonth;
+        const category = document.getElementById('budgetModalCategory').value;
+        const limit = parseFloat(document.getElementById('budgetModalLimit').value);
+        const month = document.getElementById('budgetModalMonth').value || currentMonth;
         if (!category || !(limit > 0)) { showToast('Kategori ve limit girin.', 'error'); return; }
         try {
             await db.collection('users').doc(currentUser.uid).collection('budgets').add({
                 category, limit, month,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            document.getElementById('budgetForm').reset();
-            if (budgetMonthInput) budgetMonthInput.value = currentMonth;
+            document.getElementById('addBudgetModal').style.display = 'none';
+            document.getElementById('budgetModalForm').reset();
             showToast('Bütçe kaydedildi!', 'success');
             await loadBudgets();
             updateBudgetsUI();
         } catch (error) { showToast('Bütçe kaydedilemedi: ' + error.message, 'error'); }
+    });
+
+    // Onboarding turunu tekrar göster (Ayarlar)
+    document.getElementById('replayOnboardingBtn')?.addEventListener('click', () => {
+        document.getElementById('settings')?.classList.add('active');
+        if (typeof startOnboardingTour === 'function') startOnboardingTour(true);
+        else showToast('Tur modülü yüklenemedi.', 'error');
     });
 
     // İşlem formu

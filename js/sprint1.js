@@ -80,9 +80,15 @@ function initQuickAdd() {
         },
         addGoal: () => document.getElementById('addGoalBtn')?.click(),
         addBudget: () => {
-            navigateToPage('budgets');
-            const cat = document.getElementById('budgetCategory');
-            if (cat) cat.focus();
+            // Budget form artik modalde; ana sayfa formu yoksa modal acilir.
+            const mainForm = document.getElementById('budgetForm');
+            if (mainForm) {
+                navigateToPage('budgets');
+                const cat = document.getElementById('budgetCategory');
+                if (cat) cat.focus();
+            } else {
+                document.getElementById('fabAddBudget')?.click();
+            }
         }
     };
     if (fabMenu) {
