@@ -6,6 +6,7 @@ package-lock.json
 android/
 ios/
 .capacitor/
+google-services.json
 
 # OS
 Thumbs.db
