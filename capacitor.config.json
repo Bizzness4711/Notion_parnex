@@ -1,0 +1,17 @@
+{
+  "appId": "com.bizzness4711.parnex",
+  "appName": "Parnex",
+  "webDir": "www",
+  "server": {
+    "url": "https://bizzness4711.github.io/Notion_parnex/",
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "FirebaseMessaging": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

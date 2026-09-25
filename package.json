@@ -9,11 +9,12 @@
     "cap:copy": "npx cap copy android"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.2.0"
+    "@capacitor/cli": "^6.2.0",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
+    "@capacitor-firebase/messaging": "^6.0.1",
     "@capacitor/android": "^6.2.0",
-    "@capacitor/core": "^6.2.0",
-    "@capacitor-firebase/messaging": "^6.0.1"
+    "@capacitor/core": "^6.2.0"
   }
 }
