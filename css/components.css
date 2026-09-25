@@ -2704,6 +2704,62 @@ select option {
 }
 
 /* ============================================================
+   ONBOARDING TURU: ilk giriste kisa tanitim (spotlight + kart)
+   ============================================================ */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  background: rgba(17, 18, 29, 0.55);
+  backdrop-filter: blur(1.5px);
+}
+.onboarding-overlay[hidden] { display: none; }
+/* Vurgulanan ogge katmanin ustunde ve parlak cerceveli gorunur */
+.onboarding-highlight {
+  position: relative !important;
+  z-index: 1600 !important;
+  border-radius: 14px;
+  box-shadow: 0 0 0 3px #6d5dfc, 0 0 0 9px rgba(109, 93, 252, 0.25), 0 0 30px rgba(109, 93, 252, 0.45) !important;
+  animation: onboardingPulse 1.6s ease-in-out infinite;
+}
+@keyframes onboardingPulse {
+  0%, 100% { box-shadow: 0 0 0 3px #6d5dfc, 0 0 0 9px rgba(109, 93, 252, 0.25), 0 0 30px rgba(109, 93, 252, 0.45); }
+  50% { box-shadow: 0 0 0 3px #6d5dfc, 0 0 0 14px rgba(109, 93, 252, 0.12), 0 0 40px rgba(109, 93, 252, 0.6); }
+}
+.onboarding-card {
+  position: fixed;
+  z-index: 1700;
+  width: min(360px, calc(100vw - 32px));
+  background: var(--surface-color, #fff);
+  border: 1px solid var(--border-color, rgba(0,0,0,.08));
+  border-radius: 18px;
+  padding: 18px 20px 16px;
+  box-shadow: 0 18px 50px rgba(30, 34, 53, .25);
+  animation: fabMenuIn 0.25s ease;
+}
+[data-theme="dark"] .onboarding-card { background: #191a29; border-color: rgba(255,255,255,.08); }
+.onboarding-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.onboarding-step { font-size: 0.75rem; font-weight: 700; color: #6d5dfc; letter-spacing: 0.04em; }
+.onboarding-skip { border: 0; background: none; color: var(--text-secondary, #6e7190); font-size: 0.8rem; cursor: pointer; }
+.onboarding-skip:hover { text-decoration: underline; }
+.onboarding-card h3 { margin: 0 0 6px; font-size: 1.08rem; letter-spacing: -0.01em; }
+.onboarding-card p { margin: 0 0 14px; color: var(--text-secondary, #6e7190); font-size: 0.88rem; line-height: 1.55; }
+.onboarding-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.onboarding-back {
+  border: 0; background: none; color: var(--text-secondary, #6e7190);
+  font-size: 0.85rem; cursor: pointer; padding: 8px 4px;
+}
+.onboarding-back:disabled { opacity: 0.4; cursor: default; }
+.onboarding-next {
+  border: 0; background: var(--primary-color, #6d5dfc); color: #fff;
+  font-size: 0.88rem; font-weight: 650; cursor: pointer;
+  padding: 9px 18px; border-radius: 10px;
+  transition: opacity .15s ease, transform .15s ease;
+}
+.onboarding-next:hover { opacity: 0.92; transform: translateY(-1px); }
+.onboarding-next:active { transform: scale(0.96); }
+
+/* ============================================================
    VERIFY GATE: dogrulanmamis kullanici icin tam ekran kapı
    ============================================================ */
 .verify-gate {

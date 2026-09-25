@@ -218,7 +218,7 @@
                     </div>
                 </section>
 
-                <div class="exchange-rates-container">
+                <div class="exchange-rates-container" id="exchangeRatesCard">
                     <div class="exchange-rates-header">
                         <h3>Güncel Kurlar<span id="ratesStatusDot" class="rates-status-dot" title="Kur durumu"></span></h3>
                         <button id="updateRatesBtn" class="refresh-btn"><i class="fas fa-sync"></i></button>
@@ -886,6 +886,22 @@
         </main>
     </div>
 
+    <!-- Onboarding turu (yalnızca yeni kullanıcılarda gösterilir) -->
+    <div id="onboardingOverlay" class="onboarding-overlay" hidden>
+        <div class="onboarding-card" id="onboardingCard" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+            <div class="onboarding-head">
+                <span class="onboarding-step" id="onboardingStepLabel">1 / 6</span>
+                <button id="onboardingSkipBtn" class="onboarding-skip" type="button">Atla</button>
+            </div>
+            <h3 id="onboardingTitle">Hoş geldin!</h3>
+            <p id="onboardingText">Kısa bir turla tanışalım.</p>
+            <div class="onboarding-actions">
+                <button id="onboardingBackBtn" class="onboarding-back" type="button" disabled>← Geri</button>
+                <button id="onboardingNextBtn" class="onboarding-next" type="button">İleri →</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Sprint 1: Quick-Add Widget (Floating Action Button) -->
     <div class="fab-wrap" id="fabWrap">
         <div class="fab-menu" id="fabMenu" hidden>
@@ -1032,6 +1048,7 @@
     <script src="js/transactions.js"></script>
     <script src="js/charts.js"></script>
     <script src="js/sprint1.js"></script>
+    <script src="js/onboarding.js"></script>
     <script src="js/main.js"></script>
     <script src="js/tablexfer.js"></script>
     <script src="js/printreport.js"></script>

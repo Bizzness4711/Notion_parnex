@@ -167,8 +167,11 @@ async function loadUserData() {
                 privacyModeEnabled: false,
                 role: 'user',
                 timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+                onboardingDone: false,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
+            // Yeni kullanici: ilk giriste tanitim turunu baslat.
+            setTimeout(() => startOnboardingTour(), 900);
         } else {
             const settings = userDoc.data();
             if (!settings.timeZone) {
