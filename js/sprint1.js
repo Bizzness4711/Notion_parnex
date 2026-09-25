@@ -102,8 +102,8 @@ function initQuickAdd() {
     // Yeni işlem akisi artik ana form uzerinden: FAB menudeki 'Yeni İşlem' newTransactionBtn'i tetikler.
     // quickAddModal eskiden FAB'a bagliydi; artik acilma yolu yok (kalsin, ileride kullanilabilir).
 
-    closeBtn && closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+    closeBtn && closeBtn.addEventListener('click', () => { closeModalAnimated(modal); });
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModalAnimated(modal); });
 
     typeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -317,7 +317,7 @@ function initQuickAdd() {
             await batch.commit();
             const msgMap = { income: 'Gelir eklendi!', expense: 'Masraf eklendi!', sell: 'Satış eklendi!' };
             showToast(msgMap[quickAddType] || 'İşlem eklendi!', 'success');
-            modal.style.display = 'none';
+            closeModalAnimated(modal);
             form.reset();
             typeBtns.forEach(b => b.classList.remove('active'));
             const expBtn = modal.querySelector('[data-type="expense"]');

@@ -83,7 +83,7 @@ auth.onAuthStateChanged(async (user) => {
             if (msg) msg.hidden = true;
             if (gate) gate.hidden = false;
             document.getElementById('app').style.display = 'block';
-            document.getElementById('loginModal').style.display = 'none';
+            closeModalAnimated(document.getElementById('loginModal'));
             document.getElementById('verifyGateResend').onclick = async () => {
                 try {
                     await user.sendEmailVerification(EMAIL_ACTION_SETTINGS);
@@ -123,7 +123,7 @@ auth.onAuthStateChanged(async (user) => {
         // finansal verileri kilit ekranı arkasına alınır.
         await configureSecurityUI();
 
-        document.getElementById('loginModal').style.display = 'none';
+        closeModalAnimated(document.getElementById('loginModal'));
         document.getElementById('app').style.display = 'block';
         const userName = user.displayName || user.email.split('@')[0];
         document.getElementById('userName').textContent = userName;

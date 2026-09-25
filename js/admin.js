@@ -212,7 +212,7 @@
 
   function closeAdminDetail() {
     const modal = document.getElementById('adminDetailModal');
-    if (modal) modal.style.display = 'none';
+    if (modal) closeModalAnimated(modal);
   }
 
   // İstatistikler sekmesi

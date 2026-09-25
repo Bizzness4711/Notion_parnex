@@ -13,10 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Bakiye kartı (özet modal)sonu
     document.getElementById('balanceCard').addEventListener('click', showAccountSummary);
     document.getElementById('closeAccountSummary').addEventListener('click', () => {
-        document.getElementById('accountSummaryModal').style.display = 'none';
+        closeModalAnimated(document.getElementById('accountSummaryModal'));
     });
     document.getElementById('accountSummaryModal').addEventListener('click', (event) => {
-        if (event.target.id === 'accountSummaryModal') event.currentTarget.style.display = 'none';
+        if (event.target.id === 'accountSummaryModal') closeModalAnimated(event.currentTarget);
     });
     document.getElementById('upcomingInstallmentsCard').addEventListener('click', showInstallmentSummary);
     document.getElementById('upcomingInstallmentsCard').addEventListener('keydown', (event) => {
@@ -26,10 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     document.getElementById('closeInstallmentSummary').addEventListener('click', () => {
-        document.getElementById('installmentSummaryModal').style.display = 'none';
+        closeModalAnimated(document.getElementById('installmentSummaryModal'));
     });
     document.getElementById('installmentSummaryModal').addEventListener('click', (event) => {
-        if (event.target.id === 'installmentSummaryModal') event.currentTarget.style.display = 'none';
+        if (event.target.id === 'installmentSummaryModal') closeModalAnimated(event.currentTarget);
     });
 
     document.getElementById('isRecurring').addEventListener('change', (event) => {
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await db.collection('users').doc(currentUser.uid).collection('accounts').add(accountData);
             document.getElementById('accountForm').reset();
             document.getElementById('accountCurrency').dispatchEvent(new Event('change'));
-            document.getElementById('addAccountModal').style.display = 'none';
+            closeModalAnimated(document.getElementById('addAccountModal'));
             showToast('Hesap eklendi!', 'success');
             await loadUserData();
         } catch (error) { showToast('Hesap eklenirken hata: ' + error.message, 'error'); }
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('fabOpenTransaction')?.addEventListener('click', openTransactionModal);
     document.getElementById('newTransactionBtn')?.addEventListener('click', openTransactionModal);
     document.getElementById('cancelTransactionModal')?.addEventListener('click', () => {
-        document.getElementById('addTransactionModal').style.display = 'none';
+        closeModalAnimated(document.getElementById('addTransactionModal'));
     });
     const dashboardQuickActions = [
         ['dashboardAddTransaction', 'newTransactionBtn'],
@@ -337,10 +337,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const openAddAccountModal = () => { document.getElementById('addAccountModal').style.display = 'flex'; };
     if (addAccountBtnEl) addAccountBtnEl.addEventListener('click', openAddAccountModal);
     else document.getElementById('fabAddAccount')?.addEventListener('click', openAddAccountModal);
-    document.getElementById('cancelAccount').addEventListener('click', () => { document.getElementById('addAccountModal').style.display = 'none'; });
+    document.getElementById('cancelAccount').addEventListener('click', () => { closeModalAnimated(document.getElementById('addAccountModal')); });
 
     // Hesap düzenleme modalı
-    document.getElementById('cancelEditAccount').addEventListener('click', () => { document.getElementById('editAccountModal').style.display = 'none'; });
+    document.getElementById('cancelEditAccount').addEventListener('click', () => { closeModalAnimated(document.getElementById('editAccountModal')); });
     document.getElementById('editAccountCurrency').addEventListener('change', function() {
         updateEditAccountFields();
         // Seçilen para birimi için güncel kuru birim alış fiyatı olarak doldur
@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await db.collection('users').doc(currentUser.uid).collection('accounts').doc(id).update(updates);
-            document.getElementById('editAccountModal').style.display = 'none';
+            closeModalAnimated(document.getElementById('editAccountModal'));
             showToast('Hesap güncellendi!', 'success');
             await loadUserData();
         } catch (error) {
@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCategorySelect();
     });
     document.getElementById('cancelBudgetModal')?.addEventListener('click', () => {
-        document.getElementById('addBudgetModal').style.display = 'none';
+        closeModalAnimated(document.getElementById('addBudgetModal'));
     });
     document.getElementById('budgetModalForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -540,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 category, limit, month,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            document.getElementById('addBudgetModal').style.display = 'none';
+            closeModalAnimated(document.getElementById('addBudgetModal'));
             document.getElementById('budgetModalForm').reset();
             showToast('Bütçe kaydedildi!', 'success');
             await loadBudgets();
@@ -773,7 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('installmentOptions').hidden = true;
                 document.getElementById('creditInstallmentDetails').hidden = true;
                 document.getElementById('transactionSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Kaydet';
-                document.getElementById('addTransactionModal').style.display = 'none';
+                closeModalAnimated(document.getElementById('addTransactionModal'));
                 showToast('İşlem güncellendi!', 'success');
                 if (typeof saveMerchantToHistory === 'function') saveMerchantToHistory(document.getElementById('description').value);
                 await loadUserData();
@@ -889,7 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('creditInstallmentDetails').hidden = true;
             document.getElementById('creditCardDetails').hidden = true;
             updateTransactionPurchaseFields();
-            document.getElementById('addTransactionModal').style.display = 'none';
+            closeModalAnimated(document.getElementById('addTransactionModal'));
             showToast('İşlem kaydedildi!', 'success');
             if (typeof saveMerchantToHistory === 'function') saveMerchantToHistory(document.getElementById('description').value);
             await loadUserData();
@@ -904,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'flex';
     });
     document.getElementById('cancelTransferModal')?.addEventListener('click', () => {
-        document.getElementById('addTransferModal').style.display = 'none';
+        closeModalAnimated(document.getElementById('addTransferModal'));
     });
 
     // Transfer formu (modal) - kredi kartına ödemeyi masraf olarak ekle
@@ -956,7 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             await batch.commit();
-            document.getElementById('addTransferModal').style.display = 'none';
+            closeModalAnimated(document.getElementById('addTransferModal'));
             document.getElementById('transferForm').reset();
             document.getElementById('transferDate').value = formatLocalDate(new Date());
             showToast('Transfer başarılı!', 'success');
@@ -1045,7 +1045,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addGoalBtnEl = document.getElementById('addGoalBtn');
     if (addGoalBtnEl) addGoalBtnEl.addEventListener('click', openAddGoalModal);
     else document.getElementById('fabAddGoal')?.addEventListener('click', openAddGoalModal);
-    document.getElementById('cancelGoal').addEventListener('click', () => { document.getElementById('addGoalModal').style.display = 'none'; });
+    document.getElementById('cancelGoal').addEventListener('click', () => { closeModalAnimated(document.getElementById('addGoalModal')); });
     document.getElementById('goalForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!currentUser) return;
@@ -1059,7 +1059,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             document.getElementById('goalForm').reset();
-            document.getElementById('addGoalModal').style.display = 'none';
+            closeModalAnimated(document.getElementById('addGoalModal'));
             showToast('Hedef eklendi!', 'success');
             await loadUserData();
         } catch (error) { showToast('Hedef eklenirken hata: ' + error.message, 'error'); }

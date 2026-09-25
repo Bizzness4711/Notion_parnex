@@ -1,3 +1,23 @@
+// Modal'i animasyonla kapat: .closing sinifi ekle, animasyon bitince gizle.
+// Hemen kapanmasin istendigi icin tum modallar bu yardimciyla kapatilir.
+function closeModalAnimated(modal) {
+    if (!modal) return;
+    if (modal.classList.contains('closing')) return; // zaten kapanıyor
+    modal.classList.add('closing');
+    const done = () => {
+        modal.classList.remove('closing');
+        modal.style.display = 'none';
+    };
+    const content = modal.querySelector('.modal-content');
+    if (content) {
+        content.addEventListener('animationend', done, { once: true });
+        // Guvenlik: animasyon calismazsa (prefers-reduced-motion vb.) 260ms sonra kapat
+        setTimeout(() => { if (modal.classList.contains('closing')) done(); }, 280);
+    } else {
+        done();
+    }
+}
+
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;

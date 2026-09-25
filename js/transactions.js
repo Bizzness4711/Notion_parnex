@@ -471,7 +471,7 @@ function requestModernInput({ title, description, label, icon = 'fa-pen', type =
         modal.style.display = 'flex';
 
         const close = value => {
-            modal.style.display = 'none';
+            closeModalAnimated(modal);
             form.removeEventListener('submit', submit);
             document.getElementById('cancelModernInput').removeEventListener('click', cancel);
             document.getElementById('toggleModernInputVisibility').removeEventListener('click', toggleVisibility);

@@ -83,18 +83,70 @@ select:focus-visible {
   justify-content: center;
   padding: 20px;
   background: rgba(18, 20, 37, 0.72);
+  animation: modalBackdropIn 0.22s ease;
+}
+/* Kapanista JS 'closing' sinifi ekler; animasyon bitince display:none yapilir */
+.modal.closing {
+  animation: modalBackdropOut 0.2s ease forwards;
+  pointer-events: none;
+}
+@keyframes modalBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modalBackdropOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 .modal-content {
   width: min(540px, 100%);
   max-height: calc(100vh - 40px);
   overflow-y: auto;
   overflow-x: visible;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 30px;
   background: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: 20px;
   box-shadow: var(--shadow-lg);
   transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  animation: modalCardIn 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+}
+.modal.closing .modal-content {
+  animation: modalCardOut 0.2s ease forwards;
+}
+@keyframes modalCardIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes modalCardOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(14px) scale(0.97); }
+}
+/* mobil: modal alttan cikan sheet gibi acilir, icerik kaydirilir */
+@media (max-width: 700px) {
+  .modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-content {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: 22px 22px 0 0;
+    animation: modalSheetIn 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  }
+  .modal.closing .modal-content {
+    animation: modalSheetOut 0.22s ease forwards;
+  }
+}
+@keyframes modalSheetIn {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes modalSheetOut {
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
 }
 .modal-header {
   position: relative;
