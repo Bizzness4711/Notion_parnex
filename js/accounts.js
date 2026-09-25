@@ -21,30 +21,49 @@ auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
 
-        // E-posta doğrulanmamışsa banner göster (erişi engelleme — ponytail: Firebase Console yapılandırması gerektirir)
-        const verifyBanner = document.getElementById('emailVerifyBanner');
-        if (verifyBanner) {
-            if (!user.emailVerified) {
-                verifyBanner.hidden = false;
-                const resendBtn = verifyBanner.querySelector('.verify-resend-btn');
-                if (resendBtn) {
-                    resendBtn.onclick = async () => {
-                        try {
-                            await user.sendEmailVerification();
-                            showToast('Doğrulama e-postası tekrar gönderildi.', 'success');
-                        } catch (e) {
-                            showToast('E-posta gönderilemedi: ' + e.message, 'error');
-                        }
-                    };
+        // E-posta doğrulama zorunluluğu: doğrulanmamış kullanıcı uygulamaya giremez.
+        const gate = document.getElementById('verifyGate');
+        if (!user.emailVerified) {
+            const emailEl = document.getElementById('verifyGateEmail');
+            if (emailEl) emailEl.textContent = user.email || '';
+            const msg = document.getElementById('verifyGateMsg');
+            if (msg) msg.hidden = true;
+            if (gate) gate.hidden = false;
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('verifyGateResend').onclick = async () => {
+                try {
+                    await user.sendEmailVerification();
+                    if (msg) { msg.hidden = false; msg.textContent = 'Doğrulama e-postası tekrar gönderildi. Gelen kutunu kontrol et.'; }
+                } catch (e) {
+                    if (msg) { msg.hidden = false; msg.textContent = 'E-posta gönderilemedi: ' + e.message; }
                 }
-                const dismissBtn = verifyBanner.querySelector('.verify-dismiss-btn');
-                if (dismissBtn) {
-                    dismissBtn.onclick = () => { verifyBanner.hidden = true; };
+            };
+            document.getElementById('verifyGateRefresh').onclick = async () => {
+                try {
+                    await user.reload();
+                    if (auth.currentUser && auth.currentUser.emailVerified) {
+                        showToast('E-posta doğrulandı! Hoş geldin.', 'success');
+                        location.reload();
+                    } else if (msg) {
+                        msg.hidden = false;
+                        msg.textContent = 'Henüz doğrulanmamış görünüyor. Linke tıkladıktan sonra tekrar dene.';
+                    }
+                    return;
+                } catch (e) {
+                    if (msg) { msg.hidden = false; msg.textContent = 'Kontrol edilemedi: ' + e.message; }
                 }
-            } else {
-                verifyBanner.hidden = true;
-            }
+            };
+            document.getElementById('verifyGateSignOut').onclick = async () => {
+                await auth.signOut();
+            };
+            return; // Doğrulanmadan veri yükleme, arayüz açma yok
         }
+        if (gate) gate.hidden = true;
+
+        // Doğrulanmış kullanıcı: banner'ı da gösterme, kapıyı da kapat.
+        const verifyBanner = document.getElementById('emailVerifyBanner');
+        if (verifyBanner) verifyBanner.hidden = true;
 
         securityLocked = false;
         // Kilit durumunu veri yüklemeden önce uygula. Böylece önceki oturumun

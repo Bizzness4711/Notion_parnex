@@ -54,6 +54,10 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
+/* display:grid, [hidden] attr'ini eziyor; gizleme kurali zorunlu (ilk islem sonrasi). */
+.dashboard-quick-actions[hidden] {
+  display: none;
+}
 .quick-action {
   display: flex;
   align-items: center;

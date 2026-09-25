@@ -87,6 +87,11 @@ function updateDashboard() {
     if (monthDisplay) monthDisplay.textContent = formatMonth(currentMonth);
     updateFinanceCalendar();
 
+    // Hizli islem butonlari sadece bos hesapta (yeni kullanici) gorunur;
+    // ilk islem eklenince karisir, kaldirilir.
+    const quickActions = document.getElementById('dashboardQuickActions');
+    if (quickActions) quickActions.hidden = transactions.length > 0;
+
     const eyeBtn = document.getElementById('toggleBalanceBtn');
     if (eyeBtn) {
         eyeBtn.style.display = isHidden ? 'block' : 'none';

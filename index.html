@@ -118,6 +118,19 @@
 
     <!-- Main App -->
     <div id="app" class="app-container" style="display:none;">
+        <!-- E-posta doğrulama kapısı: doğrulanmamış kullanıcı tüm arayüzü göremez -->
+        <div id="verifyGate" class="verify-gate" hidden>
+            <div class="verify-gate-card">
+                <span class="verify-gate-icon"><i class="fas fa-envelope-circle-check"></i></span>
+                <h2>E-postanı doğrula</h2>
+                <p><strong id="verifyGateEmail"></strong> adresine doğrulama linki gönderdik.</p>
+                <p class="verify-gate-hint">E-postandaki linke tıklayıp hesabını onayla, sonra buraya dön. Uygulamayı kullanmaya başlamak için son bir adım kaldı.</p>
+                <button id="verifyGateResend" class="export-btn" type="button"><i class="fas fa-paper-plane"></i> Doğrulama e-postasını tekrar gönder</button>
+                <button id="verifyGateRefresh" class="export-btn secondary" type="button"><i class="fas fa-rotate"></i> Doğruladım, kontrol et</button>
+                <button id="verifyGateSignOut" class="verify-gate-signout" type="button">Farklı hesapla gir</button>
+                <p id="verifyGateMsg" class="verify-gate-msg" hidden></p>
+            </div>
+        </div>
         <div id="emailVerifyBanner" class="email-verify-banner" hidden>
             <i class="fas fa-envelope-open-text"></i>
             <span>E-posta adresinizi doğrulayın. Doğrulama linki gelen kutunuzda.</span>
@@ -188,7 +201,7 @@
                         <h2 id="dashboardGreeting">Hoş geldin</h2>
                         <p id="dashboardSummaryNote">Bu ayın finansal gidişatını tek bakışta izle.</p>
                     </div>
-                    <div class="dashboard-quick-actions" aria-label="Hızlı işlemler">
+                    <div class="dashboard-quick-actions" id="dashboardQuickActions" aria-label="Hızlı işlemler">
                         <button id="dashboardAddTransaction" class="quick-action quick-action-primary" type="button">
                             <i class="fas fa-plus"></i>
                             <span><strong>Yeni işlem</strong><small>Gelir veya masraf ekle</small></span>

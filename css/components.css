@@ -2563,8 +2563,14 @@ select option {
 
 /* ============================================================
    EMAIL VERIFICATION BANNER
+   Header fixed oldugu icin banner da ayni yükseklikte sabitlenir ve
+   icerik header'in altina itilir; aksi halde header banner'in üstünde kalir.
    ============================================================ */
 .email-verify-banner {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2573,11 +2579,78 @@ select option {
   color: #fff;
   font-size: 0.85rem;
   font-weight: 500;
-  z-index: 100;
+  z-index: 999;
 }
+/* display:flex, [hidden] attr'ini eziyordu; gizleme kurali zorunlu. */
+.email-verify-banner[hidden] { display: none; }
+/* Banner gorunurken asagi dogru icerik kaymasin diye yer tutucu bosluk */
+#app.has-verify-banner .main-content { padding-top: calc(var(--header-height) + 56px); }
 .email-verify-banner i { font-size: 1.1rem; flex-shrink: 0; }
 .email-verify-banner span { flex: 1; min-width: 0; }
-.verify-resend-btn {
+@media (max-width: 700px) {
+  .email-verify-banner {
+    top: var(--header-height);
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+  }
+}
+
+/* ============================================================
+   VERIFY GATE: dogrulanmamis kullanici icin tam ekran kapı
+   ============================================================ */
+.verify-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg-color, #f4f5fb);
+}
+[data-theme="dark"] .verify-gate { background: #11121d; }
+.verify-gate[hidden] { display: none; }
+.verify-gate-card {
+  width: min(440px, 100%);
+  background: var(--surface-color, #fff);
+  border: 1px solid var(--border-color, rgba(0,0,0,.08));
+  border-radius: 20px;
+  padding: 36px 28px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(30, 34, 53, .12);
+}
+[data-theme="dark"] .verify-gate-card { background: #191a29; border-color: rgba(255,255,255,.08); }
+.verify-gate-icon {
+  display: inline-flex;
+  width: 64px;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(109, 93, 252, .12);
+  color: #6d5dfc;
+  font-size: 1.7rem;
+  margin-bottom: 14px;
+}
+.verify-gate-card h2 { margin: 0 0 10px; font-size: 1.4rem; letter-spacing: -0.02em; }
+.verify-gate-card p { color: var(--text-secondary, #6e7190); font-size: 0.92rem; margin: 0 0 10px; }
+.verify-gate-hint { font-size: 0.85rem !important; }
+.verify-gate-card .export-btn { width: 100%; justify-content: center; margin-top: 8px; }
+.verify-gate-card .export-btn.secondary {
+  background: transparent;
+  border: 1.5px solid var(--border-color, #ddd);
+  color: var(--text-color, #1e2235);
+}
+.verify-gate-signout {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #6e7190);
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-top: 14px;
+  text-decoration: underline;
+}
+.verify-gate-msg { color: #159a72 !important; font-weight: 600; }
   background: rgba(255,255,255,0.2);
   color: #fff;
   border: 1px solid rgba(255,255,255,0.4);
@@ -2599,4 +2672,4 @@ select option {
   font-size: 0.9rem;
   transition: color 0.2s;
 }
-.verify-dismiss-btn:hover { color: #fff; }
+.verify-dismiss-btn:hover { color: #fff; }
