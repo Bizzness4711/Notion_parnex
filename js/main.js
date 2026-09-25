@@ -129,8 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const newTxBtn = document.getElementById('newTransactionBtn');
-    if (newTxBtn) newTxBtn.addEventListener('click', () => {
+    // Yeni islem modalini ac (FAB menuden ve dashboard kisayolundan)
+    const openTransactionModal = () => {
         editingTransactionId = null;
         document.getElementById('transactionForm').reset();
         document.getElementById('date').value = formatLocalDate(new Date());
@@ -141,11 +141,12 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedType = 'expense';
         document.querySelectorAll('.type-btn').forEach(button => button.classList.toggle('active', button.dataset.type === 'expense'));
         updateCategorySelect();
-        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-        document.getElementById('add-transaction').classList.add('active');
-        document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
-        document.getElementById('sidebar').classList.remove('open');
-        document.getElementById('sidebarOverlay').classList.remove('show');
+        document.getElementById('addTransactionModal').style.display = 'flex';
+    };
+    document.getElementById('fabOpenTransaction')?.addEventListener('click', openTransactionModal);
+    document.getElementById('newTransactionBtn')?.addEventListener('click', openTransactionModal);
+    document.getElementById('cancelTransactionModal')?.addEventListener('click', () => {
+        document.getElementById('addTransactionModal').style.display = 'none';
     });
     const dashboardQuickActions = [
         ['dashboardAddTransaction', 'newTransactionBtn'],
@@ -772,6 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('installmentOptions').hidden = true;
                 document.getElementById('creditInstallmentDetails').hidden = true;
                 document.getElementById('transactionSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Kaydet';
+                document.getElementById('addTransactionModal').style.display = 'none';
                 showToast('İşlem güncellendi!', 'success');
                 if (typeof saveMerchantToHistory === 'function') saveMerchantToHistory(document.getElementById('description').value);
                 await loadUserData();
@@ -887,6 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('creditInstallmentDetails').hidden = true;
             document.getElementById('creditCardDetails').hidden = true;
             updateTransactionPurchaseFields();
+            document.getElementById('addTransactionModal').style.display = 'none';
             showToast('İşlem kaydedildi!', 'success');
             if (typeof saveMerchantToHistory === 'function') saveMerchantToHistory(document.getElementById('description').value);
             await loadUserData();

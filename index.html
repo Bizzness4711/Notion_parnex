@@ -441,65 +441,6 @@
                 </div>
             </div>
 
-            <!-- Add Transaction -->
-            <div id="add-transaction" class="page">
-                <div class="page-header"><h2>Yeni İşlem</h2></div>
-                <form id="transactionForm" class="transaction-form">
-                    <div class="form-group">
-                        <label>İşlem Tipi</label>
-                        <div class="transaction-type-buttons">
-                            <button type="button" class="type-btn active" data-type="expense"><i class="fas fa-minus"></i> Masraf</button>
-                            <button type="button" class="type-btn" data-type="income"><i class="fas fa-plus"></i> Gelir</button>
-                            <button type="button" class="type-btn" data-type="sell" id="sellTypeBtn" style="display:none;"><i class="fas fa-exchange-alt"></i> Satış</button>
-                        </div>
-                    </div>
-                    <div class="form-group"><label>Hesap</label><select id="accountSelect" required><option value="">Hesap Seçin</option></select><small id="accountRateInfo" class="hint-text" hidden></small></div>
-                    <div class="form-group"><label>Tutar</label><input type="number" id="amount" required min="0" step="0.01" placeholder="0.00"></div>
-                    <div id="transactionPurchaseDetails" class="form-group" hidden>
-                        <label id="transactionPurchaseLabel">Bu miktarı kaça aldınız? (₺)</label>
-                        <input type="number" id="transactionPurchaseRate" min="0.01" step="0.01" placeholder="Örn: 54.00">
-                        <small id="transactionPurchaseHint">Güncel kur ile aradaki fark kâr/zarar olarak hesaplanır.</small>
-                    </div>
-                    <div id="transactionSellDetails" class="form-group" hidden>
-                        <label id="transactionSellLabel">Bu miktarı kaça sattınız? (₺)</label>
-                        <input type="number" id="transactionSellRate" min="0.01" step="0.01" placeholder="Örn: 55.00">
-                        <small id="transactionSellHint">Satış kuru ile alış fiyatı arasındaki fark kâr/zarar olarak hesaplanır.</small>
-                    </div>
-                    <div id="transactionSellTargetGroup" class="form-group" hidden>
-                        <label>TRY geliri eklenecek hesap</label>
-                        <select id="transactionSellTarget" required>
-                            <option value="">Hesap seçin</option>
-                        </select>
-                        <small>Satıştan elde edilen TL bu hesaba aktarılır.</small>
-                    </div>
-                    <div class="form-group"><label>Kategori</label><select id="category" required><option value="">Kategori Seçin</option></select></div>
-                    <div class="form-group"><label>Açıklama</label><input type="text" id="description" placeholder="Açıklama girin" list="merchantSuggestions" autocomplete="off"></div>
-                    <div class="form-group"><label>Tarih</label><input type="date" id="date" required></div>
-                    <div id="creditInstallmentDetails" class="credit-card-details" hidden>
-                        <strong class="credit-section-title">Taksitli işlem</strong>
-                        <label class="checkbox-label"><input type="checkbox" id="isInstallment"> Bu işlemi taksitlendir</label>
-                        <div id="installmentOptions" class="installment-options" hidden>
-                            <div class="form-group"><label>Taksit sayısı</label><input type="number" id="installmentCount" min="2" max="60" value="2"></div>
-                            <div class="form-group"><label>Faiz oranı (%)</label><input type="number" id="installmentInterestRate" min="0" max="100" step="0.01" value="0" placeholder="Örn: 2.50"></div>
-                            <small>Faiz, alışveriş tutarına tek seferlik toplam oran olarak uygulanır.</small>
-                        </div>
-                    </div>
-                    <div class="recurring-section">
-                        <label class="checkbox-label"><input type="checkbox" id="isRecurring"> Tekrarlayan işlem olarak kaydet</label>
-                        <div id="recurringOptions" class="recurring-options" hidden>
-                            <div class="form-group"><label>Tekrar sıklığı</label><select id="recurringFrequency">
-                                <option value="monthly">Her ay</option>
-                                <option value="weekly">Her hafta</option>
-                                <option value="yearly">Her yıl</option>
-                            </select></div>
-                            <div class="form-group"><label>Bitiş tarihi (isteğe bağlı)</label><input type="date" id="recurringEndDate"></div>
-                        </div>
-                    </div>
-
-                    <button type="submit" id="transactionSubmitBtn" class="submit-btn"><i class="fas fa-save"></i> Kaydet</button>
-                </form>
-            </div>
-
             <!-- Goals -->
             <div id="goals" class="page">
                 <div class="page-header">
@@ -513,6 +454,69 @@
                 <div class="page-header"><h2>Aylık Bütçeler</h2></div>
                 <div class="page-header"><h2>Bu Ayın Bütçeleri</h2></div>
                 <div id="budgetsList" class="goals-list"></div>
+            </div>
+
+            <!-- Add Transaction Modal (FAB menüden açılır; işlem sayfası yerine) -->
+            <div id="addTransactionModal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <div class="modal-header"><h2>Yeni İşlem</h2></div>
+                    <form id="transactionForm" class="transaction-form">
+                        <div class="form-group">
+                            <label>İşlem Tipi</label>
+                            <div class="transaction-type-buttons">
+                                <button type="button" class="type-btn active" data-type="expense"><i class="fas fa-minus"></i> Masraf</button>
+                                <button type="button" class="type-btn" data-type="income"><i class="fas fa-plus"></i> Gelir</button>
+                                <button type="button" class="type-btn" data-type="sell" id="sellTypeBtn" style="display:none;"><i class="fas fa-exchange-alt"></i> Satış</button>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Hesap</label><select id="accountSelect" required><option value="">Hesap Seçin</option></select><small id="accountRateInfo" class="hint-text" hidden></small></div>
+                        <div class="form-group"><label>Tutar</label><input type="number" id="amount" required min="0" step="0.01" placeholder="0.00"></div>
+                        <div id="transactionPurchaseDetails" class="form-group" hidden>
+                            <label id="transactionPurchaseLabel">Bu miktarı kaça aldınız? (₺)</label>
+                            <input type="number" id="transactionPurchaseRate" min="0.01" step="0.01" placeholder="Örn: 54.00">
+                            <small id="transactionPurchaseHint">Güncel kur ile aradaki fark kâr/zarar olarak hesaplanır.</small>
+                        </div>
+                        <div id="transactionSellDetails" class="form-group" hidden>
+                            <label id="transactionSellLabel">Bu miktarı kaça sattınız? (₺)</label>
+                            <input type="number" id="transactionSellRate" min="0.01" step="0.01" placeholder="Örn: 55.00">
+                            <small id="transactionSellHint">Satış kuru ile alış fiyatı arasındaki fark kâr/zarar olarak hesaplanır.</small>
+                        </div>
+                        <div id="transactionSellTargetGroup" class="form-group" hidden>
+                            <label>TRY geliri eklenecek hesap</label>
+                            <select id="transactionSellTarget" required>
+                                <option value="">Hesap seçin</option>
+                            </select>
+                            <small>Satıştan elde edilen TL bu hesaba aktarılır.</small>
+                        </div>
+                        <div class="form-group"><label>Kategori</label><select id="category" required><option value="">Kategori Seçin</option></select></div>
+                        <div class="form-group"><label>Açıklama</label><input type="text" id="description" placeholder="Açıklama girin" list="merchantSuggestions" autocomplete="off"></div>
+                        <div class="form-group"><label>Tarih</label><input type="date" id="date" required></div>
+                        <div id="creditInstallmentDetails" class="credit-card-details" hidden>
+                            <strong class="credit-section-title">Taksitli işlem</strong>
+                            <label class="checkbox-label"><input type="checkbox" id="isInstallment"> Bu işlemi taksitlendir</label>
+                            <div id="installmentOptions" class="installment-options" hidden>
+                                <div class="form-group"><label>Taksit sayısı</label><input type="number" id="installmentCount" min="2" max="60" value="2"></div>
+                                <div class="form-group"><label>Faiz oranı (%)</label><input type="number" id="installmentInterestRate" min="0" max="100" step="0.01" value="0" placeholder="Örn: 2.50"></div>
+                                <small>Faiz, alışveriş tutarına tek seferlik toplam oran olarak uygulanır.</small>
+                            </div>
+                        </div>
+                        <div class="recurring-section">
+                            <label class="checkbox-label"><input type="checkbox" id="isRecurring"> Tekrarlayan işlem olarak kaydet</label>
+                            <div id="recurringOptions" class="recurring-options" hidden>
+                                <div class="form-group"><label>Tekrar sıklığı</label><select id="recurringFrequency">
+                                    <option value="monthly">Her ay</option>
+                                    <option value="weekly">Her hafta</option>
+                                    <option value="yearly">Her yıl</option>
+                                </select></div>
+                                <div class="form-group"><label>Bitiş tarihi (isteğe bağlı)</label><input type="date" id="recurringEndDate"></div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancelTransactionModal" class="cancel-btn">İptal</button>
+                            <button type="submit" id="transactionSubmitBtn" class="submit-btn"><i class="fas fa-save"></i> Kaydet</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <!-- Add Transfer Modal (FAB menüden açılır) -->
@@ -935,7 +939,7 @@
     <!-- Sprint 1: Quick-Add Widget (Floating Action Button) -->
     <div class="fab-wrap" id="fabWrap">
         <div class="fab-menu" id="fabMenu" hidden>
-            <button class="fab-menu-item" data-fab-action="newTransaction" type="button">
+            <button class="fab-menu-item" id="fabOpenTransaction" data-fab-action="newTransaction" type="button">
                 <i class="fas fa-plus"></i><span><strong>Yeni İşlem</strong><small>Gelir veya masraf ekle</small></span>
             </button>
             <button class="fab-menu-item" id="fabAddAccount" data-fab-action="addAccount" type="button">

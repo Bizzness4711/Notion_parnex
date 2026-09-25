@@ -387,9 +387,8 @@ function updateTransactionsUI() {
         updateTransactionPurchaseFields();
         const submitButton = document.getElementById('transactionSubmitBtn');
         if (submitButton) submitButton.innerHTML = '<i class="fas fa-save"></i> Değişiklikleri Kaydet';
-        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-        document.getElementById('add-transaction').classList.add('active');
-        document.querySelectorAll('.sidebar-link').forEach(link => link.classList.toggle('active', link.dataset.page === 'transactions'));
+        // Islem formu artik modalde: duzenleme icin modal acilir.
+        document.getElementById('addTransactionModal').style.display = 'flex';
     };
 }
 

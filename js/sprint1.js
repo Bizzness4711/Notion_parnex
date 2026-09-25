@@ -68,14 +68,12 @@ function initQuickAdd() {
 
     const fabActions = {
         newTransaction: () => {
-            document.getElementById('newTransactionBtn')?.click();
-            navigateToPage('add-transaction');
-            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.toggle('active', link.dataset.page === 'transactions'));
+            // Islem formu artik modalde; sadece modal acilir, sayfa degisimi yok.
+            document.getElementById('fabOpenTransaction')?.click();
         },
         addAccount: () => document.getElementById('addAccountBtn')?.click(),
         transfer: () => {
-            // Transfer formu artik modalde; sayfayi da ac (liste gorunsun).
-            navigateToPage('transfer');
+            // Transfer formu modalde; sadece modal acilir (arkada sayfa degisimi yok).
             document.getElementById('fabOpenTransfer')?.click();
         },
         addGoal: () => document.getElementById('addGoalBtn')?.click(),
