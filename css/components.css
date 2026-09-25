@@ -377,6 +377,25 @@
   background: var(--surface-muted);
   color: var(--text-color);
 }
+/* Şifremi unuttum linki: form içindeki hafif metin butonu */
+.auth-forgot {
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: -4px 0 10px;
+  border: 0;
+  background: none;
+  color: var(--text-secondary, #6e7190);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: right;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.auth-forgot:hover {
+  color: var(--primary-color, #6d5dfc);
+  text-decoration: underline;
+}
 .form-actions {
   display: flex;
   gap: 10px;
