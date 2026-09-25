@@ -1,13 +1,22 @@
 // Firebase yapılandırması
 const firebaseConfig = {
-    apiKey: "AIzaSyCmBhsXLkFjQnTdNYXH2IEOAUxAllKOXyA",
-    authDomain: "bizzness-in-muhasebesi.firebaseapp.com",
-    projectId: "bizzness-in-muhasebesi",
-    storageBucket: "bizzness-in-muhasebesi.firebasestorage.app",
-    messagingSenderId: "140794309361",
-    appId: "1:140794309361:web:bd6fa42aa10f0e971e9750",
-    measurementId: "G-E5XMM1PBVC"
+
+  apiKey: "AIzaSyDc5VzYalm9J39uHHNNpVgVA_FZolKOMQM",
+
+  authDomain: "parnex-97d1b.firebaseapp.com",
+
+  projectId: "parnex-97d1b",
+
+  storageBucket: "parnex-97d1b.firebasestorage.app",
+
+  messagingSenderId: "909377657628",
+
+  appId: "1:909377657628:web:44192bd16b27046834b8d9",
+
+  measurementId: "G-YES1LH1WGV"
+
 };
+
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
