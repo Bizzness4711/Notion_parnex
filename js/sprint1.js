@@ -105,7 +105,7 @@ function initQuickAdd() {
             if (targetSel && targetSel.options.length <= 1) {
                 const tryAccounts = accounts.filter(a => a.currency === 'TRY' && a.id !== accSel.value);
                 targetSel.innerHTML = '<option value="">Hesap seçin</option>' +
-                    tryAccounts.map(a => `<option value="${a.id}">${a.name} — ₺${Number(a.balance || 0).toFixed(2)}</option>`).join('');
+                    tryAccounts.map(a => `<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)} — ₺${Number(a.balance || 0).toFixed(2)}</option>`).join('');
             }
         }
     }
@@ -587,7 +587,11 @@ function updateGoalRings() {
     if (!goals.length) { card.style.display = 'none'; return; }
 
     const top3 = goals
-        .map(g => ({ ...g, pct: g.target > 0 ? Math.min(100, (g.current / g.target) * 100) : 0 }))
+        .map(g => {
+            // Hedef alanı: goalForm 'amount' yazar; eski kayıtlar için 'target'a düş.
+            const target = Number(g.amount ?? g.target) || 0;
+            return { ...g, target, pct: target > 0 ? Math.min(100, ((Number(g.current) || 0) / target) * 100) : 0 };
+        })
         .sort((a, b) => b.pct - a.pct)
         .slice(0, 3);
 

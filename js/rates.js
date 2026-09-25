@@ -346,7 +346,7 @@ function updateSellFields() {
     if (showSell && sellTargetSelect) {
         const TRYAccounts = accounts.filter(a => a.currency === 'TRY' && a.id !== account?.id);
         sellTargetSelect.innerHTML = '<option value="">Hesap seçin</option>' +
-            TRYAccounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+            TRYAccounts.map(a => `<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)}</option>`).join('');
         if (TRYAccounts.length === 1) sellTargetSelect.value = TRYAccounts[0].id;
     }
 }
