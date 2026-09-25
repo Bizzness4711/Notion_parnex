@@ -382,7 +382,6 @@
             <div id="accounts" class="page">
                 <div class="page-header">
                     <h2>Hesaplar</h2>
-                    <button id="addAccountBtn" class="add-btn"><i class="fas fa-plus"></i> Yeni Hesap</button>
                 </div>
                 <div id="accountsList" class="accounts-list"></div>
             </div>
@@ -503,7 +502,6 @@
             <div id="goals" class="page">
                 <div class="page-header">
                     <h2>Birikim Hedefleri</h2>
-                    <button id="addGoalBtn" class="add-btn"><i class="fas fa-plus"></i> Yeni Hedef</button>
                 </div>
                 <div id="goalsList" class="goals-list"></div>
             </div>
@@ -888,9 +886,28 @@
     </div>
 
     <!-- Sprint 1: Quick-Add Widget (Floating Action Button) -->
-    <button id="quickAddBtn" class="quick-add-fab" title="Yeni İşlem" aria-label="Yeni işlem ekle">
-        <i class="fas fa-plus"></i>
-    </button>
+    <div class="fab-wrap" id="fabWrap">
+        <div class="fab-menu" id="fabMenu" hidden>
+            <button class="fab-menu-item" data-fab-action="newTransaction" type="button">
+                <i class="fas fa-plus"></i><span><strong>Yeni İşlem</strong><small>Gelir veya masraf ekle</small></span>
+            </button>
+            <button class="fab-menu-item" id="fabAddAccount" data-fab-action="addAccount" type="button">
+                <i class="fas fa-wallet"></i><span><strong>Hesap Ekle</strong><small>Banka, nakit, yatırım…</small></span>
+            </button>
+            <button class="fab-menu-item" data-fab-action="transfer" type="button">
+                <i class="fas fa-exchange-alt"></i><span><strong>Transfer</strong><small>Hesaplar arası gönderim</small></span>
+            </button>
+            <button class="fab-menu-item" id="fabAddGoal" data-fab-action="addGoal" type="button">
+                <i class="fas fa-bullseye"></i><span><strong>Yeni Hedef</strong><small>Birikim hedefi oluştur</small></span>
+            </button>
+            <button class="fab-menu-item" data-fab-action="addBudget" type="button">
+                <i class="fas fa-chart-pie"></i><span><strong>Bütçe Ekle</strong><small>Aylık harcama limiti</small></span>
+            </button>
+        </div>
+        <button id="quickAddBtn" class="quick-add-fab" title="Hızlı İşlemler" aria-label="Hızlı işlemler menüsü" aria-expanded="false" aria-haspopup="true">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
 
     <!-- Sprint 1: Quick-Add Modal -->
     <div id="quickAddModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="quickAddTitle">

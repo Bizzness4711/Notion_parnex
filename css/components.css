@@ -2165,10 +2165,65 @@ select option {
 /* ============================================================
    SPRINT 1: Quick-Add FAB (Floating Action Button)
    ============================================================ */
-.quick-add-fab {
+/* FAB + açılır menü sarmalayıcı: menü, butonun üstünde sağa hizalı büyür */
+.fab-wrap {
   position: fixed;
   bottom: 24px;
   right: 24px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+.fab-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  min-width: 240px;
+  background: var(--surface-color, #fff);
+  border: 1px solid var(--border-color, rgba(0,0,0,.08));
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(30, 34, 53, .18);
+}
+[data-theme="dark"] .fab-menu { background: #191a29; border-color: rgba(255,255,255,.08); }
+.fab-menu[hidden] { display: none; }
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-color, #1e2235);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.fab-menu-item:hover,
+.fab-menu-item:focus-visible {
+  background: rgba(109, 93, 252, .1);
+}
+.fab-menu-item i {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(109, 93, 252, .14);
+  color: #6d5dfc;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+.fab-menu-item strong { display: block; font-size: 0.9rem; }
+.fab-menu-item small { display: block; color: var(--text-secondary, #6e7190); font-size: 0.78rem; }
+
+.quick-add-fab {
+  position: static;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -2178,12 +2233,13 @@ select option {
   font-size: 1.5rem;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(98, 86, 217, 0.4);
-  z-index: 1000;
   transition: transform 0.2s, box-shadow 0.2s, background 0.35s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+.fab-wrap.open .quick-add-fab i { transform: rotate(45deg); }
+.quick-add-fab i { transition: transform 0.2s ease; }
 .quick-add-fab:hover {
   transform: scale(1.1);
   box-shadow: 0 6px 24px rgba(98, 86, 217, 0.5);
@@ -2370,12 +2426,17 @@ select option {
 }
 
 @media (max-width: 600px) {
-  .quick-add-fab {
+  .fab-wrap {
     bottom: 16px;
     right: 16px;
+  }
+  .quick-add-fab {
     width: 50px;
     height: 50px;
     font-size: 1.3rem;
+  }
+  .fab-menu {
+    min-width: 210px;
   }
   .comparison-grid {
     grid-template-columns: 1fr;

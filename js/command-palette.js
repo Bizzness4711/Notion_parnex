@@ -6,8 +6,8 @@ const COMMAND_PALETTE_ITEMS = [
     { id: 'budgets', label: 'Bütçeler', hint: 'Aylık limitlerini kontrol et', icon: 'fa-chart-pie', type: 'page', target: 'budgets' },
     { id: 'reports', label: 'Raporlar', hint: 'Finansal raporları görüntüle', icon: 'fa-chart-line', type: 'page', target: 'reports' },
     { id: 'new-transaction', label: 'Yeni işlem ekle', hint: 'Gelir veya masraf kaydet', icon: 'fa-plus', type: 'action', target: 'newTransactionBtn' },
-    { id: 'new-account', label: 'Yeni hesap ekle', hint: 'Banka, nakit veya yatırım hesabı', icon: 'fa-credit-card', type: 'action', target: 'addAccountBtn' },
-    { id: 'new-goal', label: 'Yeni hedef oluştur', hint: 'Bir sonraki birikim adımını planla', icon: 'fa-flag', type: 'action', target: 'addGoalBtn' },
+    { id: 'new-account', label: 'Yeni hesap ekle', hint: 'Banka, nakit veya yatırım hesabı', icon: 'fa-credit-card', type: 'action', target: 'fabAddAccount' },
+    { id: 'new-goal', label: 'Yeni hedef oluştur', hint: 'Bir sonraki birikim adımını planla', icon: 'fa-flag', type: 'action', target: 'fabAddGoal' },
     { id: 'settings', label: 'Ayarlar', hint: 'Tercihleri ve güvenliği yönet', icon: 'fa-cog', type: 'page', target: 'settings' }
 ];
 

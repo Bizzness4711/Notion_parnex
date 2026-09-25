@@ -17,16 +17,69 @@ function initQuickAdd() {
 
     if (!fab || !modal) return;
 
-    fab.addEventListener('click', () => {
-        populateQuickAddSelects();
-        // set today's date
-        const dateEl = document.getElementById('quickAddDate');
-        if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
-        modal.style.display = 'flex';
-        updateQuickAddSellFields();
-        const amt = document.getElementById('quickAddAmount');
-        if (amt) amt.focus();
+    // FAB artık çok işlevli: açılır menü gösterir (yeni işlem/hesap/transfer/hedef/bütçe).
+    const fabWrap = document.getElementById('fabWrap');
+    const fabMenu = document.getElementById('fabMenu');
+    const closeFabMenu = () => {
+        if (fabMenu) fabMenu.hidden = true;
+        if (fabWrap) fabWrap.classList.remove('open');
+        fab.setAttribute('aria-expanded', 'false');
+    };
+    fab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!fabMenu) return;
+        const opening = fabMenu.hidden;
+        fabMenu.hidden = !opening;
+        if (fabWrap) fabWrap.classList.toggle('open', opening);
+        fab.setAttribute('aria-expanded', String(opening));
     });
+    document.addEventListener('click', (e) => {
+        if (fabMenu && !fabMenu.hidden && !e.target.closest('.fab-wrap')) closeFabMenu();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && fabMenu && !fabMenu.hidden) closeFabMenu();
+    });
+
+    const navigateToPage = (pageId) => {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const pageEl = document.getElementById(pageId);
+        if (pageEl) pageEl.classList.add('active');
+        document.querySelectorAll('.sidebar-link').forEach(link => link.classList.toggle('active', link.dataset.page === pageId));
+        document.getElementById('sidebar')?.classList.remove('open');
+        document.getElementById('sidebarOverlay')?.classList.remove('show');
+    };
+
+    const fabActions = {
+        newTransaction: () => {
+            document.getElementById('newTransactionBtn')?.click();
+            navigateToPage('add-transaction');
+            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.toggle('active', link.dataset.page === 'transactions'));
+        },
+        addAccount: () => document.getElementById('addAccountBtn')?.click(),
+        transfer: () => {
+            navigateToPage('transfer');
+            const from = document.getElementById('fromAccount');
+            if (from) from.focus();
+        },
+        addGoal: () => document.getElementById('addGoalBtn')?.click(),
+        addBudget: () => {
+            navigateToPage('budgets');
+            const cat = document.getElementById('budgetCategory');
+            if (cat) cat.focus();
+        }
+    };
+    if (fabMenu) {
+        fabMenu.querySelectorAll('[data-fab-action]').forEach(item => {
+            item.addEventListener('click', () => {
+                closeFabMenu();
+                const action = fabActions[item.dataset.fabAction];
+                if (action) action();
+            });
+        });
+    }
+
+    // Yeni işlem akisi artik ana form uzerinden: FAB menudeki 'Yeni İşlem' newTransactionBtn'i tetikler.
+    // quickAddModal eskiden FAB'a bagliydi; artik acilma yolu yok (kalsin, ileride kullanilabilir).
 
     closeBtn && closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });

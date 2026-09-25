@@ -149,8 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const dashboardQuickActions = [
         ['dashboardAddTransaction', 'newTransactionBtn'],
-        ['dashboardAddAccount', 'addAccountBtn'],
-        ['dashboardAddGoal', 'addGoalBtn']
+        ['dashboardAddAccount', 'fabAddAccount'],
+        ['dashboardAddGoal', 'fabAddGoal']
     ];
     dashboardQuickActions.forEach(([sourceId, targetId]) => {
         document.getElementById(sourceId)?.addEventListener('click', () => {
@@ -312,7 +312,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
 
     // Hesap ekleme modalı açma/kapama
-    document.getElementById('addAccountBtn').addEventListener('click', () => { document.getElementById('addAccountModal').style.display = 'flex'; });
+    // Butonlar FAB menüsüne taşındı; buton doğrudan varsa bağla, yoksa FAB menü öğesine delege et.
+    const addAccountBtnEl = document.getElementById('addAccountBtn');
+    const openAddAccountModal = () => { document.getElementById('addAccountModal').style.display = 'flex'; };
+    if (addAccountBtnEl) addAccountBtnEl.addEventListener('click', openAddAccountModal);
+    else document.getElementById('fabAddAccount')?.addEventListener('click', openAddAccountModal);
     document.getElementById('cancelAccount').addEventListener('click', () => { document.getElementById('addAccountModal').style.display = 'none'; });
 
     // Hesap düzenleme modalı
@@ -956,10 +960,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Hedefler
-    document.getElementById('addGoalBtn').addEventListener('click', () => {
+    const openAddGoalModal = () => {
         updateGoalAccountSelect();
         document.getElementById('addGoalModal').style.display = 'flex';
-    });
+    };
+    const addGoalBtnEl = document.getElementById('addGoalBtn');
+    if (addGoalBtnEl) addGoalBtnEl.addEventListener('click', openAddGoalModal);
+    else document.getElementById('fabAddGoal')?.addEventListener('click', openAddGoalModal);
     document.getElementById('cancelGoal').addEventListener('click', () => { document.getElementById('addGoalModal').style.display = 'none'; });
     document.getElementById('goalForm').addEventListener('submit', async (e) => {
         e.preventDefault();
