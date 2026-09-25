@@ -22,14 +22,24 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .btn { display: inline-block; padding: 12px 28px; border-radius: 12px; background: var(--primary); color: #fff; text-decoration: none; font-weight: 700; transition: opacity .2s; }
         .btn:hover { opacity: .9; }
+        .reset-form { display: none; flex-direction: column; gap: 14px; margin-top: 6px; }
+        .reset-form.show { display: flex; }
+        .reset-form input { padding: 12px 14px; border-radius: 12px; border: 1.5px solid rgba(109,93,252,.25); font-size: 1rem; background: var(--bg); color: var(--text); }
+        .reset-form input:focus { outline: none; border-color: var(--primary); }
+        .reset-form button { padding: 12px; border: 0; border-radius: 12px; background: var(--primary); color: #fff; font-weight: 700; font-size: 1rem; cursor: pointer; }
         @media (prefers-color-scheme: dark) { :root { --bg: #11121d; --surface: #191a29; --text: #f4f5fb; --muted: #a7aac0; } }
     </style>
 </head>
 <body>
     <main class="card">
         <div id="spinner" class="spinner" role="status" aria-label="Yükleniyor"></div>
-        <h1>E-posta doğrulama</h1>
+        <h1 id="cardTitle">E-posta doğrulama</h1>
         <p id="message">Doğrulama işleniyor…</p>
+        <div id="resetForm" class="reset-form">
+            <input type="password" id="newPassword" minlength="6" placeholder="Yeni şifre (en az 6 karakter)" autocomplete="new-password">
+            <input type="password" id="newPassword2" minlength="6" placeholder="Yeni şifre (tekrar)" autocomplete="new-password">
+            <button id="resetSubmitBtn" type="button">Şifreyi Güncelle</button>
+        </div>
         <a id="continueBtn" class="btn" href="/" hidden>Parnex'i Aç</a>
     </main>
 
@@ -74,8 +84,28 @@
                     done('Link geçersiz veya daha önce kullanılmış.<br>Uygulamadan yeni bir doğrulama e-postası talep edin.', false);
                 });
         } else if (mode === 'resetPassword' && oobCode) {
-            // Sifre sifirlama burada islenir (auth action handler)
-            done('Şifre sıfırlama bu sayfadan yapılmaz.<br>Lütfen uygulamadan tekrar deneyin.', false);
+            // Şifre sıfırlama: kodu doğrula, yeni şifre formu göster.
+            document.getElementById('cardTitle').textContent = 'Yeni şifre belirle';
+            msgEl.textContent = 'Hesabınız için yeni bir şifre belirleyin.';
+            msgEl.classList.remove('status');
+            const form = document.getElementById('resetForm');
+            form.classList.add('show');
+            spinner.hidden = true;
+            document.getElementById('resetSubmitBtn').onclick = async () => {
+                const p1 = document.getElementById('newPassword').value;
+                const p2 = document.getElementById('newPassword2').value;
+                if (p1.length < 6) { msgEl.textContent = 'Şifre en az 6 karakter olmalı.'; msgEl.classList.add('status','err'); return; }
+                if (p1 !== p2) { msgEl.textContent = 'Şifreler eşleşmiyor.'; msgEl.classList.add('status','err'); return; }
+                try {
+                    await auth.confirmPasswordReset(oobCode, p1);
+                    form.classList.remove('show');
+                    done('Şifreniz güncellendi! Yeni şifreyle giriş yapabilirsiniz.', true);
+                } catch (e) {
+                    console.warn(e);
+                    msgEl.textContent = 'Şifre güncellenemedi: link geçersiz olabilir. Uygulamadan tekrar talep edin.';
+                    msgEl.classList.add('status','err');
+                }
+            };
         } else {
             done('Bu sayfa e-posta doğrulama linkleri içindir.', false);
         }

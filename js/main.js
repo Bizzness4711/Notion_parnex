@@ -303,6 +303,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Şifremi unuttum: girilen e-postaya sıfırlama linki gönder (link uygulamaya döner)
+    document.getElementById('forgotPasswordBtn')?.addEventListener('click', async () => {
+        const email = document.getElementById('loginEmail').value.trim();
+        if (!email) {
+            showToast('Önce e-posta adresinizi yazın, sonra "Şifremi unuttum"a basın.', 'error');
+            document.getElementById('loginEmail').focus();
+            return;
+        }
+        try {
+            const settings = (typeof EMAIL_ACTION_SETTINGS !== 'undefined') ? EMAIL_ACTION_SETTINGS : undefined;
+            await auth.sendPasswordResetEmail(email, settings);
+            showToast('Şifre sıfırlama linki e-postanıza gönderildi.', 'success');
+        } catch (error) {
+            if (error.code === 'auth/user-not-found') showToast('Bu e-posta ile kayıtlı kullanıcı yok.', 'error');
+            else showToast('Sıfırlama linki gönderilemedi: ' + error.message, 'error');
+        }
+    });
+
     // Şifre göster/gizle
     document.querySelectorAll('.auth-password-toggle').forEach(button => button.addEventListener('click', () => {
         const input = document.getElementById(button.dataset.target);

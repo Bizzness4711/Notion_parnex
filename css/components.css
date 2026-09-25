@@ -2186,6 +2186,33 @@ select option {
   border: 1px solid var(--border-color, rgba(0,0,0,.08));
   border-radius: 16px;
   box-shadow: 0 12px 40px rgba(30, 34, 53, .18);
+  transform-origin: bottom right;
+  animation: fabMenuIn 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+@keyframes fabMenuIn {
+  from { opacity: 0; transform: scale(0.82) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.fab-menu-item { position: relative; overflow: hidden; }
+.fab-menu-item:nth-child(1) { animation: fabItemIn 0.24s ease both; }
+.fab-menu-item:nth-child(2) { animation: fabItemIn 0.24s 0.03s ease both; }
+.fab-menu-item:nth-child(3) { animation: fabItemIn 0.24s 0.06s ease both; }
+.fab-menu-item:nth-child(4) { animation: fabItemIn 0.24s 0.09s ease both; }
+.fab-menu-item:nth-child(5) { animation: fabItemIn 0.24s 0.12s ease both; }
+@keyframes fabItemIn {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.fab-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(109, 93, 252, .28);
+  transform: scale(0);
+  animation: fabRipple 0.5s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes fabRipple {
+  to { transform: scale(2.6); opacity: 0; }
 }
 [data-theme="dark"] .fab-menu { background: #191a29; border-color: rgba(255,255,255,.08); }
 .fab-menu[hidden] { display: none; }
@@ -2240,6 +2267,7 @@ select option {
 }
 .fab-wrap.open .quick-add-fab i { transform: rotate(45deg); }
 .quick-add-fab i { transition: transform 0.2s ease; }
+.quick-add-fab:active { transform: scale(0.92); }
 .quick-add-fab:hover {
   transform: scale(1.1);
   box-shadow: 0 6px 24px rgba(98, 86, 217, 0.5);

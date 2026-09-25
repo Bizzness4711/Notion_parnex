@@ -14,6 +14,9 @@ function formatMonth(monthString) {
 const EMAIL_ACTION_URL = 'https://bizzness4711.github.io/Notion_parnex/';
 const EMAIL_ACTION_SETTINGS = { url: EMAIL_ACTION_URL, handleCodeInApp: false };
 
+// Firebase'in varsayılan dogrulama sayfası ve e-postaları Turkce gonderilsin.
+try { auth.languageCode = 'tr'; } catch (e) {}
+
 // E-posta linki dogrudan uygulamaya donerse (varsayilan handler ya da verify.html
 // yonlendirmesi): ?mode=verifyEmail&oobCode=... parametrelerini burada isle.
 (function handleEmailActionRedirect() {

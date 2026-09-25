@@ -40,6 +40,23 @@ function initQuickAdd() {
         if (e.key === 'Escape' && fabMenu && !fabMenu.hidden) closeFabMenu();
     });
 
+    // Dokunma geri bildirimi: her menü öğesine basınca ripple efekti
+    if (fabMenu) {
+        fabMenu.addEventListener('pointerdown', (e) => {
+            const item = e.target.closest('.fab-menu-item');
+            if (!item) return;
+            const rect = item.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const ripple = document.createElement('span');
+            ripple.className = 'fab-ripple';
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+            item.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 550);
+        });
+    }
+
     const navigateToPage = (pageId) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         const pageEl = document.getElementById(pageId);
