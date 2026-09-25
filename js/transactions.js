@@ -436,7 +436,7 @@ window.addToGoal = async function(goalId) {
             batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(linkedAccount.id), { balance: Number(linkedAccount.balance || 0) - amount });
         }
         await batch.commit();
-        if (newCurrent >= goal.target && typeof sendGoalReachedEmail === 'function') sendGoalReachedEmail(goal.name, goal.target);
+        if (newCurrent >= goal.target) showToast(`🎉 "${goal.name}" hedefine ulaştın!`, 'success');
         showToast('Hedefe para eklendi!', 'success');
         await loadUserData();
     } catch (error) { showToast('Hata: ' + error.message, 'error'); }

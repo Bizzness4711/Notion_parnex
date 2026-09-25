@@ -57,5 +57,5 @@ function updateFinancialHealth({ totalIncome = 0, totalExpense = 0, savingsRate 
     };
     setMeter('healthSavingsLabel', 'healthSavingsBar', `${Math.round(Math.max(0, savingsRate))}%`, savingsScore / 40 * 100);
     setMeter('healthBalanceLabel', 'healthBalanceBar', netBalance >= 0 ? 'Pozitif' : 'Negatif', balanceScore / 35 * 100);
-    setMeter('healthBudgetLabel', 'healthBudgetBar', currentBudgets.length ? `%${budgetUsage}` : 'Plan yok', currentBudgets.length ? Math.max(0, 100 - budgetUsage) : 50);
+    setMeter('healthBudgetLabel', 'healthBudgetBar', currentBudgets.length ? `%${budgetUsage}` : 'Plan yok', currentBudgets.length ? Math.max(0, 100 - budgetUsage) : 0);
 }

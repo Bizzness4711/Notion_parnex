@@ -221,16 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(soundToggle.checked ? 'Bildirim sesi açıldı.' : 'Bildirim sesi kapatıldı.', 'success');
         });
     }
-    const emailToggle = document.getElementById('emailNotificationsToggle');
-    if (emailToggle && typeof isEmailNotificationsEnabled === 'function') {
-        emailToggle.checked = isEmailNotificationsEnabled();
-        emailToggle.addEventListener('change', () => {
-            if (typeof setEmailNotificationsEnabled === 'function') {
-                setEmailNotificationsEnabled(emailToggle.checked);
-            }
-            showToast(emailToggle.checked ? 'E-posta bildirimleri açıldı.' : 'E-posta bildirimleri kapatıldı.', 'success');
-        });
-    }
     const testSoundBtn = document.getElementById('testNotifSoundBtn');
     if (testSoundBtn) testSoundBtn.addEventListener('click', () => {
         playNotificationSound();
@@ -280,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('sendEmailVerification hatası:', verifyErr);
                 showToast('Kayıt oldu ancak doğrulama e-postası gönderilemedi: ' + verifyErr.message, 'error');
             }
-            if (typeof sendWelcomeEmail === 'function') sendWelcomeEmail(name);
         } catch (error) { showToast('Kayıt hatası: ' + error.message, 'error'); }
     });
 

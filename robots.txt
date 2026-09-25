@@ -1,6 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /email-preview/
-Disallow: /emailjs-template.html
 
 Sitemap: https://bizzness4711.github.io/Muhasebe/sitemap.xml

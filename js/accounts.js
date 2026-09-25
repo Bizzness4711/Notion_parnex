@@ -20,10 +20,6 @@ window.changeMonth = function(delta) {
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
-        const emailToggle = document.getElementById('emailNotificationsToggle');
-        if (emailToggle && typeof isEmailNotificationsEnabled === 'function') {
-            emailToggle.checked = isEmailNotificationsEnabled();
-        }
 
         // E-posta doğrulanmamışsa banner göster (erişi engelleme — ponytail: Firebase Console yapılandırması gerektirir)
         const verifyBanner = document.getElementById('emailVerifyBanner');

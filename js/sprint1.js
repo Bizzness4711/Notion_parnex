@@ -565,11 +565,9 @@ function checkBudgetAlerts() {
         if (pct >= 100) {
             const overspend = spent - b.limit;
             showToast(`🔴 ${b.category} bütçesi aşıldı! ₺${overspend.toFixed(0)} fazla harcandı.`, 'error');
-            if (typeof sendBudgetAlertEmail === 'function') sendBudgetAlertEmail(b.category, pct, spent, b.limit, true);
         } else if (pct >= 80) {
             const remaining = b.limit - spent;
             showToast(`⚠️ ${b.category} bütçesinin %${pct.toFixed(0)} kullanıldı — ₺${remaining.toFixed(0)} kaldı!`, 'error');
-            if (typeof sendBudgetAlertEmail === 'function') sendBudgetAlertEmail(b.category, pct, spent, b.limit, false);
         }
 
         _shownBudgetAlerts.add(key);
