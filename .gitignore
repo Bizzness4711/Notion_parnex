@@ -1,1 +1,12 @@
-Nothing needs to be added to .gitignore since only a README.md file was added, which is a source/config file and should not be ignored.
+# Node
+node_modules/
+package-lock.json
+
+# Capacitor / Android derleme çıktıları
+android/
+ios/
+.capacitor/
+
+# OS
+Thumbs.db
+.DS_Store
