@@ -264,7 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await auth.createUserWithEmailAndPassword(email, document.getElementById('registerPassword').value);
             await result.user.updateProfile({ displayName: name });
             try {
-                await result.user.sendEmailVerification();
+                // Link ayarli: dogrulama sonrasi uygulamaya geri doner (EMAIL_ACTION_SETTINGS, accounts.js)
+                await result.user.sendEmailVerification((typeof EMAIL_ACTION_SETTINGS !== 'undefined') ? EMAIL_ACTION_SETTINGS : undefined);
                 showToast('Kayıt başarılı! E-posta doğrulama linki gönderildi.', 'success');
             } catch (verifyErr) {
                 console.error('sendEmailVerification hatası:', verifyErr);

@@ -5,6 +5,48 @@ function formatMonth(monthString) {
     return `${monthNames[month-1]} ${year}`;
 }
 
+// E-posta doğrulama linki ayarları:
+// Firebase Console > Authentication > Settings > Authorized domains'e 'bizzness4711.github.io'
+// ekli olmalı. Aşağıdaki continueUrl, link sonrası kullanıcıyı uygulamaya geri getirir.
+// İsteğe bağlı: Firebase Console > Templates > Email address verification > action URL'i
+// https://bizzness4711.github.io/Notion_parnex/verify.html yaparsanız link doğrudan
+// verify.html'e gelir, kod orada uygulanıp uygulama ana sayfasına yönlendirilir.
+const EMAIL_ACTION_URL = 'https://bizzness4711.github.io/Notion_parnex/';
+const EMAIL_ACTION_SETTINGS = { url: EMAIL_ACTION_URL, handleCodeInApp: false };
+
+// E-posta linki dogrudan uygulamaya donerse (varsayilan handler ya da verify.html
+// yonlendirmesi): ?mode=verifyEmail&oobCode=... parametrelerini burada isle.
+(function handleEmailActionRedirect() {
+    try {
+        const params = new URLSearchParams(location.search);
+        const mode = params.get('mode');
+        const oobCode = params.get('oobCode');
+        if (!oobCode || !mode) return;
+        if (mode === 'resetPassword') {
+            // Sifre sifirlama formu verify.html'de; oraya tasi.
+            location.replace('verify.html' + location.search);
+            return;
+        }
+        if (mode !== 'verifyEmail') return;
+        auth.applyActionCode(oobCode)
+            .then(async () => {
+                showToast('E-posta doğrulandı! Hoş geldin.', 'success');
+                if (auth.currentUser) {
+                    try { await auth.currentUser.reload(); } catch (e) {}
+                }
+                // Temiz URL ile taze yükleme: gate/banner taze auth durumuna göre çözülür.
+                location.replace(location.pathname);
+            })
+            .catch((e) => {
+                console.warn('Doğrulama kodu uygulanamadı.', e);
+                showToast('Doğrulama linki geçersiz veya daha önce kullanılmış.', 'error');
+                params.delete('mode'); params.delete('oobCode'); params.delete('continueUrl'); params.delete('apiKey'); params.delete('lang');
+                const qs = params.toString();
+                history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+            });
+    } catch (e) { console.warn('E-posta aksiyon parametreleri okunamadı.', e); }
+})();
+
 window.changeMonth = function(delta) {
     let [year, month] = currentMonth.split('-').map(Number);
     month += delta;
@@ -21,6 +63,10 @@ auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
 
+        // Sunucudaki guncel dogrulama durumunu cek (baska sekmede dogrulandiysa da dogru gorunsun).
+        try { await user.reload(); } catch (e) {}
+        user = auth.currentUser || user;
+
         // E-posta doğrulama zorunluluğu: doğrulanmamış kullanıcı uygulamaya giremez.
         const gate = document.getElementById('verifyGate');
         if (!user.emailVerified) {
@@ -33,7 +79,7 @@ auth.onAuthStateChanged(async (user) => {
             document.getElementById('loginModal').style.display = 'none';
             document.getElementById('verifyGateResend').onclick = async () => {
                 try {
-                    await user.sendEmailVerification();
+                    await user.sendEmailVerification(EMAIL_ACTION_SETTINGS);
                     if (msg) { msg.hidden = false; msg.textContent = 'Doğrulama e-postası tekrar gönderildi. Gelen kutunu kontrol et.'; }
                 } catch (e) {
                     if (msg) { msg.hidden = false; msg.textContent = 'E-posta gönderilemedi: ' + e.message; }
