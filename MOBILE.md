@@ -23,6 +23,25 @@ uygulama kapalıyken bile bildirim merkezine düşer.
 ```bash
 npm install                 # Capacitor + eklentileri indirir
 npx cap add android         # android/ klasörünü oluşturur (tek sefer)
+```
+
+### Firebase Gradle eklentisi (cap add sonrası, tek sefer)
+
+`@capacitor-firebase/messaging` native FCM için Google Services eklentisi ister:
+
+1. `android/build.gradle` açın → `buildscript { dependencies { ... } }` içine şu satırı ekleyin:
+   ```
+   classpath 'com.google.gms:google-services:4.4.2'
+   ```
+2. `android/app/build.gradle` açın → en üstteki `apply plugin: 'com.android.application'` satırının hemen altına:
+   ```
+   apply plugin: 'com.google.gms.google-services'
+   ```
+3. `google-services.json` dosyasının `android/app/` içinde olduğunu doğrulayın.
+
+Sonra devam:
+
+```bash
 npx cap sync android        # config + eklentileri native projeye yazar
 npx cap open android        # Android Studio'yu açar
 ```
