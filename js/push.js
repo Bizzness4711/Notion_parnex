@@ -1,7 +1,7 @@
 // FCM web push: izinli cihaza token alıp Firestore'a yazar, ön planda geleni gösterir.
 // ÖN KOŞUL: aşağıdaki VAPID anahtarını doldur.
 // Firebase Console > Proje Ayarları > Cloud Messaging > Web Push sertifikaları > Anahtar oluştur.
-const FCM_VAPID_KEY = 'BGXJEnJGws5yvMXZcWJCGsEflmMCwhSsmIQBXu4xchTqoGiIXdjhnaGbL2kRaNp_uU_4_aQB7jkoBJObsaZXuMU';
+const FCM_VAPID_KEY = 'BEE_2EhTp5qwYC1RTR-I3qAI92uY4tm4dsczZVm_tg1CxtatXs6bywzsqpidKnNh4p2cz5V1Slth30-wbmFVZIA';
 
 async function initPush() {
     try {

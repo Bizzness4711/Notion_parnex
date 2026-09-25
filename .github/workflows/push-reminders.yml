@@ -1,0 +1,27 @@
+# Saatlik push hatırlatıcı: tools/push/send.js çalıştırır.
+# Gereksinim: repo secret'ı FIREBASE_SERVICE_ACCOUNT (Firebase service account JSON'u, tek satır).
+# Kurulum: GitHub repo -> Settings -> Secrets and variables -> Actions -> New repository secret
+name: Push reminders
+
+on:
+  schedule:
+    - cron: '0 * * * *' # her saat başı
+  workflow_dispatch: # manuel tetikleme butonu
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Bağımlılıkları kur
+        run: npm install firebase-admin@12 --no-save
+
+      - name: Push gönder
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node tools/push/send.js
