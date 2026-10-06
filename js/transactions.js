@@ -549,7 +549,12 @@ window.deleteTransaction = async function(id) {
                         updates.quantity = newBalance;
                         const transactionRate = Number(transaction.purchaseRate || transaction.accountOpeningRate || 0);
                         const currentRate = getAccountOpeningRate(account);
-                        if (transactionRate > 0 && newBalance > 0) {
+                        if (newBalance <= 0) {
+                            updates.quantity = 0;
+                            updates.balance = 0;
+                            updates.buyPrice = 0;
+                            updates.openingRate = 0;
+                        } else if (transactionRate > 0) {
                             if (transaction.type === 'income') {
                                 updates.buyPrice = ((Number(account.balance) * currentRate) - (impact * transactionRate)) / newBalance;
                             } else {
