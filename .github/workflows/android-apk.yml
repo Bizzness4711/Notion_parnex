@@ -26,6 +26,20 @@ jobs:
       - name: Add Capacitor Android platform
         run: npx cap add android
 
+      - name: Prepare Firebase Android configuration
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          set -e
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          elif [ -f google-services.json ]; then
+            cp google-services.json android/app/google-services.json
+          else
+            echo "::error::GOOGLE_SERVICES_JSON secret veya kökte google-services.json bulunamadı. Native FCM çalışmaz."
+            exit 1
+          fi
+
       - name: Sync Capacitor
         run: npx cap sync android
 
@@ -79,8 +93,20 @@ jobs:
               text = re.sub(r'android:roundIcon="[^"]+"', 'android:roundIcon="@mipmap/ic_launcher_round"', text, count=1)
           else:
               text = text.replace('<application ', '<application android:roundIcon="@mipmap/ic_launcher_round" ', 1)
+          metadata = '\n        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_parnex" />\n        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/parnex_notification_color" />'
+          if 'com.google.firebase.messaging.default_notification_icon' not in text:
+              text = text.replace('</application>', metadata + '\n    </application>', 1)
           manifest.write_text(text)
           PY
+          cat > android/app/src/main/res/drawable/ic_stat_parnex.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+              <path android:fillColor="#FFFFFF" android:pathData="M4,19V5h8c4.2,0 6.5,2.1 6.5,5.5S16.2,16 12,16H9v3H4zM9,12.8h2.5c1.7,0 2.7,-0.8 2.7,-2.3s-1,-2.3 -2.7,-2.3H9v4.6z"/>
+              <path android:fillColor="#FFFFFF" android:pathData="M14.5,18.5l2.4,-2.4 1.6,1.6 2.5,-3.1 1.2,1 -3.7,4.6 -1.6,-1.6 -1.5,1.5z"/>
+          </vector>
+          EOF
+          cat > android/app/src/main/res/values/parnex-notification.xml <<'EOF'
+          <resources><color name="parnex_notification_color">#6D5DFC</color></resources>
+          EOF
 
       - name: Build debug APK
         working-directory: android
