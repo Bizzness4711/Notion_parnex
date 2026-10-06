@@ -28,19 +28,57 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Apply Parnex app icon
+      - name: Apply Parnex adaptive launcher icon
         run: |
-          mkdir -p android/app/src/main/res/drawable android/app/src/main/res/values
-          curl -L --fail --retry 3 https://raw.githubusercontent.com/Bizzness4711/Notion_parnex/main/icons/logo-512.png -o android/app/src/main/res/drawable/parnex_logo.png
+          set -e
+          mkdir -p android/app/src/main/res/drawable android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi android/app/src/main/res/mipmap-xxxhdpi android/app/src/main/res/mipmap-anydpi-v26 android/app/src/main/res/values
+          curl -L --fail --retry 3 https://raw.githubusercontent.com/Bizzness4711/Notion_parnex/main/icons/logo-512.png -o /tmp/parnex_logo.png
+          # Keep the exact Parnex logo for legacy Android launchers.
+          for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
+            density="${spec%%:*}"; size="${spec##*:}"
+            magick /tmp/parnex_logo.png -resize "${size}x${size}" "android/app/src/main/res/mipmap-${density}/ic_launcher.png"
+            cp "android/app/src/main/res/mipmap-${density}/ic_launcher.png" "android/app/src/main/res/mipmap-${density}/ic_launcher_round.png"
+          done
+          cat > android/app/src/main/res/drawable/ic_launcher_foreground.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="64"
+              android:viewportHeight="64">
+              <path
+                  android:fillColor="#FFFFFF"
+                  android:pathData="M17,47V17h16c9,0 14,4.5 14,11.6s-5,11.6 -14,11.6H27V47H17zM27,31.9h5.5c3,0 4.8,-1.2 4.8,-3.3s-1.8,-3.3 -4.8,-3.3H27v6.6z"/>
+              <path
+                  android:fillColor="@android:color/transparent"
+                  android:pathData="M37,48l6,-6 4,4 7,-9"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="4"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"/>
+          </vector>
+          EOF
+          cat > android/app/src/main/res/drawable/ic_launcher_background.xml <<'EOF'
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <gradient android:startColor="#6D5DFC" android:endColor="#A855F7" android:angle="135"/>
+          </shape>
+          EOF
+          cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@drawable/ic_launcher_background"/>
+              <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+          </adaptive-icon>
+          EOF
+          cp android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
           python3 - <<'PY'
           from pathlib import Path
+          import re
           manifest = Path("android/app/src/main/AndroidManifest.xml")
           text = manifest.read_text()
-          if 'android:icon=' in text:
-              import re
-              text = re.sub(r'android:icon="[^"]+"', 'android:icon="@drawable/parnex_logo"', text, count=1)
+          text = re.sub(r'android:icon="[^"]+"', 'android:icon="@mipmap/ic_launcher"', text, count=1)
+          if 'android:roundIcon=' in text:
+              text = re.sub(r'android:roundIcon="[^"]+"', 'android:roundIcon="@mipmap/ic_launcher_round"', text, count=1)
           else:
-              text = text.replace('<application ', '<application android:icon="@drawable/parnex_logo" ', 1)
+              text = text.replace('<application ', '<application android:roundIcon="@mipmap/ic_launcher_round" ', 1)
           manifest.write_text(text)
           PY
 
