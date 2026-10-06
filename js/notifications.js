@@ -63,7 +63,7 @@ async function loadNotifications() {
             const d = doc.data() || {};
             if (!Number(d.ts) || d.ts < cut) { olds.push(doc.ref); return; }
             if (d.deleted) return; // silinenler kullanıcıya gösterilmez, adminde durur
-            actives.push({ id: doc.id, key: d.key || '', title: d.title || 'Finora', message: d.message || '', icon: d.icon || 'fa-bell', read: !!d.read, ts: d.ts });
+            actives.push({ id: doc.id, key: d.key || '', title: d.title || 'Parnex', message: d.message || '', icon: d.icon || 'fa-bell', read: !!d.read, ts: d.ts });
         });
         notifications = actives.slice(0, 40);
         // 40 kaydı aşan aktifleri silinmiş işaretle (fiziksel silme pazartesi).
@@ -126,7 +126,7 @@ function playNotificationSound() {
     }
 }
 
-function addNotification(id, message, icon = 'fa-bell', title = 'Finora') {
+function addNotification(id, message, icon = 'fa-bell', title = 'Parnex') {
     if (notifications.some(item => item.key === id || item.id === id)) return;
     const item = { id: '', key: id, message, icon, title, read: false, ts: Date.now() };
     notifications.unshift(item);
@@ -150,7 +150,7 @@ function updateNotificationsUI() {
     count.textContent = unread.length > 99 ? '99+' : String(unread.length);
     count.hidden = unread.length === 0;
     list.innerHTML = notifications.length
-        ? notifications.slice(0, 12).map(item => `<div class="notification-item"><i class="fas ${escapeHtml(item.icon)}"></i><span><strong>${escapeHtml(item.title || 'Finora')}</strong> · ${escapeHtml(item.message)}</span><button class="delete-btn" onclick="event.stopPropagation();deleteNotification('${item.id}')" title="Bildirimi sil"><i class="fas fa-times"></i></button></div>`).join('')
+        ? notifications.slice(0, 12).map(item => `<div class="notification-item"><i class="fas ${escapeHtml(item.icon)}"></i><span><strong>${escapeHtml(item.title || 'Parnex')}</strong> · ${escapeHtml(item.message)}</span><button class="delete-btn" onclick="event.stopPropagation();deleteNotification('${item.id}')" title="Bildirimi sil"><i class="fas fa-times"></i></button></div>`).join('')
         : '<div class="notification-empty">Yeni bildiriminiz yok.</div>';
 }
 
