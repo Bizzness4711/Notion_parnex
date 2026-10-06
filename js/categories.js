@@ -1,6 +1,20 @@
 function getCategories(type) {
-    const mine = customCategories.filter(c => c.type === type).map(c => c.name);
-    return mine.length ? mine : (DEFAULT_CATEGORIES[type] || []);
+    // Varsayılan kategoriler her kullanıcıda görünür.
+    // Firestore'da yalnızca 1 özel kategori kalmış olsa bile diğer
+    // varsayılan kategorilerin kaybolmasını engeller.
+    const defaults = DEFAULT_CATEGORIES[type] || [];
+    const custom = customCategories
+        .filter(c => c.type === type)
+        .map(c => c.name)
+        .filter(Boolean);
+
+    const seen = new Set();
+    return [...defaults, ...custom].filter(name => {
+        const key = String(name).trim().toLocaleLowerCase('tr-TR');
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
 }
 
 function updateCategorySelect() {
@@ -29,14 +43,28 @@ function updateCategorySelect() {
 function updateCategoryManagerUI() {
     const list = document.getElementById('categoriesList');
     if (!list) return;
-    const items = customCategories.length ? customCategories : [
-        ...DEFAULT_CATEGORIES.expense.map(name => ({ name, type: 'expense' })),
-        ...DEFAULT_CATEGORIES.income.map(name => ({ name, type: 'income' }))
+    // Varsayılanlar + kullanıcı kategorileri birlikte gösterilir.
+    const defaultItems = [
+        ...DEFAULT_CATEGORIES.expense.map(name => ({ name, type: 'expense', isDefault: true })),
+        ...DEFAULT_CATEGORIES.income.map(name => ({ name, type: 'income', isDefault: true }))
     ];
+    const customItems = customCategories.map(c => ({ ...c, isDefault: false }));
+
+    const seen = new Set();
+    const items = [...defaultItems, ...customItems].filter(c => {
+        const key = `${c.type}|${String(c.name || '').trim().toLocaleLowerCase('tr-TR')}`;
+        if (!c.name || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+
     list.innerHTML = items.map(c => {
-        const del = c.id ? `<button class="delete-btn" onclick="deleteCategory('${c.id}')" title="Kategoriyi sil"><i class="fas fa-trash"></i></button>` : '';
+        const del = c.isDefault || !c.id
+            ? ''
+            : `<button class="delete-btn" onclick="deleteCategory('${c.id}')" title="Kategoriyi sil"><i class="fas fa-trash"></i></button>`;
+        const badge = c.isDefault ? '<span class="category-default-badge">Varsayılan</span>' : '';
         return `<div class="transaction-card-modern"><div class="transaction-info-modern">
-            <div class="transaction-title-modern">${escapeHtml(c.name)}</div>
+            <div class="transaction-title-modern">${escapeHtml(c.name)} ${badge}</div>
             <div class="transaction-subtitle-modern">${c.type === 'income' ? 'Gelir' : 'Masraf'}</div>
         </div>${del}</div>`;
     }).join('');
