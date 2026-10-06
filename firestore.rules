@@ -10,7 +10,10 @@ service cloud.firestore {
     // Kullanıcı profili: kendin okuyabilirsin, admin hepsini listeleyebilir.
     // İlk admini Firebase Console'dan manuel ver: users/{uid} -> role = "admin"
     match /users/{uid} {
-      allow read: if isOwner(uid) || isAdmin();
+      // Kullanıcı, UID değişse bile aynı e-posta adresine ait eski
+      // profilini bulabilsin; sorgu yalnızca kendi e-postasını döndürebilir.
+      allow read: if isOwner(uid) || isAdmin() ||
+        (signedIn() && resource.data.email == request.auth.token.email);
       allow create: if isOwner(uid) && (!('role' in request.resource.data) || request.resource.data.role == 'user');
       // Rol alanını sadece admin değiştirebilir, normal kullanıcı değiştiremez.
       allow update: if (isOwner(uid) && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role)) || isAdmin();
