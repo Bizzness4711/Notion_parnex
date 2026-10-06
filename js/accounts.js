@@ -931,3 +931,124 @@ function updateEditAccountFields() {
     else if (typeSelect.value === 'investment') typeSelect.value = 'bank';
 }
 
+
+
+/**
+ * Eski Parnex Firebase projesindeki verileri mevcut projeye güvenli şekilde kopyalar.
+ * Eski proje: bizzness-in-muhasebesi
+ * Yeni proje: parnex-97d1b
+ *
+ * Eski hesabın e-posta/parolası gerekir. Eski veriler silinmez.
+ */
+window.migrateLegacyFirebaseData = async function migrateLegacyFirebaseData() {
+    if (!currentUser) {
+        showToast('Önce giriş yapmalısınız.', 'error');
+        return;
+    }
+
+    const email = prompt('Eski Parnex hesabınızın e-posta adresi:', currentUser.email || '');
+    if (!email) return;
+
+    const password = prompt('Eski Parnex hesabınızın şifresi:');
+    if (!password) return;
+
+    const oldConfig = {
+        apiKey: 'AIzaSyCmBhsXLkFjQnTdNYXH2IEOAUxAllKOXyA',
+        authDomain: 'bizzness-in-muhasebesi.firebaseapp.com',
+        projectId: 'bizzness-in-muhasebesi',
+        storageBucket: 'bizzness-in-muhasebesi.firebasestorage.app',
+        messagingSenderId: '140794309361',
+        appId: '1:140794309361:web:bd6fa42aa10f0e971e9750',
+        measurementId: 'G-E5XMM1PBVC'
+    };
+
+    let legacyApp;
+    try {
+        legacyApp = firebase.app('legacyMigration');
+    } catch (_) {
+        legacyApp = firebase.initializeApp(oldConfig, 'legacyMigration');
+    }
+
+    const legacyAuth = legacyApp.auth();
+    const legacyDb = legacyApp.firestore();
+
+    try {
+        showToast('Eski Firebase hesabına bağlanılıyor...', 'info');
+        const credential = await legacyAuth.signInWithEmailAndPassword(email.trim(), password);
+        const legacyUid = credential.user.uid;
+        const legacyUserRef = legacyDb.collection('users').doc(legacyUid);
+        const legacyUserSnap = await legacyUserRef.get();
+
+        if (!legacyUserSnap.exists) {
+            throw new Error('Eski Firebase hesabında kullanıcı verisi bulunamadı.');
+        }
+
+        const collections = [
+            'accounts',
+            'transactions',
+            'transfers',
+            'recurringTransactions',
+            'goals',
+            'budgets'
+        ];
+
+        let total = 0;
+        const copied = {};
+
+        for (const collectionName of collections) {
+            const snapshot = await legacyUserRef.collection(collectionName).get();
+            let count = 0;
+
+            // Firestore batch limiti nedeniyle 450'lik parçalar halinde yaz.
+            let batch = db.batch();
+            let batchCount = 0;
+
+            for (const document of snapshot.docs) {
+                const target = db.collection('users').doc(currentUser.uid)
+                    .collection(collectionName).doc(document.id);
+                batch.set(target, document.data(), { merge: true });
+                batchCount++;
+                count++;
+                total++;
+
+                if (batchCount >= 450) {
+                    await batch.commit();
+                    batch = db.batch();
+                    batchCount = 0;
+                }
+            }
+
+            if (batchCount > 0) await batch.commit();
+            copied[collectionName] = count;
+        }
+
+        // Eski kullanıcı ayarlarından yalnızca uygulamanın güvenli/işlevsel alanlarını taşı.
+        const oldSettings = legacyUserSnap.data() || {};
+        const settingsToCopy = {};
+        for (const key of ['currency', 'currentMonth', 'themeColor', 'privacyModeEnabled', 'timeZone']) {
+            if (oldSettings[key] !== undefined) settingsToCopy[key] = oldSettings[key];
+        }
+        if (Object.keys(settingsToCopy).length) {
+            await db.collection('users').doc(currentUser.uid).set(settingsToCopy, { merge: true });
+        }
+
+        await legacyAuth.signOut();
+        await loadUserData();
+
+        const summary = Object.entries(copied)
+            .filter(([, count]) => count > 0)
+            .map(([name, count]) => name + ': ' + count)
+            .join(', ');
+
+        showToast(
+            total
+                ? 'Eski veriler geri aktarıldı: ' + summary
+                : 'Eski hesapta aktarılacak işlem/veri bulunamadı.',
+            total ? 'success' : 'info'
+        );
+    } catch (error) {
+        try { await legacyAuth.signOut(); } catch (_) {}
+        console.error('Eski Firebase veri aktarımı başarısız:', error);
+        showToast('Eski veriler aktarılmadı: ' + (error.message || error), 'error');
+    }
+};
