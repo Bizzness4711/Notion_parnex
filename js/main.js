@@ -622,10 +622,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     : Number(oldTransaction.isInstallment ? oldTransaction.installmentTotal || oldTransaction.amount : oldTransaction.amount || 0);
                 const newImpact = selectedType === 'income' ? amount : (isInstallment ? installmentTotal : amount);
                 const recurringCollection = db.collection('users').doc(currentUser.uid).collection('recurringTransactions');
+                const oldRecurringCandidates = recurringTransactions.filter(item => item.accountId === oldTransaction.accountId
+                    && item.description === oldTransaction.description
+                    && Number(item.amount) === Number(oldTransaction.amount));
                 const oldRecurring = recurringTransactions.find(item => item.id === oldTransaction.recurringId)
-                    || recurringTransactions.find(item => item.accountId === oldTransaction.accountId
-                        && item.description === oldTransaction.description
-                        && Number(item.amount) === Number(oldTransaction.amount));
+                    || (oldRecurringCandidates.length === 1 ? oldRecurringCandidates[0] : null);
                 const recurringRef = isRecurring
                     ? (oldRecurring ? recurringCollection.doc(oldRecurring.id) : recurringCollection.doc())
                     : null;
