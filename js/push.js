@@ -22,6 +22,8 @@ async function savePushToken(token, platformLabel) {
 // --- Capacitor (Android APK) modu ---
 // Not: sayfa uzak URL'den (GitHub Pages) yuklendigi icin ES import kullanilamaz;
 // Capacitor koprusu her sayfaya enjekte edilir, eklenti global proxy'den erisilir.
+let nativePushInitialized = false;
+
 async function initPushNative() {
     const FirebaseMessaging = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseMessaging;
     if (!FirebaseMessaging) {
@@ -29,27 +31,38 @@ async function initPushNative() {
         throw new Error('FirebaseMessaging native eklentisi bulunamadı');
     }
 
-    // Android 13+: bildirim izni system diyaloguyla sorulur.
-    if (typeof FirebaseMessaging.requestPermissions === 'function') {
+    // Android 13+: izin zaten verilmişse tekrar sistem ayarlarına yönlendirmeden devam et.
+    if (typeof FirebaseMessaging.checkPermissions === 'function') {
+        const current = await FirebaseMessaging.checkPermissions();
+        if (current && current.receive === 'denied') {
+            const requested = typeof FirebaseMessaging.requestPermissions === 'function'
+                ? await FirebaseMessaging.requestPermissions()
+                : current;
+            if (requested && requested.receive !== 'granted') {
+                throw new Error('Bildirim izni verilmedi');
+            }
+        }
+    } else if (typeof FirebaseMessaging.requestPermissions === 'function') {
         const perm = await FirebaseMessaging.requestPermissions();
-        if (perm && perm.receive === 'denied') {
-            console.warn('Push bildirim izni verilmedi.');
-            throw new Error('Bildirim izni reddedildi');
+        if (perm && perm.receive !== 'granted') {
+            throw new Error('Bildirim izni verilmedi');
         }
     }
 
-    // Native FCM token'i (VAPID gerekmez; google-services.json devreye girer).
+    // Native FCM token'i VAPID gerektirmez; Android Firebase uygulaması/google-services.json kullanılır.
     const result = await FirebaseMessaging.getToken();
     const token = result && result.value;
     if (!token) throw new Error('Native FCM token alınamadı');
     await savePushToken(token, 'android-native');
 
-    // Token yenilenirse guncelle (uygulama acikken).
+    // Aynı sayfada butona birden fazla basıldığında listener'ları çoğaltma.
+    if (nativePushInitialized) return;
+    nativePushInitialized = true;
+
     await FirebaseMessaging.addListener('tokenReceived', async (event) => {
         try { await savePushToken(event && event.value, 'android-native'); } catch (e) { console.warn('Token yenilenemedi.', e); }
     });
 
-    // Uygulama on plandayken gelen push: bildirim merkezine dusur + ses.
     await FirebaseMessaging.addListener('notificationReceived', (event) => {
         const n = (event && event.notification) || {};
         const title = n.title || 'Parnex';
@@ -58,7 +71,6 @@ async function initPushNative() {
         else if (typeof playNotificationSound === 'function') playNotificationSound();
     });
 
-    // Bildirime dokununca bildirim listesini tazele.
     await FirebaseMessaging.addListener('notificationActionPerformed', () => {
         if (typeof updateNotificationsUI === 'function') updateNotificationsUI();
     });
