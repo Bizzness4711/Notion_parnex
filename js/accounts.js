@@ -155,21 +155,42 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-async function recoverMissingTransactionsFromSameFirebase() {
-    if (!currentUser || !isAdmin) return { copied: 0, sourceUid: null };
+async function recoverMissingTransactionsFromSameFirebase(options = {}) {
+    if (!currentUser) return { copied: 0, sourceUid: null };
 
     try {
-        // Bildirim/Firebase ayarları değişirken UID değişmişse eski kullanıcı
-        // aynı e-posta ile hâlâ bu Firebase projesinde bulunabilir.
-        const usersSnapshot = await db.collection('users').get();
         const email = String(currentUser.email || '').trim().toLowerCase();
-        const candidates = usersSnapshot.docs
-            .filter(doc => doc.id !== currentUser.uid)
-            .map(doc => ({ id: doc.id, data: doc.data() || {} }))
-            .filter(item => {
-                const candidateEmail = String(item.data.email || '').trim().toLowerCase();
-                return email && candidateEmail === email;
+        if (!email) return { copied: 0, sourceUid: null };
+
+        // Öncelik aynı e-postaya ait eski UID'lerdir. Admin hesaplarında,
+        // aynı e-posta bulunamazsa mevcut projedeki kullanıcılar da taranır.
+        const candidateMap = new Map();
+        const emailSnapshot = await db.collection('users')
+            .where('email', '==', currentUser.email)
+            .limit(10)
+            .get();
+
+        emailSnapshot.docs.forEach(doc => {
+            if (doc.id !== currentUser.uid) {
+                candidateMap.set(doc.id, { id: doc.id, data: doc.data() || {}, priority: 0 });
+            }
+        });
+
+        if (isAdmin) {
+            const usersSnapshot = await db.collection('users').get();
+            usersSnapshot.docs.forEach(doc => {
+                if (doc.id === currentUser.uid || candidateMap.has(doc.id)) return;
+                const data = doc.data() || {};
+                const candidateEmail = String(data.email || '').trim().toLowerCase();
+                candidateMap.set(doc.id, {
+                    id: doc.id,
+                    data,
+                    priority: candidateEmail === email ? 0 : 1
+                });
             });
+        }
+
+        const candidates = [...candidateMap.values()].sort((a, b) => a.priority - b.priority);
 
         for (const candidate of candidates) {
             const sourceRef = db.collection('users').doc(candidate.id);
@@ -179,26 +200,31 @@ async function recoverMissingTransactionsFromSameFirebase() {
             const goalsSnapshot = await sourceRef.collection('goals').get();
             const budgetsSnapshot = await sourceRef.collection('budgets').get();
             const accountsSnapshot = await sourceRef.collection('accounts').get();
+            const categoriesSnapshot = await sourceRef.collection('categories').get();
 
             const totalSourceData =
                 txSnapshot.size + transferSnapshot.size + recurringSnapshot.size +
-                goalsSnapshot.size + budgetsSnapshot.size;
+                goalsSnapshot.size + budgetsSnapshot.size + accountsSnapshot.size +
+                categoriesSnapshot.size;
 
             if (!totalSourceData) continue;
 
             let batch = db.batch();
             let batchCount = 0;
+            const commitIfNeeded = async () => {
+                if (batchCount >= 450) {
+                    await batch.commit();
+                    batch = db.batch();
+                    batchCount = 0;
+                }
+            };
             const copyCollection = async (snapshot, collectionName) => {
                 for (const doc of snapshot.docs) {
                     const target = db.collection('users').doc(currentUser.uid)
                         .collection(collectionName).doc(doc.id);
                     batch.set(target, doc.data(), { merge: true });
                     batchCount++;
-                    if (batchCount >= 450) {
-                        await batch.commit();
-                        batch = db.batch();
-                        batchCount = 0;
-                    }
+                    await commitIfNeeded();
                 }
             };
 
@@ -207,12 +233,15 @@ async function recoverMissingTransactionsFromSameFirebase() {
             await copyCollection(recurringSnapshot, 'recurringTransactions');
             await copyCollection(goalsSnapshot, 'goals');
             await copyCollection(budgetsSnapshot, 'budgets');
-
-            // Hesaplar mevcut kullanıcıda hiç yoksa eski hesapları da geri getir.
-            const currentAccounts = await db.collection('users').doc(currentUser.uid).collection('accounts').get();
-            if (currentAccounts.empty) await copyCollection(accountsSnapshot, 'accounts');
-
+            await copyCollection(accountsSnapshot, 'accounts');
+            await copyCollection(categoriesSnapshot, 'categories');
             if (batchCount > 0) await batch.commit();
+
+            await db.collection('users').doc(currentUser.uid).set({
+                recoveredFromUid: candidate.id,
+                recoveredAt: firebase.firestore.FieldValue.serverTimestamp(),
+                recoverySourceEmail: candidate.data.email || currentUser.email
+            }, { merge: true });
 
             return {
                 copied: totalSourceData,
@@ -222,7 +251,8 @@ async function recoverMissingTransactionsFromSameFirebase() {
                 recurringTransactions: recurringSnapshot.size,
                 goals: goalsSnapshot.size,
                 budgets: budgetsSnapshot.size,
-                accounts: currentAccounts.empty ? accountsSnapshot.size : 0
+                accounts: accountsSnapshot.size,
+                categories: categoriesSnapshot.size
             };
         }
     } catch (error) {
@@ -237,6 +267,11 @@ async function loadUserData() {
     try {
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
         if (!userDoc.exists) {
+            // Firebase Authentication UID değişmişse (hesap yeniden oluşturma,
+            // farklı giriş yöntemi vb.) aynı e-posta ile eski kullanıcı verisini
+            // yeni UID'ye otomatik taşı. Böylece bildirim/auth değişiklikleri
+            // finansal veriyi görünmez hale getiremez.
+            const recovery = await recoverMissingTransactionsFromSameFirebase();
             isHidden = false;
             await db.collection('users').doc(currentUser.uid).set({
                 name: currentUser.displayName || currentUser.email,
