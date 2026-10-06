@@ -1070,6 +1070,11 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Yeni ay başlatıldı!', 'success');
     });
 
+    document.getElementById('migrateLegacyDataBtn')?.addEventListener('click', async () => {
+        if (!confirm('Eski Parnex Firebase hesabındaki veriler mevcut hesabınıza kopyalanacak. Eski veriler silinmeyecek. Devam edilsin mi?')) return;
+        await window.migrateLegacyFirebaseData();
+    });
+
     // Dışa aktar, içe aktar, sil
     document.getElementById('clearData').addEventListener('click', clearAllData);
     document.getElementById('saveSecurityPin').addEventListener('click', async () => {
