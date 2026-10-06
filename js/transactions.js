@@ -513,9 +513,31 @@ window.deleteGoal = async function(id) {
 };
 
 window.deleteAccount = async function(id) {
-    if (!confirm('Bu hesabı silmek istediğinize emin misiniz?')) return;
     if (!currentUser) return;
-    try { await db.collection('users').doc(currentUser.uid).collection('accounts').doc(id).delete(); showToast('Hesap silindi!', 'success'); await loadUserData(); } catch (e) { showToast('Silme hatası: ' + e.message, 'error'); }
+    const account = accounts.find(item => item.id === id);
+    if (!account) return;
+    if (!confirm('Bu hesabı silmek istediğinize emin misiniz? Hesaba bağlı işlem veya transfer varsa silme işlemi güvenlik nedeniyle engellenir.')) return;
+
+    try {
+        const userRef = db.collection('users').doc(currentUser.uid);
+        const [txSnap, transferFromSnap, transferToSnap] = await Promise.all([
+            userRef.collection('transactions').where('accountId', '==', id).limit(1).get(),
+            userRef.collection('transfers').where('fromAccountId', '==', id).limit(1).get(),
+            userRef.collection('transfers').where('toAccountId', '==', id).limit(1).get()
+        ]);
+
+        if (!txSnap.empty || !transferFromSnap.empty || !transferToSnap.empty) {
+            showToast('Bu hesapta bağlı işlem/transfer kayıtları var. Geçmişi bozmamak için önce bu kayıtları düzenleyin veya silin.', 'error');
+            return;
+        }
+
+        await userRef.collection('accounts').doc(id).delete();
+        showToast('Hesap silindi!', 'success');
+        await loadUserData();
+    } catch (e) {
+        console.error('Hesap silme hatası:', e);
+        showToast('Silme hatası: ' + e.message, 'error');
+    }
 };
 
 window.deleteTransaction = async function(id) {
