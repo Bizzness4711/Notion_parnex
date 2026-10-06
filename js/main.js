@@ -754,7 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const oldBalance = Number(oldAccount.balance || 0) + (oldTransaction.type === 'income' ? -oldImpact : oldImpact);
                         const oldUpdates = { balance: oldBalance };
 
-                        if (isInvestment) {
+                        if (isInvestmentAccount(oldAccount)) {
                             oldUpdates.quantity = Math.max(0, oldBalance);
                             const oldPurchaseRate = Number(oldTransaction.purchaseRate || oldTransaction.accountOpeningRate || 0);
                             const oldCurrentRate = Number(getAccountOpeningRate(oldAccount) || 0);
