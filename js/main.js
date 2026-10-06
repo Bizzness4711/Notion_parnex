@@ -1024,16 +1024,30 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         const input = document.getElementById('unlockPin');
         const error = document.getElementById('unlockError');
+        const lockoutUntil = getSecurityPinLockoutUntil();
+        if (lockoutUntil > Date.now()) {
+            const seconds = Math.max(1, Math.ceil((lockoutUntil - Date.now()) / 1000));
+            error.textContent = 'Çok fazla hatalı deneme. ' + seconds + ' saniye sonra tekrar deneyin.';
+            input.value = '';
+            return;
+        }
+        if (lockoutUntil) resetSecurityPinAttempts();
+
         const expected = localStorage.getItem(securityStorageKey('pin'));
         if (expected && await verifySecurityPin(input.value.trim(), expected)) {
+            resetSecurityPinAttempts();
             if (!expected.includes(':')) {
                 localStorage.setItem(securityStorageKey('pin'), await hashSecurityPin(input.value.trim()));
             }
             unlockSecurityApp();
             return;
         }
+
         input.value = '';
-        error.textContent = 'PIN kodu hatalı.';
+        const cooldown = registerSecurityPinFailure();
+        error.textContent = cooldown
+            ? '5 hatalı deneme. 30 saniye boyunca PIN kilitlendi.'
+            : 'PIN kodu hatalı.';
         input.focus();
     });
 
