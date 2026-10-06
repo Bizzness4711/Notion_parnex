@@ -199,7 +199,7 @@
               const n = doc.data() || {};
               const when = Number(n.ts) ? new Date(n.ts).toLocaleString('tr-TR') : '-';
               const state = n.deleted ? 'silindi' : (n.read ? 'okundu' : 'yeni');
-              rows.push(`<tr><td>${escapeHtml(n.title || 'Finora')}</td><td>${escapeHtml(n.message || '')}</td><td>${state}</td><td>${escapeHtml(when)}</td></tr>`);
+              rows.push(`<tr><td>${escapeHtml(n.title || 'Parnex')}</td><td>${escapeHtml(n.message || '')}</td><td>${state}</td><td>${escapeHtml(when)}</td></tr>`);
             });
             box.innerHTML = `<div class="table-scroll"><table class="advanced-report-table"><thead><tr><th>Başlık</th><th>Mesaj</th><th>Durum</th><th>Tarih</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
           }
