@@ -26,7 +26,7 @@ async function initPushNative() {
     const FirebaseMessaging = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseMessaging;
     if (!FirebaseMessaging) {
         console.warn('FirebaseMessaging eklentisi bulunamadı. @capacitor-firebase/messaging kurulu mu?');
-        return;
+        throw new Error('FirebaseMessaging native eklentisi bulunamadı');
     }
 
     // Android 13+: bildirim izni system diyaloguyla sorulur.
@@ -34,13 +34,15 @@ async function initPushNative() {
         const perm = await FirebaseMessaging.requestPermissions();
         if (perm && perm.receive === 'denied') {
             console.warn('Push bildirim izni verilmedi.');
-            return;
+            throw new Error('Bildirim izni reddedildi');
         }
     }
 
     // Native FCM token'i (VAPID gerekmez; google-services.json devreye girer).
     const result = await FirebaseMessaging.getToken();
-    await savePushToken(result && result.value, 'android-native');
+    const token = result && result.value;
+    if (!token) throw new Error('Native FCM token alınamadı');
+    await savePushToken(token, 'android-native');
 
     // Token yenilenirse guncelle (uygulama acikken).
     await FirebaseMessaging.addListener('tokenReceived', async (event) => {
