@@ -28,6 +28,22 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Apply Parnex app icon
+        run: |
+          mkdir -p android/app/src/main/res/drawable android/app/src/main/res/values
+          curl -L --fail --retry 3 https://raw.githubusercontent.com/Bizzness4711/Notion_parnex/main/icons/logo-512.png -o android/app/src/main/res/drawable/parnex_logo.png
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          text = manifest.read_text()
+          if 'android:icon=' in text:
+              import re
+              text = re.sub(r'android:icon="[^"]+"', 'android:icon="@drawable/parnex_logo"', text, count=1)
+          else:
+              text = text.replace('<application ', '<application android:icon="@drawable/parnex_logo" ', 1)
+          manifest.write_text(text)
+          PY
+
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
