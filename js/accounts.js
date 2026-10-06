@@ -219,15 +219,17 @@ async function loadUserData() {
                 throw error;
             });
         const [txSnapshot, trSnapshot, recurringSnapshot, goalsSnapshot] = await Promise.all([
-            db.collection('users').doc(currentUser.uid).collection('transactions').orderBy('date', 'desc').get(),
-            db.collection('users').doc(currentUser.uid).collection('transfers').orderBy('date', 'desc').get(),
+            db.collection('users').doc(currentUser.uid).collection('transactions').get(),
+            db.collection('users').doc(currentUser.uid).collection('transfers').get(),
             recurringPromise,
             db.collection('users').doc(currentUser.uid).collection('goals').orderBy('createdAt', 'desc').get()
         ]);
         transactions = [];
         txSnapshot.forEach(doc => transactions.push({ id: doc.id, ...doc.data() }));
+        transactions.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
         transfers = [];
         trSnapshot.forEach(doc => transfers.push({ id: doc.id, ...doc.data() }));
+        transfers.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
         recurringTransactions = [];
         recurringSnapshot?.forEach(doc => recurringTransactions.push({ id: doc.id, ...doc.data() }));
         goals = [];
