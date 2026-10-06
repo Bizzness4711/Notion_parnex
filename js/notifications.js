@@ -176,20 +176,31 @@ async function requestNotificationPermission() {
         try {
             if (typeof initPushNative !== 'function') throw new Error('Native FCM modülü yüklenemedi');
             await initPushNative();
-            showToast('Telefon bildirimleri etkinleştirildi.', 'success');
+            showToast('Bildirimler etkinleştirildi.', 'success');
         } catch (e) {
-            console.warn('Native bildirim izni alınamadı.', e);
-            showToast('Telefon bildirimleri açılamadı. Firebase Android ayarlarını kontrol edin.', 'error');
+            console.warn('Native bildirim izni/token işlemi başarısız.', e);
+            showToast('Bildirimler etkinleştirilemedi. Lütfen tekrar deneyin.', 'error');
         }
         return;
     }
     if (!('Notification' in window)) {
-        showToast('Bu tarayıcı masaüstü bildirimlerini desteklemiyor.', 'error');
+        showToast('Bu tarayıcı bildirimleri desteklemiyor.', 'error');
         return;
     }
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted' && typeof initPush === 'function') initPush();
-    showToast(permission === 'granted' ? 'Masaüstü bildirimleri açıldı.' : 'Bildirim izni verilmedi.', permission === 'granted' ? 'success' : 'error');
+    try {
+        const permission = Notification.permission === 'granted'
+            ? 'granted'
+            : await Notification.requestPermission();
+        if (permission === 'granted') {
+            if (typeof initPush === 'function') await initPush();
+            showToast('Bildirimler açıldı.', 'success');
+        } else {
+            showToast('Bildirim izni verilmedi.', 'error');
+        }
+    } catch (e) {
+        console.warn('Web bildirim izni alınamadı.', e);
+        showToast('Bildirimler etkinleştirilemedi. Lütfen tekrar deneyin.', 'error');
+    }
 }
 
 // Otomatik kontroller: bugünkü tekrarlayan işlemler + hedef kilometre taşları + bütçe uyarıları.
