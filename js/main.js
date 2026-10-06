@@ -1,6 +1,7 @@
 // ponytail: not split — single DOMContentLoaded closure with shared state
 // (selectedType, editingTransactionId). 889 lines, manageable.
 document.addEventListener('DOMContentLoaded', () => {
+    let openTransactionAfterAccount = false;
         // Gizlilik butonu
     document.getElementById('privacyModeBtn').addEventListener('click', togglePrivacyMode);
 
@@ -103,6 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModalAnimated(document.getElementById('addAccountModal'));
             showToast('Hesap eklendi!', 'success');
             await loadUserData();
+            if (openTransactionAfterAccount && typeof openTransactionModal === 'function') {
+                openTransactionAfterAccount = false;
+                openTransactionModal();
+            }
         } catch (error) { showToast('Hesap eklenirken hata: ' + error.message, 'error'); }
     });
 
@@ -131,6 +136,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Yeni islem modalini ac (FAB menuden ve dashboard kisayolundan)
     const openTransactionModal = () => {
+        // Yeni kullanıcıda henüz hesap yoksa işlem formu boş ve kullanılamaz kalmasın.
+        // Önce hesap oluştur, ardından işlem formunu otomatik aç.
+        if (accounts.length === 0) {
+            openTransactionAfterAccount = true;
+            const accountModal = document.getElementById('addAccountModal');
+            if (accountModal) accountModal.style.display = 'flex';
+            showToast('İlk işlemini eklemek için önce bir hesap oluşturalım.', 'info');
+            return;
+        }
         editingTransactionId = null;
         document.getElementById('transactionForm').reset();
         document.getElementById('date').value = formatLocalDate(new Date());
@@ -645,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     transactionRate: isSell ? sellRate : transactionRate,
                     transactionRateDate: new Date().toISOString(),
                     profitLoss: isSell ? 0 : profitLoss,
-                    sellRate: isSell ? sellRate : firebase.firestore.FieldValue.delete(),
+                    ...(isSell && Number.isFinite(sellRate) && sellRate > 0 ? { sellRate } : { sellRate: firebase.firestore.FieldValue.delete() }),
                     sellTargetAccountId: isSell ? sellTargetId : firebase.firestore.FieldValue.delete(),
                     sellTargetAccountName: isSell ? (accounts.find(a => a.id === sellTargetId)?.name || '') : firebase.firestore.FieldValue.delete(),
                     isInstallment,
