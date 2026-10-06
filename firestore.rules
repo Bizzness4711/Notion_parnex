@@ -27,7 +27,11 @@ service cloud.firestore {
       match /notifications/{doc} { allow read, write: if isOwner(uid) || isAdmin(); }
       // Push token: kullanıcı yalnızca kendi cihaz tokenlarını yönetebilir.
       // Admin SDK, push gönderimi için güvenlik kurallarını zaten bypass eder.
-      match /pushTokens/{doc} { allow read, write: if isOwner(uid); }
+      match /pushTokens/{doc} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow create, update: if isOwner(uid);
+        allow delete: if isOwner(uid) || isAdmin();
+      }
       // Push loglarını istemci yazamaz; kullanıcı kendi loglarını, admin ise yönetim amacıyla okuyabilir.
       match /pushLog/{doc} {
         allow read: if isOwner(uid) || isAdmin();
