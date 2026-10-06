@@ -43,7 +43,7 @@ Parnex, gelir-gider takibi, bütçe yönetimi, birikim hedefleri ve yatırım ta
 
 1. Bu repoyu klonlayın:
 ```bash
-git clone https://github.com/bizzness4711/Muhasebe.git
+git clone https://github.com/Bizzness4711/Notion_parnex.git
 ```
 
 2. `index.html` dosyasını bir web tarayıcısında açın veya bir web sunucusunda barındırın.
@@ -54,7 +54,7 @@ git clone https://github.com/bizzness4711/Muhasebe.git
 
 ## 🌐 Canlı Demo
 
-[https://bizzness4711.github.io/Muhasebe/](https://bizzness4711.github.io/Muhasebe/)
+[https://bizzness4711.github.io/Notion_parnex/](https://bizzness4711.github.io/Notion_parnex/)
 
 ## 📱 PWA Desteği
 
