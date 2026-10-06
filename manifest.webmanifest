@@ -1,0 +1,24 @@
+{
+  "name": "Parnex | Kişisel Finans",
+  "short_name": "Parnex",
+  "description": "Kişisel finans, gelir-gider, bütçe ve yatırım takibi.",
+  "start_url": "/Notion_parnex/",
+  "scope": "/Notion_parnex/",
+  "display": "standalone",
+  "background_color": "#f4f5fb",
+  "theme_color": "#6d5dfc",
+  "icons": [
+    {
+      "src": "icons/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
