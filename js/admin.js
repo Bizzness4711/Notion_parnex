@@ -362,12 +362,60 @@
     } catch (e) { showToast('Hesap silinemedi: ' + e.message, 'error'); }
   };
 
-  window.deleteAdminUser = async function (uid) {    if (!confirm('Bu kullanıcının Firestore kaydını sileyim mi? (Auth kaydı silinmez, kullanıcı tekrar giriş yapabilir. Tam silme için Firebase Console > Authentication kullanın.)')) return;
+  window.deleteAdminUser = async function (uid) {
+    if (!uid) return;
+    if (typeof currentUser !== 'undefined' && currentUser?.uid === uid) {
+      showToast('Kendi admin hesabınızı buradan silemezsiniz.', 'error');
+      return;
+    }
+    if (!confirm('Bu kullanıcının tüm Firestore verilerini silelim mi? Hesabın Firebase Authentication kaydı silinmez; tam silme için Firebase Console > Authentication kullanın.')) return;
+
+    const subcollections = [
+      'accounts',
+      'transactions',
+      'transfers',
+      'recurringTransactions',
+      'goals',
+      'budgets',
+      'categories',
+      'notifications',
+      'pushTokens',
+      'pushLog'
+    ];
+
     try {
-      await db.collection('users').doc(uid).delete();
-      showToast('Kullanıcı kaydı silindi.', 'success');
+      const userRef = db.collection('users').doc(uid);
+
+      for (const collectionName of subcollections) {
+        const snap = await userRef.collection(collectionName).get();
+        if (snap.empty) continue;
+
+        let batch = db.batch();
+        let count = 0;
+
+        for (const doc of snap.docs) {
+          batch.delete(doc.ref);
+          count++;
+
+          // Firestore batch limit is 500; stay below it for safety.
+          if (count === 450) {
+            await batch.commit();
+            batch = db.batch();
+            count = 0;
+          }
+        }
+
+        if (count > 0) await batch.commit();
+      }
+
+      await userRef.delete();
+      showToast('Kullanıcının Firestore verileri silindi. Firebase Authentication kaydı ayrıca silinmelidir.', 'success');
+      countsLoaded = false;
       await window.loadAdminData();
-    } catch (e) { showToast('Silinemedi: ' + e.message, 'error'); }
+    } catch (e) {
+      console.error('Admin kullanıcı silme hatası:', e);
+      showToast('Kullanıcı tamamen silinemedi: ' + e.message, 'error');
+    }
   };
 
   document.addEventListener('DOMContentLoaded', () => {
