@@ -155,6 +155,83 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
+async function recoverMissingTransactionsFromSameFirebase() {
+    if (!currentUser || !isAdmin) return { copied: 0, sourceUid: null };
+
+    try {
+        // Bildirim/Firebase ayarları değişirken UID değişmişse eski kullanıcı
+        // aynı e-posta ile hâlâ bu Firebase projesinde bulunabilir.
+        const usersSnapshot = await db.collection('users').get();
+        const email = String(currentUser.email || '').trim().toLowerCase();
+        const candidates = usersSnapshot.docs
+            .filter(doc => doc.id !== currentUser.uid)
+            .map(doc => ({ id: doc.id, data: doc.data() || {} }))
+            .filter(item => {
+                const candidateEmail = String(item.data.email || '').trim().toLowerCase();
+                return email && candidateEmail === email;
+            });
+
+        for (const candidate of candidates) {
+            const sourceRef = db.collection('users').doc(candidate.id);
+            const txSnapshot = await sourceRef.collection('transactions').get();
+            const transferSnapshot = await sourceRef.collection('transfers').get();
+            const recurringSnapshot = await sourceRef.collection('recurringTransactions').get();
+            const goalsSnapshot = await sourceRef.collection('goals').get();
+            const budgetsSnapshot = await sourceRef.collection('budgets').get();
+            const accountsSnapshot = await sourceRef.collection('accounts').get();
+
+            const totalSourceData =
+                txSnapshot.size + transferSnapshot.size + recurringSnapshot.size +
+                goalsSnapshot.size + budgetsSnapshot.size;
+
+            if (!totalSourceData) continue;
+
+            let batch = db.batch();
+            let batchCount = 0;
+            const copyCollection = async (snapshot, collectionName) => {
+                for (const doc of snapshot.docs) {
+                    const target = db.collection('users').doc(currentUser.uid)
+                        .collection(collectionName).doc(doc.id);
+                    batch.set(target, doc.data(), { merge: true });
+                    batchCount++;
+                    if (batchCount >= 450) {
+                        await batch.commit();
+                        batch = db.batch();
+                        batchCount = 0;
+                    }
+                }
+            };
+
+            await copyCollection(txSnapshot, 'transactions');
+            await copyCollection(transferSnapshot, 'transfers');
+            await copyCollection(recurringSnapshot, 'recurringTransactions');
+            await copyCollection(goalsSnapshot, 'goals');
+            await copyCollection(budgetsSnapshot, 'budgets');
+
+            // Hesaplar mevcut kullanıcıda hiç yoksa eski hesapları da geri getir.
+            const currentAccounts = await db.collection('users').doc(currentUser.uid).collection('accounts').get();
+            if (currentAccounts.empty) await copyCollection(accountsSnapshot, 'accounts');
+
+            if (batchCount > 0) await batch.commit();
+
+            return {
+                copied: totalSourceData,
+                sourceUid: candidate.id,
+                transactions: txSnapshot.size,
+                transfers: transferSnapshot.size,
+                recurringTransactions: recurringSnapshot.size,
+                goals: goalsSnapshot.size,
+                budgets: budgetsSnapshot.size,
+                accounts: currentAccounts.empty ? accountsSnapshot.size : 0
+            };
+        }
+    } catch (error) {
+        console.warn('Aynı Firebase projesindeki eski veriler aranamadı:', error);
+    }
+
+    return { copied: 0, sourceUid: null };
+}
+
 async function loadUserData() {
     if (!currentUser) return;
     try {
@@ -227,6 +304,25 @@ async function loadUserData() {
         transactions = [];
         txSnapshot.forEach(doc => transactions.push({ id: doc.id, ...doc.data() }));
         transactions.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+
+        // İşlemler boşsa ve mevcut kullanıcı admin ise, aynı Firebase projesinde
+        // aynı e-postaya ait eski UID altında kalmış verileri otomatik kurtar.
+        if (transactions.length === 0 && isAdmin) {
+            const recovery = await recoverMissingTransactionsFromSameFirebase();
+            if (recovery.copied > 0) {
+                showToast(
+                    'Eski işlemler otomatik geri getirildi: ' +
+                    recovery.transactions + ' işlem, ' +
+                    recovery.transfers + ' transfer.',
+                    'success'
+                );
+                const restoredTx = await db.collection('users').doc(currentUser.uid).collection('transactions').get();
+                transactions = [];
+                restoredTx.forEach(doc => transactions.push({ id: doc.id, ...doc.data() }));
+                transactions.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+            }
+        }
+
         transfers = [];
         trSnapshot.forEach(doc => transfers.push({ id: doc.id, ...doc.data() }));
         transfers.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
