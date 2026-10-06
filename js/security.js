@@ -43,6 +43,30 @@ async function verifySecurityPin(pin, storedValue) {
     return (await hashSecurityPin(pin, saltHex)).split(':')[1] === expectedHash;
 }
 
+function getSecurityPinAttempts() {
+    return Number(localStorage.getItem(securityStorageKey('pin-attempts') || '') || 0);
+}
+
+function getSecurityPinLockoutUntil() {
+    return Number(localStorage.getItem(securityStorageKey('pin-lockout-until') || '') || 0);
+}
+
+function resetSecurityPinAttempts() {
+    localStorage.removeItem(securityStorageKey('pin-attempts'));
+    localStorage.removeItem(securityStorageKey('pin-lockout-until'));
+}
+
+function registerSecurityPinFailure() {
+    const attempts = getSecurityPinAttempts() + 1;
+    localStorage.setItem(securityStorageKey('pin-attempts'), String(attempts));
+    if (attempts >= 5) {
+        localStorage.setItem(securityStorageKey('pin-lockout-until'), String(Date.now() + 30000));
+        localStorage.setItem(securityStorageKey('pin-attempts'), '0');
+        return 30;
+    }
+    return 0;
+}
+
 function hasSecurityPin() {
     return Boolean(securityStorageKey('pin') && localStorage.getItem(securityStorageKey('pin')));
 }
