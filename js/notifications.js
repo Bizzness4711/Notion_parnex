@@ -172,6 +172,17 @@ window.clearAllNotifications = async function () {
 };
 
 async function requestNotificationPermission() {
+    if (typeof isCapacitorNative === 'function' && isCapacitorNative()) {
+        try {
+            if (typeof initPushNative !== 'function') throw new Error('Native FCM modülü yüklenemedi');
+            await initPushNative();
+            showToast('Telefon bildirimleri etkinleştirildi.', 'success');
+        } catch (e) {
+            console.warn('Native bildirim izni alınamadı.', e);
+            showToast('Telefon bildirimleri açılamadı. Firebase Android ayarlarını kontrol edin.', 'error');
+        }
+        return;
+    }
     if (!('Notification' in window)) {
         showToast('Bu tarayıcı masaüstü bildirimlerini desteklemiyor.', 'error');
         return;
