@@ -14,9 +14,9 @@ const messaging = firebase.messaging();
 
 // Uygulama kapalıyken gelen push burada gösterilir.
 messaging.onBackgroundMessage((payload) => {
-    const title = (payload && payload.notification && payload.notification.title) || 'Finora';
+    const title = (payload && payload.notification && payload.notification.title) || 'Parnex';
     const body = (payload && payload.notification && payload.notification.body) || 'Yeni bildiriminiz var.';
-    self.registration.showNotification(title, { body, icon: 'icons/logo-192.png', badge: 'icons/logo-192.png', tag: 'finora' });
+    self.registration.showNotification(title, { body, icon: 'icons/logo-192.png', badge: 'icons/logo-192.png', tag: 'parnex' });
 });
 
 self.addEventListener('notificationclick', (event) => {
