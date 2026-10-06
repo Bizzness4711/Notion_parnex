@@ -107,7 +107,7 @@ async function main() {
         // Tek uyarıda kendi başlığı, çok uyarıda özet başlık + satır başına tip.
         const notification = bodies.length === 1
             ? { title: bodies[0].title, body: bodies[0].body }
-            : { title: `Finora (${bodies.length} bildirim)`, body: bodies.slice(0, 3).map(m => `${m.title} — ${m.body}`).join('\n') };
+            : { title: `Parnex (${bodies.length} bildirim)`, body: bodies.slice(0, 3).map(m => `${m.title} — ${m.body}`).join('\n') };
         const res = await messaging.sendEachForMulticast({ tokens, notification });
         console.log(`FCM sonuç: ${res.successCount} başarılı, ${res.failureCount} hatalı`);
         // Geçersiz tokenları temizle, diğer hataları logla
