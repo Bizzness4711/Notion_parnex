@@ -163,17 +163,52 @@ async function saveSettings() {
 }
 
 async function clearAllData() {
-    if (!confirm('Tüm veriler silinecek. Emin misiniz?')) return;
+    if (!confirm('Hesaplarınız, işlemleriniz, transferleriniz, hedefleriniz ve bildirimleriniz dahil tüm uygulama verileri silinecek. Bu işlem geri alınamaz. Emin misiniz?')) return;
     if (!currentUser) return;
     try {
-        for (const collection of ['accounts', 'transactions', 'transfers', 'recurringTransactions', 'goals']) {
-            const snapshot = await db.collection('users').doc(currentUser.uid).collection(collection).get();
-            for (const doc of snapshot.docs) await doc.ref.delete();
-        }
-        accounts = []; transactions = []; transfers = []; recurringTransactions = []; goals = [];
+        const userRef = db.collection('users').doc(currentUser.uid);
+        const collections = [
+            'accounts',
+            'transactions',
+            'transfers',
+            'recurringTransactions',
+            'goals',
+            'budgets',
+            'categories',
+            'notifications',
+            'pushTokens',
+            'pushLog'
+        ];
+
+        // Firestore batch sınırı 500 olduğundan güvenli bir pay bırakıyoruz.
+        const deleteCollection = async (collectionName) => {
+            const snapshot = await userRef.collection(collectionName).get();
+            const refs = snapshot.docs.map(doc => doc.ref);
+            for (let i = 0; i < refs.length; i += 450) {
+                const batch = db.batch();
+                refs.slice(i, i + 450).forEach(ref => batch.delete(ref));
+                if (refs.length) await batch.commit();
+            }
+        };
+
+        for (const collection of collections) await deleteCollection(collection);
+
+        accounts = [];
+        transactions = [];
+        transfers = [];
+        recurringTransactions = [];
+        goals = [];
+        if (typeof budgets !== 'undefined') budgets = [];
+        if (typeof categories !== 'undefined') categories = [];
+        notifications = [];
+
         updateAllUI();
-        showToast('Tüm veriler silindi!', 'success');
-    } catch (e) { showToast('Silme hatası: ' + e.message, 'error'); }
+        if (typeof updateNotificationsUI === 'function') updateNotificationsUI();
+        showToast('Tüm uygulama verileri silindi.', 'success');
+    } catch (e) {
+        console.error('Tüm veri silme hatası:', e);
+        showToast('Silme hatası: ' + e.message, 'error');
+    }
 }
 
 
