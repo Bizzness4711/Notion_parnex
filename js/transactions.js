@@ -358,10 +358,11 @@ function updateTransactionsUI() {
             if (isHidden) showToast('İşlemi düzenlemek için önce gizlilik modunu kapatın.', 'error');
             return;
         }
+        const recurringCandidates = recurringTransactions.filter(item => item.accountId === transaction.accountId
+            && item.description === transaction.description
+            && Number(item.amount) === Number(transaction.amount));
         const recurring = recurringTransactions.find(item => item.id === transaction.recurringId)
-            || recurringTransactions.find(item => item.accountId === transaction.accountId
-                && item.description === transaction.description
-                && Number(item.amount) === Number(transaction.amount));
+            || (recurringCandidates.length === 1 ? recurringCandidates[0] : null);
         editingTransactionId = id;
         selectedType = transaction.type === 'income' ? 'income' : transaction.type === 'sell' ? 'sell' : 'expense';
         const typeButton = document.querySelector(`.type-btn[data-type="${selectedType}"]`);
