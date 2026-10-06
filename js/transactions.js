@@ -350,6 +350,10 @@ function updateTransactionsUI() {
 
     window.editTransaction = function(id) {
         const transaction = transactions.find(item => item.id === id);
+        if (transaction?.transferId) {
+            showToast('Bu kayıt bir transferin ödeme kaydıdır. Transferi Transferler bölümünden yönetin.', 'error');
+            return;
+        }
         if (!transaction || !currentUser || isHidden) {
             if (isHidden) showToast('İşlemi düzenlemek için önce gizlilik modunu kapatın.', 'error');
             return;
@@ -514,10 +518,14 @@ window.deleteAccount = async function(id) {
 };
 
 window.deleteTransaction = async function(id) {
-    if (!confirm('Bu işlemi silmek istediğinize emin misiniz?')) return;
     if (!currentUser) return;
+    const transaction = transactions.find(t => t.id === id);
+    if (transaction?.transferId) {
+        showToast('Bu kayıt bir transferin ödeme kaydıdır. Transferi silmek için Transferler bölümünü kullanın.', 'error');
+        return;
+    }
+    if (!confirm('Bu işlemi silmek istediğinize emin misiniz?')) return;
     try {
-        const transaction = transactions.find(t => t.id === id);
         if (transaction) {
             const account = accounts.find(a => a.id === transaction.accountId);
             const batch = db.batch();
