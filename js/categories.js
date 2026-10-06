@@ -1,10 +1,9 @@
 function getCategories(type) {
-    // Varsayılan kategoriler her kullanıcıda görünür.
-    // Firestore'da yalnızca 1 özel kategori kalmış olsa bile diğer
-    // varsayılan kategorilerin kaybolmasını engeller.
-    const defaults = DEFAULT_CATEGORIES[type] || [];
+    // Satış işlemleri kategori olarak gelir kategorilerini kullanır.
+    const categoryType = type === 'sell' ? 'income' : type;
+    const defaults = DEFAULT_CATEGORIES[categoryType] || [];
     const custom = customCategories
-        .filter(c => c.type === type)
+        .filter(c => c && c.type === categoryType)
         .map(c => c.name)
         .filter(Boolean);
 
@@ -92,4 +91,3 @@ function getNextRecurringDate(dateString, frequency) {
     else date.setMonth(date.getMonth() + 1);
     return date.toISOString().split('T')[0];
 }
-
