@@ -719,16 +719,86 @@ document.addEventListener('DOMContentLoaded', () => {
                     const restoredBalance = Number(oldAccount.balance || 0) + (oldTransaction.type === 'income' ? -oldImpact : oldImpact);
                     const adjustedBalance = restoredBalance + (selectedType === 'income' ? newImpact : -newImpact);
                     const accountUpdates = { balance: adjustedBalance };
-                    if (isInvestment) accountUpdates.quantity = adjustedBalance;
+
+                    if (isInvestment) {
+                        accountUpdates.quantity = Math.max(0, adjustedBalance);
+                        const oldPurchaseRate = Number(oldTransaction.purchaseRate || oldTransaction.accountOpeningRate || 0);
+                        const newPurchaseRate = Number(purchaseRate || getAccountOpeningRate(account) || 0);
+                        const currentRate = Number(getAccountOpeningRate(account) || 0);
+                        const currentQuantity = Number(oldAccount.balance || 0);
+                        let costBasis = currentQuantity * currentRate;
+
+                        // Eski yatırım alışını maliyet bazından çıkar, yeni alışın maliyetini ekle.
+                        if (oldTransaction.type === 'income' && oldPurchaseRate > 0) {
+                            costBasis -= Number(oldTransaction.amount || 0) * oldPurchaseRate;
+                        }
+                        if (selectedType === 'income' && newPurchaseRate > 0) {
+                            costBasis += amount * newPurchaseRate;
+                        }
+
+                        if (adjustedBalance <= 0) {
+                            accountUpdates.quantity = 0;
+                            accountUpdates.balance = 0;
+                            accountUpdates.buyPrice = 0;
+                            accountUpdates.openingRate = 0;
+                        } else if (costBasis > 0) {
+                            const weightedBuyPrice = costBasis / adjustedBalance;
+                            accountUpdates.buyPrice = weightedBuyPrice;
+                            accountUpdates.openingRate = weightedBuyPrice;
+                        }
+                    }
+
                     batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(account.id), accountUpdates);
                 } else {
                     if (oldAccount) {
                         const oldBalance = Number(oldAccount.balance || 0) + (oldTransaction.type === 'income' ? -oldImpact : oldImpact);
-                        batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(oldAccount.id), { balance: oldBalance });
+                        const oldUpdates = { balance: oldBalance };
+
+                        if (isInvestment) {
+                            oldUpdates.quantity = Math.max(0, oldBalance);
+                            const oldPurchaseRate = Number(oldTransaction.purchaseRate || oldTransaction.accountOpeningRate || 0);
+                            const oldCurrentRate = Number(getAccountOpeningRate(oldAccount) || 0);
+                            let oldCostBasis = Number(oldAccount.balance || 0) * oldCurrentRate;
+                            if (oldTransaction.type === 'income' && oldPurchaseRate > 0) {
+                                oldCostBasis -= Number(oldTransaction.amount || 0) * oldPurchaseRate;
+                            }
+                            if (oldBalance <= 0) {
+                                oldUpdates.quantity = 0;
+                                oldUpdates.balance = 0;
+                                oldUpdates.buyPrice = 0;
+                                oldUpdates.openingRate = 0;
+                            } else if (oldCostBasis > 0) {
+                                oldUpdates.buyPrice = oldCostBasis / oldBalance;
+                                oldUpdates.openingRate = oldUpdates.buyPrice;
+                            }
+                        }
+
+                        batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(oldAccount.id), oldUpdates);
                     }
+
                     const newBalance = Number(account.balance || 0) + (selectedType === 'income' ? newImpact : -newImpact);
                     const accountUpdates = { balance: newBalance };
-                    if (isInvestment) accountUpdates.quantity = newBalance;
+
+                    if (isInvestment) {
+                        accountUpdates.quantity = Math.max(0, newBalance);
+                        const newPurchaseRate = Number(purchaseRate || getAccountOpeningRate(account) || 0);
+                        const currentRate = Number(getAccountOpeningRate(account) || 0);
+                        let newCostBasis = Number(account.balance || 0) * currentRate;
+                        if (selectedType === 'income' && newPurchaseRate > 0) {
+                            newCostBasis += amount * newPurchaseRate;
+                        }
+
+                        if (newBalance <= 0) {
+                            accountUpdates.quantity = 0;
+                            accountUpdates.balance = 0;
+                            accountUpdates.buyPrice = 0;
+                            accountUpdates.openingRate = 0;
+                        } else if (newCostBasis > 0) {
+                            accountUpdates.buyPrice = newCostBasis / newBalance;
+                            accountUpdates.openingRate = accountUpdates.buyPrice;
+                        }
+                    }
+
                     batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(account.id), accountUpdates);
                 }
                 try {
