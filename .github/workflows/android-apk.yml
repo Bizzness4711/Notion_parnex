@@ -1,4 +1,5 @@
 name: Android APK
+# Parnex production debug build
 
 on:
   workflow_dispatch:
