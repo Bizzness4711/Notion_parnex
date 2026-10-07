@@ -16,9 +16,8 @@ Parnex, gelir-gider takibi, bütçe yönetimi, birikim hedefleri ve yatırım ta
 
 ```
 ├── index.html          # Ana HTML dosyası
-├── style.css           # Ana stil dosyası
 ├── js/                 # JavaScript dosyaları
-├── css/                # Ek stil dosyaları
+├── css/                # Stil dosyaları (bölünmüş)
 ├── icons/              # Uygulama ikonları
 ├── data/               # Veri dosyaları
 ├── tools/              # Hesaplama araçları
