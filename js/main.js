@@ -249,6 +249,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.dataset.theme = newTheme;
         localStorage.setItem('theme-v2', newTheme);
         document.querySelector('#themeBtn i').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        // Tema değişince durum çubuğu rengi de değişmeli (js/pwa.js dinler).
+        window.dispatchEvent(new CustomEvent('pwa:themechange'));
     });
 
     // Kur güncelle

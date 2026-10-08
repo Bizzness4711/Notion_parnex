@@ -1,0 +1,225 @@
+/* ============================================================
+   PWA / MOBIL KABUK
+   - safe-area: viewport-fit=cover ile kesilen cerceve paylari
+   - standalone modda tarayici arayuzu kaybolur; kenarlar dibe yapisir
+   - kurulum banner'i ve guncelleme cubugu
+   ============================================================ */
+
+/* 1. Cerceve paylari.
+   Ucgen/kavisli ekranlarda sabit header, sidebar ve modal alt cubuk
+   safe-area olmadan ekran disina tasar. Tek kural: her sabit yuzey
+   kendi payini kendi ekseninde uygular. */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+html,
+body {
+  /* Yukari/asagi kaydirma Lastik top etkisi yapmasin; uygulama hissi gelsin. */
+  overscroll-behavior-y: none;
+}
+
+.app-container {
+  /* Sabit header + guvenli alan toplami kadar yer ac. */
+  min-height: calc(100vh + var(--safe-top));
+}
+
+/* 2. Header: ust boslugu guvenli alandan alir. */
+.header {
+  top: 0;
+  padding-top: var(--safe-top);
+  height: calc(var(--header-height) + var(--safe-top));
+}
+
+/* Icerik, header'ın gercek yuksekligi kadar asagi kayar. */
+.main-content {
+  padding-top: calc(var(--header-height) + var(--safe-top) + 22px);
+}
+
+/* 3. Sidebar: soldaki kenar boslugu (yatay modda notch). */
+.sidebar {
+  padding-top: calc(26px + var(--safe-top));
+  padding-left: calc(16px + var(--safe-left));
+}
+
+/* 4. Modal: alt kenarda acilan sheet, home cubugunun uzerine binmesin. */
+.modal-content {
+  padding-bottom: calc(30px + var(--safe-bottom));
+}
+
+/* 5. Quick-add FAB: sag-alt kenar + home cubugu. */
+.fab-wrap {
+  bottom: calc(24px + var(--safe-bottom));
+  right: calc(24px + var(--safe-right));
+}
+
+/* 6. Yatay modda guvenli alanlar yatayda devreye girer. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .main-content {
+    padding-left: max(14px, var(--safe-left));
+    padding-right: max(14px, var(--safe-right));
+  }
+  .header {
+    padding-right: max(14px, var(--safe-right));
+    padding-left: max(14px, var(--safe-left));
+  }
+  .fab-menu {
+    /* Alttan acilan menu ekranin kisa liginde tasmasin. */
+    max-height: calc(100vh - var(--safe-top) - var(--safe-bottom) - 90px);
+    overflow-y: auto;
+  }
+}
+
+/* 7. Cevrimdisi kurulum banner'i (yalnizca iOS'ta gorunur). */
+.pwa-install-banner {
+  position: fixed;
+  z-index: 3000;
+  left: max(12px, var(--safe-left));
+  right: max(12px, var(--safe-right));
+  bottom: calc(12px + var(--safe-bottom));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.24s var(--ease), transform 0.24s var(--ease);
+}
+.pwa-install-banner.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.pwa-install-banner img {
+  flex: none;
+  border-radius: 10px;
+}
+.pwa-install-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 0.85rem;
+}
+.pwa-install-copy strong {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.pwa-install-copy span {
+  color: var(--text-secondary);
+}
+.pwa-install-close {
+  flex: none;
+  align-self: flex-start;
+  padding: 6px 8px;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+/* 8. Guncelleme cubugu. */
+.pwa-update-bar {
+  position: fixed;
+  z-index: 3001;
+  left: 50%;
+  top: calc(10px + var(--safe-top));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 24px);
+  padding: 9px 10px 9px 16px;
+  border-radius: 999px;
+  background: #1e2235;
+  color: #f4f3fa;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translate(-50%, -14px);
+  transition: opacity 0.24s var(--ease), transform 0.24s var(--ease);
+}
+.pwa-update-bar.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.pwa-update-bar span {
+  white-space: nowrap;
+}
+.pwa-update-btn {
+  padding: 6px 13px;
+  border: 0;
+  border-radius: 999px;
+  background: #6256d9;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.pwa-update-dismiss {
+  padding: 5px;
+  border: 0;
+  background: none;
+  color: rgba(244, 243, 250, 0.65);
+  font-size: 0.9rem;
+}
+
+/* 9. Ayarlar sayfasindaki kurulum satiri. */
+.pwa-install-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.pwa-install-row .export-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* 10. Cihazda kurulu (standalone) modda ince ayarlar:
+   tarayici arayuzu yok, dolayisiyla secim vurgusu ve metin secimi
+   masaustunden farkli ele alinmali. */
+@media (display-mode: standalone) {
+  /* Native uygulama hissi: metin secimini yalnizca girdilerde tut. */
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input,
+  textarea,
+  [contenteditable],
+  .toast,
+  .modal-content {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  /* Iceri/disa kaydirma cubugu gizlenir; sayfa kendi kayar. */
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+/* 11. iOS'ta tus vurgusu ve cift-tap zoom sikismasi. */
+.standalone-scroll,
+html {
+  -webkit-text-size-adjust: 100%;
+}
+input,
+textarea,
+select {
+  /* iOS otomatik yakinlastirmasini onlemek icin 16px esigi. */
+  font-size: max(16px, 1em);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pwa-install-banner,
+  .pwa-update-bar {
+    transition: none;
+  }
+}

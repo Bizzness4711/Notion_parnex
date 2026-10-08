@@ -11,17 +11,21 @@ Parnex, gelir-gider takibi, bütçe yönetimi, birikim hedefleri ve yatırım ta
 - **Harcama Analizi**: Harcamalarınızı kategorilere göre analiz edin
 - **Responsive Tasarım**: Mobil, tablet ve masaüstü cihazlarda mükemmel görünüm
 - **Karanlık Mod**: Otomatik karanlık mod desteği
+- **PWA**: Ana ekrana eklenir, tam ekran çalışır, çevrimdışı açılır
+- **Çevrimdışı Çalışma**: Uygulama kabuğu önbelleklenir; kura verileri her zaman taze
 
 ## 📁 Proje Yapısı
 
 ```
 ├── index.html          # Ana HTML dosyası
+├── sw.js               # Service worker (önbellek + offline + push)
 ├── js/                 # JavaScript dosyaları
 ├── css/                # Stil dosyaları (bölünmüş)
-├── icons/              # Uygulama ikonları
+├── icons/              # Uygulama ikonları (any + maskable + apple-touch)
 ├── data/               # Veri dosyaları
 ├── tools/              # Hesaplama araçları
 ├── test/               # Birim testler (node:test)
+├── www/                # Capacitor webDir + çevrimdışı yönlendirme sayfası
 ├── altin/              # Altın takibi modülü
 ├── birikim/            # Birikim hedefleri modülü
 ├── butce/              # Bütçe yönetimi modülü
@@ -48,6 +52,29 @@ Testler `main` dalına yapılan push ve PR'larda GitHub Actions ile otomatik ko�
 - JavaScript (Vanilla JS)
 - Firebase (Firestore)
 - PWA (Progressive Web App)
+
+## 📱 Telefonda kullanma (PWA)
+
+Parnex, kurulum gerektirmeyen bir uygulamadır: tarayıcıda açılır, ana ekrana
+eklenir ve tam ekran çalışır.
+
+- **Android / Chrome:** Menü → **Yükle** ya da uygulamadaki **Ayarlar →
+  Telefonda Kullan → Uygulamayı yükle**
+- **iOS / Safari:** Paylaş → **Ana Ekrana Ekle** (iOS'ta tarayıcı kurulum
+  diyaloğu göstermediği için uygulama adımı hatırlatır)
+
+Çevrimdışıyken uygulama kabuğu açılır, kura verileri ise her zaman ağdan
+çekilir — böylece ekranda bayat bakiye gösterilmez.
+
+> Service worker yalnızca `https://` veya `localhost` üzerinde çalışır.
+> GitHub Pages `https` kullandığı için canlı demoda kurulum hazırdır.
+
+### Yeni dosya eklerken
+
+`sw.js` içindeki `PRECACHE` listesine yeni bir `js/`, `css/` veya sayfa
+eklediğinizde o dosyayı da listeye ekleyin; `test/pwa.test.mjs` bu eşleşmeyi
+kontrol eder ve eksik bırakırsanız test kırmızıya döner. Kabuk değiştiğinde
+`CACHE_VERSION` değerini artırın — eski önbellekler otomatik temizlenir.
 
 ## 📦 Kurulum
 

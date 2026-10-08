@@ -84,7 +84,9 @@ async function initPushWeb() {
         console.warn('FCM VAPID anahtarı girilmeden push çalışmaz (js/push.js).');
         return;
     }
-    const reg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+    // Push + offline ayni worker'da: ayni scope'a ikinci bir service worker
+    // kaydedilemez. sw.js push handler'ini kendi iceriyor (bkz. sw.js ust yorumu).
+    const reg = await navigator.serviceWorker.register('sw.js');
     const messaging = firebase.messaging();
     if (Notification.permission !== 'granted') return;
     const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });

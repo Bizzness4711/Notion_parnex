@@ -1,7 +1,18 @@
-# Parnex Mobil Uygulama (Capacitor / Android)
+# Parnex Mobil Uygulama
 
-Siteyi saran native Android uygulaması (APK). Push bildirimleri **native FCM** ile gelir:
-uygulama kapalıyken bile bildirim merkezine düşer.
+İki ayrı yol var:
+
+| Yol | Ne zaman | Gereken |
+|---|---|---|
+| **PWA** (varsayılan) | Chrome / Safari'de ana ekrana eklemek yeterli | Sunucu üzerinden `https` |
+| **Capacitor / Android** | Play Store ya da mağaza dışı APK | Android Studio, JDK, SDK |
+
+PWA yolu **derleme gerektirmez**: `sw.js` uygulama kabuğunu önbelleğe alır,
+çevrimdışı açılmayı sağlar, push bildirimlerini FCM ile gösterir. Ayrıntılar
+için README'deki "Telefonda kullanma (PWA)" bölümüne bakın.
+
+Aşağıdaki bölümler Capacitor (APK) yolunu anlatır. Push bildirimleri
+**native FCM** ile gelir: uygulama kapalıyken bile bildirim merkezine düşer.
 
 > Not: `capacitor.config.json` kullanılıyor (.ts değil) — TypeScript aracı gerektirmez.
 > Bu proje daha önce derlendi; aşağıdaki adımlar sıfırdan kurulum içindir.
@@ -72,3 +83,6 @@ Android Studio ile derlemek isterseniz `npx cap open android` → **Build → Bu
   JAVA_HOME'u jbr-21.0.11'e çevirin.
 - **"SDK location not found"** → `android/local.properties` içindeki sdk.dir yolunu düzeltin.
 - **Beyaz ekran:** İnternet yok; `www/index.html` yedek sayfası görünür.
+- **PWA'da push gelmiyor:** `sw.js` tek service worker'dır (push + offline
+  birlikte). Ayrı bir push worker'ı eklemeyin — aynı scope'a ikinci worker
+  kaydedilemez ve bildirimler sessizce bozulur.

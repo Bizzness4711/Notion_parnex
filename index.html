@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#f4f5fb" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#171827" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Parnex">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#f4f5fb">
     <title>Parnex | Kişisel Finans ve Bütçe Yönetimi</title>
     <meta name="description" content="Parnex ile gelir-gider takibi, bütçe yönetimi, birikim hedefleri ve yatırım takibinizi ücretsiz yapın. Hemen başlayın.">
     <meta name="robots" content="index, follow">
@@ -53,13 +56,15 @@
 
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/svg+xml" href="icons/logo.svg">
-    <link rel="apple-touch-icon" href="icons/logo-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/logo-192.png">
     <link rel="stylesheet" href="css/base.css?v=20260926">
     <link rel="stylesheet" href="css/layout.css?v=20260918">
     <link rel="stylesheet" href="css/components.css?v=20260918">
     <link rel="stylesheet" href="css/pages.css?v=20260918">
     <link rel="stylesheet" href="css/theme.css?v=20260918">
     <link rel="stylesheet" href="css/ux-refresh.css?v=20260919">
+    <link rel="stylesheet" href="css/pwa.css?v=20261008">
     <script>
         document.documentElement.dataset.theme = localStorage.getItem('theme-v2') === 'dark' ? 'dark' : 'light';
     </script>
@@ -817,6 +822,7 @@
                         <small class="hint-text">PIN bu cihazdaki ekran kilidini yönetir; verileriniz Firebase erişim kurallarıyla korunur.</small>
                     </div>
                     <div class="setting-item"><div class="setting-head"><span class="setting-icon"><i class="fas fa-calendar-plus"></i></span><div><strong>Dönem Sistemi</strong><small>Yeni ay başlatma</small></div></div><p class="hint-text">Aktif dönem: <strong id="settingsPeriodLabel">-</strong></p><p class="hint-text">Yeni ay başlatınca özetler ve bütçeler yeni döneme geçer, eski veriler korunur.</p><button id="startNewMonth" class="export-btn"><i class="fas fa-play"></i> Yeni Ay Başlat</button></div>
+                    <div class="setting-item"><div class="setting-head"><span class="setting-icon"><i class="fas fa-mobile-screen"></i></span><div><strong>Telefonda Kullan</strong><small>Ana ekrana ekle</small></div></div><p class="hint-text" id="pwaInstallHint">Parnex'i telefonunuzun ana ekranına ekleyin; tam ekran ve çevrimdışı çalışır.</p><div class="pwa-install-row"><button id="pwaInstallBtn" class="export-btn" type="button"><i class="fas fa-download"></i> <span id="pwaInstallBtnText">Uygulamayı yükle</span></button></div></div>
                     <div class="setting-item"><div class="setting-head"><span class="setting-icon"><i class="fas fa-map-signs"></i></span><div><strong>Tanıtım Turu</strong><small>Uygulama gezintisi</small></div></div><p class="hint-text">Uygulamayı tanıtan kısa turu tekrar izleyin.</p><button id="replayOnboardingBtn" class="export-btn" type="button"><i class="fas fa-route"></i> Turu tekrar göster</button></div>
                     <div class="setting-item">
                         <div class="setting-head"><span class="setting-icon"><i class="fas fa-bell"></i></span><div><strong>Bildirimler</strong><small>Bildirim izni ve ses</small></div></div>
@@ -1072,6 +1078,7 @@
     </div>
 
     <script src="js/firebase-config.js"></script>
+    <script src="js/pwa.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/categories.js"></script>
     <script src="js/notifications.js"></script>
