@@ -7,7 +7,6 @@
     const SW_URL = 'sw.js';
     const INSTALL_DISMISSED = 'pwa-install-dismissed';
 
-    let deferredPrompt = null;
     let registration = null;
 
     function isNativeApp() {
@@ -100,32 +99,14 @@
         requestAnimationFrame(() => bar.classList.add('show'));
     }
 
-    // Chromium: tarayici "install" diyalogunu biz tetikleriz.
-    window.addEventListener('beforeinstallprompt', event => {
-        event.preventDefault();
-        deferredPrompt = event;
-        updateInstallButton();
-    });
-
+    // Kurulumu "yakala" diye bir olayı bastırmıyoruz: yapılırsa tarayıcının
+    // kendi "Yükle" ipucu kaybolur ve Android'de kurulum yolu kalmaz.
+    // Sadece kurulum gerçekleştiğinde haber verip banner'i kapatıyoruz.
     window.addEventListener('appinstalled', () => {
-        deferredPrompt = null;
         localStorage.removeItem(INSTALL_DISMISSED);
         hideInstallBanner();
-        updateInstallButton();
         if (typeof showToast === 'function') showToast('Parnex ana ekrana eklendi.', 'success');
     });
-
-    async function promptInstall() {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        try {
-            await deferredPrompt.userChoice;
-        } catch (err) {
-            console.warn('Kurulum istemi hata verdi:', err);
-        }
-        deferredPrompt = null;
-        updateInstallButton();
-    }
 
     function hideInstallBanner() {
         const banner = document.querySelector('.pwa-install-banner');
@@ -174,47 +155,6 @@
         requestAnimationFrame(() => banner.classList.add('show'));
     }
 
-    // Ayarlar sayfasindaki "Uygulamayi yukle" dugmesi her platforma uyar.
-    function updateInstallButton() {
-        const button = document.getElementById('pwaInstallBtn');
-        if (!button) return;
-        const hint = document.getElementById('pwaInstallHint');
-        const installed = isStandalone();
-
-        // Buton etiketi HTML'de <span id="pwaInstallBtnText"> icinde; ikon atne
-    // degismemesi icin yalnizca metni degistiriyoruz.
-    const label = button.querySelector('#pwaInstallBtnText') || button;
-    const setLabel = text => { label.textContent = text; };
-
-    if (installed) {
-            setLabel('Uygulama yüklü');
-            button.disabled = true;
-            if (hint) hint.textContent = 'Parnex ana ekranınızda çalışıyor.';
-            return;
-        }
-        if (needsIOSInstructions()) {
-            setLabel('Nasıl kurulur?');
-            button.disabled = false;
-            if (hint) hint.textContent = 'Safari’de Paylaş → Ana Ekrana Ekle seçeneğini kullanın.';
-            button.onclick = () => {
-                if (typeof showToast === 'function') {
-                    showToast('Safari paylaş menüsünden “Ana Ekrana Ekle” seçin.', 'info');
-                }
-            };
-            return;
-        }
-        if (deferredPrompt) {
-            setLabel('Uygulamayı yükle');
-            if (hint) hint.textContent = 'Telefonunuzun ana ekranına ekleyin; tam ekran açılır.';
-            button.disabled = false;
-            button.onclick = promptInstall;
-            return;
-        }
-        setLabel('Uygulamayı yükle');
-        button.disabled = true;
-        if (hint) hint.textContent = 'Tarayıcınızın menüsünden “Yükle” veya “Ana ekrana ekle” seçeneğini kullanın.';
-    }
-
     // Cevrimdisi: kullanici veri girmeden once bilsin. Firestore cevrimdisi
     // calisirsa hata verir; once uyari gostermek daha iyi bir deneyim.
     function trackConnection() {
@@ -246,13 +186,10 @@
     function init() {
         registerServiceWorker();
         trackConnection();
-        updateInstallButton();
         syncThemeColor();
         // iOS kullaniciyi kuruluma davet eder; Chromium'da tarayici ipucu verir.
         setTimeout(maybeShowInstallBanner, 4000);
 
         window.addEventListener('pwa:themechange', syncThemeColor);
-        // Geri gelen sayfalarda buton durumu (beforeinstallprompt) guncel kalsin.
-        window.addEventListener('focus', updateInstallButton);
     }
 })();

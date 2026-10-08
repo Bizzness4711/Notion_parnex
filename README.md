@@ -58,8 +58,7 @@ Testler `main` dalına yapılan push ve PR'larda GitHub Actions ile otomatik ko�
 Parnex, kurulum gerektirmeyen bir uygulamadır: tarayıcıda açılır, ana ekrana
 eklenir ve tam ekran çalışır.
 
-- **Android / Chrome:** Menü → **Yükle** ya da uygulamadaki **Ayarlar →
-  Telefonda Kullan → Uygulamayı yükle**
+- **Android / Chrome:** Menü → **Yükle** (ya da adres çubuğundaki kurulum simgesi)
 - **iOS / Safari:** Paylaş → **Ana Ekrana Ekle** (iOS'ta tarayıcı kurulum
   diyaloğu göstermediği için uygulama adımı hatırlatır)
 

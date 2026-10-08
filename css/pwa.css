@@ -168,20 +168,7 @@ body {
   font-size: 0.9rem;
 }
 
-/* 9. Ayarlar sayfasindaki kurulum satiri. */
-.pwa-install-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-  flex-wrap: wrap;
-}
-.pwa-install-row .export-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-/* 10. Cihazda kurulu (standalone) modda ince ayarlar:
+/* 9. Cihazda kurulu (standalone) modda ince ayarlar:
    tarayici arayuzu yok, dolayisiyla secim vurgusu ve metin secimi
    masaustunden farkli ele alinmali. */
 @media (display-mode: standalone) {
@@ -205,7 +192,7 @@ body {
   }
 }
 
-/* 11. iOS'ta tus vurgusu ve cift-tap zoom sikismasi. */
+/* 10. iOS'ta tus vurgusu ve cift-tap zoom sikismasi. */
 .standalone-scroll,
 html {
   -webkit-text-size-adjust: 100%;

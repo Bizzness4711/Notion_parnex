@@ -212,8 +212,18 @@ test('css/pwa.css çentikli ekran için üst güvenli alanı uygular', () => {
     assert.match(pwa, /\.header\s*\{[^}]*var\(--safe-top\)/);
 });
 
-test('Ayarlar sayfasında uygulama kurulum düğmesi var', () => {
-    const manifest = read('index.html');
-    assert.match(manifest, /id="pwaInstallBtn"/);
-    assert.match(manifest, /id="pwaInstallHint"/);
+test('js/pwa.js tarayıcının kendi kurulum ipucunu bastırmıyor', () => {
+    // beforeinstallprompt preventDefault edilirse tarayıcı "Yükle" ipucunu
+    // göstermez. Biz bir kurulum düğmesi sunmadığımız için bu olayı hiç
+    // yakalamamak gerekir; aksi halde Android'de kurulum yolu kalır.
+    const pwa = read('js/pwa.js');
+    assert.doesNotMatch(pwa, /addEventListener\('beforeinstallprompt'/);
+    assert.doesNotMatch(pwa, /preventDefault\(\)/);
+});
+
+test('iOS kurulum banner\'ı yalnızca elle kurulum gereken tarayıcılarda çıkar', () => {
+    // iOS'ta beforeinstallprompt gelmez; yönergenin tek yolu bu banner.
+    const pwa = read('js/pwa.js');
+    assert.match(pwa, /function needsIOSInstructions\(\)/);
+    assert.match(pwa, /if \(!needsIOSInstructions\(\)\) return;/);
 });
