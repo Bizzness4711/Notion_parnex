@@ -1,4 +1,4 @@
-﻿.close-btn {
+.close-btn {
   position: absolute;
   right: 0;
   top: -5px;
@@ -45,7 +45,7 @@
   color: #fff;
   background:
     linear-gradient(145deg, rgba(35, 30, 104, 0.78), rgba(72, 61, 188, 0.75)),
-    url("data/login-photo.jpg") center/cover;
+    url("../data/login-photo.jpg") center/cover;
 }
 .auth-visual:after {
   content: "";

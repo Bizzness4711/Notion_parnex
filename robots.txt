@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bizzness4711.github.io/Muhasebe/sitemap.xml
+Sitemap: https://bizzness4711.github.io/Notion_parnex/sitemap.xml
