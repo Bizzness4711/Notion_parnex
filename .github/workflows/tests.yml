@@ -1,0 +1,27 @@
+# Birim testleri: node:test (Node 20+ yerleşik runner, ek bağımlılık yok).
+# Çalıştırmak için: npm test  veya  node --test test/
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # manuel tetikleme butonu
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Birim testleri çalıştır
+        run: npm test

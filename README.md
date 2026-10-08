@@ -21,6 +21,7 @@ Parnex, gelir-gider takibi, bütçe yönetimi, birikim hedefleri ve yatırım ta
 ├── icons/              # Uygulama ikonları
 ├── data/               # Veri dosyaları
 ├── tools/              # Hesaplama araçları
+├── test/               # Birim testler (node:test)
 ├── altin/              # Altın takibi modülü
 ├── birikim/            # Birikim hedefleri modülü
 ├── butce/              # Bütçe yönetimi modülü
@@ -29,6 +30,16 @@ Parnex, gelir-gider takibi, bütçe yönetimi, birikim hedefleri ve yatırım ta
 ├── harcama/            # Harcama analizi modülü
 └── yatirim/            # Yatırım takibi modülü
 ```
+
+## 🧪 Testler
+
+Para matematiği (kredi kartı, taksit, yatırım kâr/zarar, kur çevrimi) ve yardımcı fonksiyonlar için birim testler `test/` altındadır. Node'un yerleşik test çalıştırıcısı kullanılır, ek bağımlılık yok:
+
+```bash
+npm test
+```
+
+Testler `main` dalına yapılan push ve PR'larda GitHub Actions ile otomatik koşar (`.github/workflows/tests.yml`).
 
 ## 🛠️ Teknolojiler
 

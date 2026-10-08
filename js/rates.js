@@ -150,18 +150,6 @@ async function fetchExchangeRates() {
             }
         },
         {
-            url: 'https://api.metalpriceapi.com/v1/latest?api_key=demo&base=USD&currencies=XAU',
-            parse: (data) => {
-                const rates = data?.rates || {};
-                const xau = Number(rates.XAU ?? rates.xau);
-                if (!(xau > 0)) return null;
-                // xau: 1 USD = x XAU ise ons fiyatı = 1/xau USD
-                if (xau < 0.01 && usdTryForGold > 0) return { gramTry: (1 / xau) / 31.1035 * usdTryForGold };
-                if (xau > 100 && usdTryForGold > 0) return { gramTry: xau / 31.1035 * usdTryForGold };
-                return null;
-            }
-        },
-        {
             url: 'https://data-asg.goldprice.org/dbXRates/TRY',
             parse: (data) => {
                 const item = data?.items?.[0];
