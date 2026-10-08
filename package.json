@@ -4,7 +4,7 @@
   "private": true,
   "description": "Parnex - Kisisel Finans ve Butce Yonetimi (Capacitor paketi)",
   "scripts": {
-    "test": "node --test \"test/*.test.mjs\"",
+    "test": "node --test",
     "cap:sync": "npx cap sync android",
     "cap:open": "npx cap open android",
     "cap:copy": "npx cap copy android"

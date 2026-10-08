@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadAppScripts } from './helpers/app-context.mjs';
+import { loadAppScripts } from '../test-helpers/app-context.mjs';
 
 // Bu test yalnızca js/utils.js'e ihtiyaç duyar (saf yardımcılar).
 const context = loadAppScripts(['js/utils.js']);

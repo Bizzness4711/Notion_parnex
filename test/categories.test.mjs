@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadAppScripts, evalInContext } from './helpers/app-context.mjs';
+import { loadAppScripts, evalInContext } from '../test-helpers/app-context.mjs';
 
 // Tekrarlayan işlem tarihleri ve kategori listesi yardımcıları.
 const context = loadAppScripts([

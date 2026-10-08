@@ -5,7 +5,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
-const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 function createLocalStorageStub() {
     const store = new Map();
