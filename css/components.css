@@ -856,6 +856,9 @@
   .sidebar {
     left: -260px;
     display: flex;
+    /* Çekmece header'ın altında başlar: menü düğmesi (açıkken X) çekmece
+       arkasında kalıp dokunulamaz hale geliyordu. */
+    top: var(--header-height);
     width: 250px;
     flex-direction: column;
     transition: var(--transition);
@@ -867,7 +870,7 @@
   .sidebar-overlay {
     position: fixed;
     z-index: 1000;
-    inset: 0;
+    inset: var(--header-height) 0 0 0;
     background: rgba(0, 0, 0, 0.35);
   }
   .sidebar-overlay.open,

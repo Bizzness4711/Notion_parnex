@@ -458,6 +458,11 @@
     justify-content: center;
   }
   .command-palette-trigger kbd { display: none; }
+  /* Telefonda klavye ipuçları işe yaramıyor. */
+  .command-palette-search kbd,
+  .command-palette-heading small {
+    display: none;
+  }
   .command-palette-dialog { margin-top: 70px; }
   /* Dokunma hedefleri: theme.css 34px taban bırakır; mobilde 40px'e çıkar. */
   .refresh-btn,
@@ -483,18 +488,25 @@
   .edit-account-btn {
     padding: 8px;
   }
-  /* Giriş ekranı: sekme ve bağlantıların dokunma hedefleri küçük kalıyordu. */
-  .auth-tab {
-    display: inline-flex;
-    min-height: 40px;
-    align-items: center;
+  /* Rapor sayfası: theme.css'in ≤1100 iki sütun kuralı ≤700 tek sütun
+     kuralını ezdiği için kartlar telefonda sıkışıp metinleri kesti. */
+  .report-container,
+  .advanced-report-grid,
+  .report-detail-grid {
+    grid-template-columns: 1fr;
   }
-  .auth-forgot,
-  .auth-password-toggle {
-    min-height: 40px;
+
+  /* Uzun kelimeler (e-posta, hesap adı) kart kenarında kesilmesin. */
+  .dashboard-intro-copy {
+    min-width: 0;
   }
-  .auth-password-toggle {
-    min-width: 40px;
+  .dashboard-intro h2,
+  .stat-card h3,
+  .account-card-title,
+  .account-card-title span,
+  .budget-card-header strong,
+  .goal-card h3 {
+    overflow-wrap: anywhere;
   }
 
   /* Header'dan cekmeceye tasinan ikincil eylemler (main.js applyHeaderLayout).
@@ -545,6 +557,58 @@
   .sidebar-footer .command-palette-trigger:hover {
     background: var(--surface-muted);
     color: var(--text-color);
+  }
+}
+@media (max-width: 900px) {
+  /* Tablet de dokunmatik: ikon düğmeleri 34px tabanda kalıyordu. */
+  .month-nav-btn,
+  .refresh-btn,
+  .edit-transaction-btn,
+  .delete-btn,
+  .delete-account-btn,
+  .delete-goal-btn,
+  .edit-account-btn,
+  .command-palette-trigger {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .month-nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+  /* Giriş ekranı, bildirim paneli, komut paleti, form ve PVA kapatma. */
+  .auth-tab {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+  }
+  .auth-forgot,
+  .auth-password-toggle {
+    min-height: 40px;
+  }
+  .auth-password-toggle {
+    min-width: 40px;
+  }
+  .notification-panel-header {
+    flex-wrap: wrap;
+  }
+  .notification-panel-header button {
+    min-height: 40px;
+    padding: 0 6px;
+  }
+  .notification-permission-btn {
+    min-height: 44px;
+  }
+  .command-palette-search input {
+    min-height: 40px;
+  }
+  #categoryForm input,
+  #categoryForm select {
+    min-height: 44px;
+  }
+  .pwa-install-close {
+    min-width: 40px;
+    min-height: 40px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
