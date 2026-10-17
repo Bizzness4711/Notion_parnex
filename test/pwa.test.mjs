@@ -227,3 +227,25 @@ test('iOS kurulum banner\'ı yalnızca elle kurulum gereken tarayıcılarda çı
     assert.match(pwa, /function needsIOSInstructions\(\)/);
     assert.match(pwa, /if \(!needsIOSInstructions\(\)\) return;/);
 });
+
+test('sw.js tazelenen kabuğu sorgu dizesiz anahtara yazıyor', () => {
+    // index.html CSS/JS dosyalarını ?v=... ile ister, matchShell ise
+    // ignoreSearch ile arar. Tazelenen kopyayı istek anahtarına yazarsak
+    // (css/x.css?v=...) eski kabuk hep eşleşir ve kullanıcı yeni sürümü
+    // hiç göremez. Bu, canlıda "responsive hâlâ bozuk" şeklinde görünür.
+    const sw = read('sw.js');
+    assert.match(sw, /function shellKey\(url\)/);
+    const revalidate = sw.match(/async function staleWhileRevalidate[\s\S]*?\n\}/);
+    assert.ok(revalidate, 'staleWhileRevalidate bulunamadı');
+    assert.match(revalidate[0], /cache\.put\(shellKey\(url\)/);
+    assert.doesNotMatch(revalidate[0], /cache\.put\(request/);
+});
+
+test('index.html yerel varlıklarının tamamı PRECACHE içinde', () => {
+    // Kabukta olmayan bir css/js dosyası çevrimdışı açılışta sessizce eksik kalır.
+    const html = read('index.html');
+    const refs = [...html.matchAll(/(?:href|src)="(css|js)\/([^"?]+)(?:\?[^"]*)?"/g)]
+        .map(match => `./${match[1]}/${match[2]}`);
+    const missing = refs.filter(ref => !readPrecache().includes(ref));
+    assert.deepEqual(missing, [], `PRECACHE dışında kalan varlık: ${missing.join(', ')}`);
+});

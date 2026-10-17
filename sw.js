@@ -14,7 +14,7 @@
  *    kurulumda install başarısız olurdu.
  */
 
-const CACHE_VERSION = 'parnex-v2';
+const CACHE_VERSION = 'parnex-v3';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const OFFLINE_FALLBACK = './www/index.html';
@@ -143,6 +143,14 @@ function directoryCandidates(url) {
     return [url.pathname + 'index.html'];
 }
 
+// Kabuk girdileri sorgu dizesiz saklanır. index.html CSS/JS'i ?v=... ile
+// ister; matchShell ignoreSearch ile aradığı için tazelenen kopyayı da aynı
+// anahtara yazmazsak eski dosya hep eşleşir ve kullanıcı yeni sürümü hiç
+// göremez (sonsuza kadar eski kabuk).
+function shellKey(url) {
+    return directoryCandidates(url)[0] || url.pathname;
+}
+
 async function matchShell(request, url) {
     const cache = await caches.open(SHELL_CACHE);
     const direct = await cache.match(request, { ignoreSearch: true });
@@ -175,7 +183,7 @@ async function staleWhileRevalidate(request) {
         // Yalnızca başarılı, temel (basic) yanıtlar saklanır: opaque yanıtın
         // gövdesi okunamadığı için offline'ta kullanılamaz.
         if (response && response.ok && response.type === 'basic') {
-            cache.put(request, response.clone());
+            cache.put(shellKey(url), response.clone());
         }
         return response;
     }).catch(() => null);
@@ -185,13 +193,13 @@ async function staleWhileRevalidate(request) {
 async function handleNavigation(request) {
     const url = new URL(request.url);
     try {
-        const response = await fetch(request);
+const response = await fetch(request);
         if (response && response.ok) {
             const cache = await caches.open(SHELL_CACHE);
             // Dizin isteklerini dosya adiyla sakla: bir sonraki cevrimdisi
-            // acilista ayni adres yine ayni kaydi bulsun.
-            const key = directoryCandidates(url)[0] || url.pathname;
-            cache.put(key, response.clone());
+            // acilista ayni adres yine ayni kaydi bullsun. Sorgu dizesi
+            // atilir (shellKey) ki tazelenen kabuk eskisinin yerine gecsin.
+            cache.put(shellKey(url), response.clone());
         }
         return response;
     } catch (err) {
