@@ -200,6 +200,35 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMenuIcon();
     });
 
+    // Dar ekranda header sigmaz: gizlilik, çıkış ve komut menüsü çekmeceye taşınır.
+    // Geniş ekranda düğmeler eski yerlerine (aynı sırayla) geri konur.
+    const headerRight = document.querySelector('.header-right');
+    const sidebarEl = document.getElementById('sidebar');
+    const userInfoEl = document.querySelector('.user-info');
+    const privacyBtnEl = document.getElementById('privacyModeBtn');
+    const logoutBtnEl = document.getElementById('logoutBtn');
+    const paletteBtnEl = document.getElementById('commandPaletteBtn');
+    const mobileSlot = document.createElement('div');
+    mobileSlot.className = 'sidebar-footer';
+
+    function applyHeaderLayout() {
+        if (!headerRight || !sidebarEl || !userInfoEl) return;
+        if (window.innerWidth <= 700) {
+            if (!mobileSlot.isConnected) sidebarEl.appendChild(mobileSlot);
+            [privacyBtnEl, logoutBtnEl, paletteBtnEl].forEach(el => {
+                if (el && el.parentElement !== mobileSlot) mobileSlot.appendChild(el);
+            });
+        } else {
+            if (privacyBtnEl && privacyBtnEl.parentElement !== headerRight) headerRight.insertBefore(privacyBtnEl, userInfoEl);
+            if (logoutBtnEl && logoutBtnEl.parentElement !== userInfoEl) userInfoEl.appendChild(logoutBtnEl);
+            if (paletteBtnEl && paletteBtnEl.parentElement !== headerRight) headerRight.appendChild(paletteBtnEl);
+            if (mobileSlot.isConnected) mobileSlot.remove();
+        }
+        updateMenuIcon();
+    }
+    applyHeaderLayout();
+    window.addEventListener('resize', applyHeaderLayout);
+
     // Bildirimler: zil paneli + izin + ses ayarı
     // (Ses için ilk kullanıcı etkileşiminde AudioContext açılır.)
     document.addEventListener('click', function unlockAudioOnce() {

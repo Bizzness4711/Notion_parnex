@@ -60,10 +60,10 @@
     <link rel="apple-touch-icon" sizes="192x192" href="icons/logo-192.png">
     <link rel="stylesheet" href="css/base.css?v=20260926">
     <link rel="stylesheet" href="css/layout.css?v=20260918">
-    <link rel="stylesheet" href="css/components.css?v=20260918">
+    <link rel="stylesheet" href="css/components.css?v=20261018">
     <link rel="stylesheet" href="css/pages.css?v=20260918">
     <link rel="stylesheet" href="css/theme.css?v=20260918">
-    <link rel="stylesheet" href="css/ux-refresh.css?v=20260919">
+    <link rel="stylesheet" href="css/ux-refresh.css?v=20261018">
     <link rel="stylesheet" href="css/pwa.css?v=20261008">
     <script>
         document.documentElement.dataset.theme = localStorage.getItem('theme-v2') === 'dark' ? 'dark' : 'light';
@@ -119,7 +119,7 @@
                 </form>
                 <div class="divider"><span>veya</span></div>
                 <button id="googleLogin" class="google-btn"><i class="fab fa-google"></i> Google ile devam et</button>
-                <p class="auth-security-note"><i class="fas fa-shield-halved"></i> Verileriniz güvenli şekilde saklanır.</p>
+                <p class="auth-security-note"><i class="fas fa-shield-alt"></i> Verileriniz güvenli şekilde saklanır.</p>
             </section>
         </div>
     </div>
@@ -129,7 +129,7 @@
         <!-- E-posta doğrulama kapısı: doğrulanmamış kullanıcı tüm arayüzü göremez -->
         <div id="verifyGate" class="verify-gate" hidden>
             <div class="verify-gate-card">
-                <span class="verify-gate-icon"><i class="fas fa-envelope-circle-check"></i></span>
+                <span class="verify-gate-icon"><i class="fas fa-envelope-open-text"></i></span>
                 <h2>E-postanı doğrula</h2>
                 <p><strong id="verifyGateEmail"></strong> adresine doğrulama linki gönderdik.</p>
                 <p class="verify-gate-hint">E-postandaki linke tıklayıp hesabını onayla, sonra buraya dön. Uygulamayı kullanmaya başlamak için son bir adım kaldı.</p>
@@ -172,7 +172,7 @@
                 </div>
                 <button id="themeBtn" class="theme-btn" aria-label="Temayı değiştir"><i class="fas fa-moon"></i></button>
                 <button id="commandPaletteBtn" class="command-palette-trigger" type="button" aria-label="Komut menüsünü aç" title="Komut menüsü (Ctrl+K)">
-                    <i class="fas fa-command" aria-hidden="true"></i><kbd>⌘K</kbd>
+                    <i class="fas fa-magnifying-glass" aria-hidden="true"></i><kbd>⌘K</kbd>
                 </button>
             </div>
         </header>

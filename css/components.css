@@ -795,6 +795,14 @@
   .auth-visual {
     display: none;
   }
+  /* Sabit yan panel header'ı daraltır; kullanıcı adı ve klavye ipucu
+     taşmaz, yoksa bildirim/tema/komut düğmeleri ekrandan taşar. */
+  .user-name {
+    display: none;
+  }
+  .command-palette-trigger kbd {
+    display: none;
+  }
 }
 @media (max-width: 700px) {
   :root {
@@ -807,15 +815,21 @@
   }
   .header-left {
     gap: 9px;
+    min-width: 0;
   }
   .menu-btn {
     display: block;
   }
   .header h1 {
+    min-width: 0;
+    overflow: hidden;
     font-size: 1rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .header-right {
-    gap: 4px;
+    flex: none;
+    gap: 2px;
   }
   .header-action-btn {
     padding: 9px;
@@ -827,9 +841,23 @@
   .user-info {
     gap: 3px;
   }
+  /* Header satırını daralt: ikon düğmeleri sıkışık, ama dokunma hedefi 40px. */
+  .notification-btn,
+  .privacy-btn,
+  .logout-btn,
+  .theme-btn {
+    padding: 7px 6px;
+    font-size: 1rem;
+  }
+  .user-avatar {
+    width: 30px;
+    height: 30px;
+  }
   .sidebar {
     left: -260px;
+    display: flex;
     width: 250px;
+    flex-direction: column;
     transition: var(--transition);
     box-shadow: var(--shadow-lg);
   }
@@ -848,7 +876,8 @@
   }
   .main-content {
     margin-left: 0;
-    padding: calc(var(--header-height) + 22px) 14px 35px;
+    /* Alt boşluk FAB'in altında kalmasın: son kartın düğmeleri kaplanmasın. */
+    padding: calc(var(--header-height) + 22px) 14px 96px;
   }
   .page-header {
     align-items: flex-start;
@@ -884,6 +913,14 @@
   .calendar-day {
     min-height: 48px;
     padding: 6px;
+  }
+  .finance-calendar .calendar-cell {
+    min-height: 62px;
+    padding: 6px;
+    border-radius: 10px;
+  }
+  .finance-calendar .calendar-cell strong {
+    font-size: 0.84rem;
   }
   .calendar-day-total {
     margin-top: 5px;
@@ -1638,7 +1675,9 @@ select option {
 .forecast-event.income b {
   color: var(--income-color);
 }
-@media (max-width: 800px) {
+/* Yatay telefon/tablet genişliklerinde 4 sütunlu zaman çizelgesi karta taşardı;
+   içerik kaydırılamadan kestiği için tek sütuna inilir. */
+@media (max-width: 1024px) {
   .forecast-flow {
     grid-template-columns: 1fr;
   }

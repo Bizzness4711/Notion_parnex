@@ -234,7 +234,7 @@ async function togglePrivacyMode() {
             title: 'Gizlilik modunu kapat',
             description: 'Devam etmek için hesabınızın şifresini girin.',
             label: 'Şifre',
-            icon: 'fa-shield-halved',
+            icon: 'fa-shield-alt',
             type: 'password',
             autocomplete: 'current-password',
             placeholder: 'Şifrenizi yazın'

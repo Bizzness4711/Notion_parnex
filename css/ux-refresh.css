@@ -451,9 +451,101 @@
     flex: 1 1 100%;
     min-width: 0;
   }
-  .command-palette-trigger { padding: 0 8px; }
+  .command-palette-trigger {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 8px;
+    justify-content: center;
+  }
   .command-palette-trigger kbd { display: none; }
   .command-palette-dialog { margin-top: 70px; }
+  /* Dokunma hedefleri: theme.css 34px taban bırakır; mobilde 40px'e çıkar. */
+  .refresh-btn,
+  .eye-btn,
+  .month-nav-btn,
+  .edit-transaction-btn,
+  .delete-btn,
+  .delete-account-btn,
+  .delete-goal-btn,
+  .edit-account-btn,
+  .command-palette-trigger {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .month-nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .edit-transaction-btn,
+  .delete-btn,
+  .delete-account-btn,
+  .delete-goal-btn,
+  .edit-account-btn {
+    padding: 8px;
+  }
+  /* Giriş ekranı: sekme ve bağlantıların dokunma hedefleri küçük kalıyordu. */
+  .auth-tab {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+  }
+  .auth-forgot,
+  .auth-password-toggle {
+    min-height: 40px;
+  }
+  .auth-password-toggle {
+    min-width: 40px;
+  }
+
+  /* Header'dan cekmeceye tasinan ikincil eylemler (main.js applyHeaderLayout).
+     theme.css ikon dugmelerini ortalar; burada satır görünümüne çevriliyor. */
+  .sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-color);
+  }
+  .sidebar-footer .privacy-btn,
+  .sidebar-footer .logout-btn,
+  .sidebar-footer .command-palette-trigger {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 11px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    text-align: left;
+  }
+  .sidebar-footer .privacy-btn::after {
+    content: "Gizlilik modu";
+  }
+  .sidebar-footer .logout-btn::after {
+    content: "Çıkış yap";
+  }
+  .sidebar-footer .command-palette-trigger::after {
+    content: "Komut menüsü";
+  }
+  .sidebar-footer .command-palette-trigger kbd {
+    display: none;
+  }
+  .sidebar-footer .logout-btn {
+    color: var(--expense-color);
+  }
+  .sidebar-footer .privacy-btn:hover,
+  .sidebar-footer .logout-btn:hover,
+  .sidebar-footer .command-palette-trigger:hover {
+    background: var(--surface-muted);
+    color: var(--text-color);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .quick-action,
