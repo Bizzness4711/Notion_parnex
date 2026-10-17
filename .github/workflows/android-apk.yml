@@ -130,11 +130,13 @@ jobs:
         run: |
           set -e
           tag=apk-latest
-          apk=android/app/build/outputs/apk/debug/app-debug.apk
-          notes="Parnex Android (Capacitor) debug derlemesi. Kaynak commit: $GITHUB_SHA"
+          cp android/app/build/outputs/apk/debug/app-debug.apk parnex-debug.apk
+          title="Parnex APK (en güncel)"
+          notes="$(printf 'Parnex Android (Capacitor) debug derlemesi.\n\nKaynak commit: `%s`\n\n**Kurulum:** APK'yi indir, telefonda aç ve "bilinmeyen kaynaklara izin ver" onayını ver. İlk açılışta bildirim izni istenir.\n\nBu etiket her derlemede güncellenir; indirme linki sabittir.' "$GITHUB_SHA")"
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" "$apk" --clobber
-            gh release edit "$tag" --title "Parnex APK (en güncel)" --notes "$notes"
+            gh release upload "$tag" parnex-debug.apk --clobber
+            gh release edit "$tag" --title "$title" --notes "$notes"
+            gh release delete-asset "$tag" app-debug.apk 2>/dev/null || true
           else
-            gh release create "$tag" "$apk" --title "Parnex APK (en güncel)" --notes "$notes"
+            gh release create "$tag" parnex-debug.apk --title "$title" --notes "$notes"
           fi
