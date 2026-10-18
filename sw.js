@@ -14,7 +14,7 @@
  *    kurulumda install başarısız olurdu.
  */
 
-const CACHE_VERSION = 'parnex-v3';
+const CACHE_VERSION = 'parnex-v4';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const OFFLINE_FALLBACK = './www/index.html';

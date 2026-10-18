@@ -487,21 +487,21 @@ function setPrivacyModeUI(enabled) {
 }
 
 function updateAllUI() {
-    updateAdminVisibility();
-    updateAccountsUI();
-    updateDashboard();
-    updateTransactionsUI();
-    updateRecurringTransactionsUI();
-    updateGoalsUI();
-    updateBudgetsUI();
-    updateMonthlyTransfersUI();
-    updateCategorySelect();
-    updateNotificationsUI();
-    updateCharts();
-    updateProfitLossReport();
-    updateAdvancedReports();
-    updateBalanceForecast();
-    updateGoalAccountSelect();
+    if (typeof updateAdminVisibility === 'function') updateAdminVisibility();
+    if (typeof updateAccountsUI === 'function') updateAccountsUI();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    if (typeof updateTransactionsUI === 'function') updateTransactionsUI();
+    if (typeof updateRecurringTransactionsUI === 'function') updateRecurringTransactionsUI();
+    if (typeof updateGoalsUI === 'function') updateGoalsUI();
+    if (typeof updateBudgetsUI === 'function') updateBudgetsUI();
+    if (typeof updateMonthlyTransfersUI === 'function') updateMonthlyTransfersUI();
+    if (typeof updateCategorySelect === 'function') updateCategorySelect();
+    if (typeof updateNotificationsUI === 'function') updateNotificationsUI();
+    if (typeof updateCharts === 'function') updateCharts();
+    if (typeof updateProfitLossReport === 'function') updateProfitLossReport();
+    if (typeof updateAdvancedReports === 'function') updateAdvancedReports();
+    if (typeof updateBalanceForecast === 'function') updateBalanceForecast();
+    if (typeof updateGoalAccountSelect === 'function') updateGoalAccountSelect();
     const monthDisplay = document.getElementById('currentMonthDisplay');
     if (monthDisplay) monthDisplay.textContent = formatMonth(currentMonth);
 }
