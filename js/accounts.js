@@ -744,7 +744,10 @@ function updateAdvancedReports() {
     const netWorthSummary = getNetWorthSummary();
     const netWorth = netWorthSummary.assets - netWorthSummary.liabilities;
     const totalProfitLoss = accounts.filter(isInvestmentAccount).reduce((sum, account) => sum + getInvestmentMetrics(account).profitLoss, 0)
-        + transactions.filter(transaction => transaction.type === 'expense').reduce((sum, transaction) => sum + Number(transaction.profitLoss || 0), 0);
+        + transactions
+            .filter(transaction => transaction.type === 'expense' || transaction.type === 'sell')
+            .filter(transaction => isInvestmentAccount(accounts.find(account => account.id === transaction.accountId)))
+            .reduce((sum, transaction) => sum + Number(transaction.profitLoss || 0), 0);
     const ranges = getReportRanges();
     const currentTransactions = reportTransactions(ranges.current);
     const previousTransactions = reportTransactions(ranges.previous);
@@ -876,7 +879,7 @@ function updateProfitLossReport() {
             return totals;
         }, { quantity: 0, cost: 0, currentValue: 0 });
         const realized = transactions
-            .filter(transaction => transaction.type === 'expense' && transaction.accountCurrency === currency)
+            .filter(transaction => (transaction.type === 'expense' || transaction.type === 'sell') && transaction.accountCurrency === currency)
             .reduce((sum, transaction) => sum + Number(transaction.profitLoss || 0), 0);
         const unrealized = metrics.currentValue - metrics.cost;
         const total = unrealized + realized;

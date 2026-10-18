@@ -38,7 +38,7 @@ function updateDashboard() {
     }, { currentValue: 0, profitLoss: 0 });
     const realizedProfitLoss = transactions
         .filter(transaction => isInvestmentAccount(accounts.find(account => account.id === transaction.accountId)))
-        .filter(transaction => transaction.type === 'expense')
+        .filter(transaction => transaction.type === 'expense' || transaction.type === 'sell')
         .reduce((sum, transaction) => sum + Number(transaction.profitLoss || 0), 0);
     investmentTotals.profitLoss += realizedProfitLoss;
 
