@@ -509,6 +509,34 @@
     overflow-wrap: anywhere;
   }
 
+  /* theme.css bu ızgaraları 1fr ile yeniden tanımlar; 1fr içerik genişliğinin
+     altına inemediği için 280-300px ekranlarda sayfayı yatay taşırıyordu.
+     minmax(0, 1fr) track'lerin içerikten daralmasına izin verir. */
+  .stats-grid,
+  .exchange-rates-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .advanced-report-grid,
+  .report-container,
+  .report-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .account-checkbox,
+  .account-selector-item {
+    min-width: 0;
+  }
+  .account-checkbox span {
+    overflow-wrap: anywhere;
+  }
+  .currency-label,
+  .currency-value {
+    overflow-wrap: anywhere;
+  }
+  .transaction-subtitle-modern,
+  .transaction-rate-modern {
+    overflow-wrap: anywhere;
+  }
+
   /* Header'dan cekmeceye tasinan ikincil eylemler (main.js applyHeaderLayout).
      theme.css ikon dugmelerini ortalar; burada satır görünümüne çevriliyor. */
   .sidebar-footer {
@@ -609,6 +637,33 @@
   .pwa-install-close {
     min-width: 40px;
     min-height: 40px;
+  }
+}
+
+/* Çok dar telefonlar (katlanabilir kapak ekranı, 300px altı): başlık yerine
+   logo kalsın, rakamlar biraz küçülsün. */
+@media (max-width: 340px) {
+  .header h1 {
+    display: none;
+  }
+  .stat-card {
+    padding: 12px;
+  }
+  .stat-card p {
+    font-size: 0.92rem;
+  }
+  .stat-card h3 {
+    font-size: 0.68rem;
+  }
+  .balance-amount {
+    font-size: 1.5rem;
+  }
+  .finance-calendar .calendar-cell {
+    min-height: 56px;
+    padding: 5px;
+  }
+  .calendar-event-count {
+    font-size: 0.56rem;
   }
 }
 @media (prefers-reduced-motion: reduce) {

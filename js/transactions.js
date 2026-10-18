@@ -516,23 +516,62 @@ window.deleteAccount = async function(id) {
     if (!currentUser) return;
     const account = accounts.find(item => item.id === id);
     if (!account) return;
-    if (!confirm('Bu hesabı silmek istediğinize emin misiniz? Hesaba bağlı işlem veya transfer varsa silme işlemi güvenlik nedeniyle engellenir.')) return;
+
+    const userRef = db.collection('users').doc(currentUser.uid);
+    let transactions = [];
+    let transfers = [];
+    let recurrings = [];
+    try {
+        // limit(1) yerine tam liste: engelin ne olduğunu kullanıcıya göstermek
+        // için kayıtları sayıp örnek verebilmeliyiz.
+        const [txSnap, transferFromSnap, transferToSnap, recurringSnap] = await Promise.all([
+            userRef.collection('transactions').where('accountId', '==', id).get(),
+            userRef.collection('transfers').where('fromAccountId', '==', id).get(),
+            userRef.collection('transfers').where('toAccountId', '==', id).get(),
+            userRef.collection('recurringTransactions').where('accountId', '==', id).get()
+        ]);
+        transactions = txSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        transfers = [...transferFromSnap.docs, ...transferToSnap.docs];
+        recurrings = recurringSnap.docs;
+    } catch (e) {
+        showToast('Silme hatası: ' + e.message, 'error');
+        return;
+    }
+
+    // recurringId'li kayıtlar tekrarlayan şablonlardan üretilmiştir; kullanıcı
+    // bunları İşlemler listesinde görmeyebilir (ay filtresi) ama hesabı
+    // engellerler. Elle eklenen kayıtlar geçmişin parçasıdır, otomatik
+    // silinmez.
+    const generatedTransactions = transactions.filter(t => t.recurringId);
+    const manualTransactions = transactions.filter(t => !t.recurringId);
+    const hasManualHistory = manualTransactions.length > 0 || transfers.length > 0;
+
+    const reasons = [];
+    if (manualTransactions.length) reasons.push(`${manualTransactions.length} elle eklenmiş işlem`);
+    if (transfers.length) reasons.push(`${transfers.length} transfer kaydı`);
+    if (generatedTransactions.length) reasons.push(`${generatedTransactions.length} otomatik işlem`);
+    if (recurrings.length) reasons.push(`${recurrings.length} tekrarlayan kayıt`);
+    const detail = reasons.length ? `\n\nBağlı kayıtlar: ${reasons.join(', ')}.` : '';
+
+    if (hasManualHistory) {
+        if (!window.confirm(`Bu hesabı silmek istediğinize emin misiniz?${detail}`)) return;
+        showToast('Silme engellendi: geçmiş kayıtları olan hesap silinemez. Önce bu kayıtları düzenleyin veya silin.', 'error');
+        return;
+    }
+
+    const question = reasons.length
+        ? `${account.name} hesabına bağlı otomatik kayıtlar var.${detail}\n\nBu kayıtlar da silinerek hesap kaldırılsın mı?`
+        : 'Bu hesabı silmek istediğinize emin misiniz?';
+    if (!window.confirm(question)) return;
 
     try {
-        const userRef = db.collection('users').doc(currentUser.uid);
-        const [txSnap, transferFromSnap, transferToSnap] = await Promise.all([
-            userRef.collection('transactions').where('accountId', '==', id).limit(1).get(),
-            userRef.collection('transfers').where('fromAccountId', '==', id).limit(1).get(),
-            userRef.collection('transfers').where('toAccountId', '==', id).limit(1).get()
-        ]);
-
-        if (!txSnap.empty || !transferFromSnap.empty || !transferToSnap.empty) {
-            showToast('Bu hesapta bağlı işlem/transfer kayıtları var. Geçmişi bozmamak için önce bu kayıtları düzenleyin veya silin.', 'error');
-            return;
-        }
-
-        await userRef.collection('accounts').doc(id).delete();
-        showToast('Hesap silindi!', 'success');
+        const batch = db.batch();
+        generatedTransactions.forEach(t => batch.delete(userRef.collection('transactions').doc(t.id)));
+        // Şablonu silmezsek hesap yok olurken yeniden üretir.
+        recurrings.forEach(snapshot => batch.delete(snapshot.ref));
+        batch.delete(userRef.collection('accounts').doc(id));
+        await batch.commit();
+        showToast(reasons.length ? 'Hesap ve bağlı otomatik kayıtları silindi!' : 'Hesap silindi!', 'success');
         await loadUserData();
     } catch (e) {
         console.error('Hesap silme hatası:', e);
