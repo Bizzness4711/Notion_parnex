@@ -5,6 +5,27 @@ function formatMonth(monthString) {
     return `${monthNames[month-1]} ${year}`;
 }
 
+// Bir tarih degerini 'YYYY-MM' anahtarina cevirir. '2026-09-15' gibi ISO
+// tarihlerde ve '15.09.2026' gibi nokta formatinda calisir; okunamaz ya da
+// eksik tarihlerde bos string doner (boyle kayitlar ay filtresine takilmaz,
+// Transferler sayfasinda her ay gorunur kalir; silme engelinde de "tarihsiz"
+// diye gosterilir).
+function transferMonthKey(value) {
+    const s = String(value || '').trim();
+    if (/^\d{4}-\d{2}/.test(s)) return s.slice(0, 7);
+    const m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+    if (m) return `${m[3]}-${m[2]}`;
+    return '';
+}
+
+// Gosterim icin hesabin guncel adi. Hesap yeniden adlandirildiysa kayittaki
+// eski ad degil, simadaki ad gorunur; hesap silinmisse kayit ici ad fallback
+// olur. Boylece kullanici "hangi hesabin transferi bu?" diye bulabilir.
+function resolveAccountName(id, storedName) {
+    const account = accounts.find(item => item.id === id);
+    return (account && account.name) || storedName || 'Bilinmeyen hesap';
+}
+
 // E-posta doğrulama linki ayarları:
 // Firebase Console > Authentication > Settings > Authorized domains'e 'bizzness4711.github.io'
 // ekli olmalı. Aşağıdaki continueUrl, link sonrası kullanıcıyı uygulamaya geri getirir.
@@ -513,9 +534,14 @@ function updateMonthlyTransfersUI() {
     const filterInput = document.getElementById('transferFilterMonth');
     if (filterInput && !filterInput.value) filterInput.value = currentMonth;
     const month = (filterInput && filterInput.value) ? filterInput.value : currentMonth;
+    // Tarihi okunamayan/eksik transferler hicbir ayda gorunmezdi; artik hepsine
+    // girerler. Digerleri yalnizca secili ayin kaydini gosterir.
     const monthTransfers = transfers
-        .filter(t => String(t.date || '').startsWith(month))
-        .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        .filter(t => {
+            const key = transferMonthKey(t.date);
+            return !key || key === month;
+        })
+        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
 
     // Ozet kart: toplam tutar + adet
     const totalEl = document.getElementById('transferMonthlyTotal');
@@ -533,8 +559,8 @@ function updateMonthlyTransfersUI() {
         <div class="transaction-card-modern">
             <div class="transaction-icon-modern transfer"><i class="fas fa-exchange-alt"></i></div>
             <div class="transaction-info-modern">
-                <div class="transaction-title-modern">${escapeHtml(t.fromAccountName || '')} → ${escapeHtml(t.toAccountName || '')}</div>
-                <div class="transaction-subtitle-modern">${escapeHtml(t.description || 'Hesap Transferi')} • ${escapeHtml(t.date || '')}</div>
+                <div class="transaction-title-modern">${escapeHtml(resolveAccountName(t.fromAccountId, t.fromAccountName))} → ${escapeHtml(resolveAccountName(t.toAccountId, t.toAccountName))}</div>
+                <div class="transaction-subtitle-modern">${escapeHtml(t.description || 'Hesap Transferi')} • ${escapeHtml(t.date || 'Tarih yok')}</div>
             </div>
             <div class="transaction-amount-modern transfer">↔ ₺${Number(t.amount || 0).toFixed(2)}</div>
             <button class="delete-btn" onclick="deleteTransfer('${t.id}')" title="Transferi sil"><i class="fas fa-trash"></i></button>

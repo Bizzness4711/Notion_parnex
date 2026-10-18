@@ -270,9 +270,9 @@ function updateTransactionsUI() {
             displayType: 'transfer',
             amount: t.amount,
             category: '🔄 Transfer',
-            description: `${t.fromAccountName} → ${t.toAccountName}${t.description ? ' - ' + t.description : ''}`,
+            description: `${resolveAccountName(t.fromAccountId, t.fromAccountName)} → ${resolveAccountName(t.toAccountId, t.toAccountName)}${t.description ? ' - ' + t.description : ''}`,
             date: t.date || '',
-            accountName: t.fromAccountName,
+            accountName: resolveAccountName(t.fromAccountId, t.fromAccountName),
             accountCurrency: 'TRY',
             accountOpeningRate: 0,
             transactionRate: 0,
@@ -282,7 +282,7 @@ function updateTransactionsUI() {
         });
     });
 
-    allItems.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    allItems.sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
 
     const createCard = (item) => {
         const isExpense = item.displayType === 'expense';
@@ -335,7 +335,9 @@ function updateTransactionsUI() {
         if (filterType === 'expense') filtered = filtered.filter(t => t.displayType === 'expense');
         if (filterType === 'sell') filtered = filtered.filter(t => t.displayType === 'sell');
         if (filterType === 'transfer') filtered = filtered.filter(t => t.displayType === 'transfer');
-        if (filterAccount !== 'all') filtered = filtered.filter(t => t.accountId === filterAccount || t.fromAccountId === filterAccount);
+        // Transferlerde hedef hesap da esas taraftir; toAccountId yoksa
+        // "borç hesabına göre filtrele" yapan kullanıcı transferi göremezdi.
+        if (filterAccount !== 'all') filtered = filtered.filter(t => t.accountId === filterAccount || t.fromAccountId === filterAccount || t.toAccountId === filterAccount);
         if (search) {
             filtered = filtered.filter(t => [t.category, t.description, t.accountName, t.accountCurrency, t.date]
                 .filter(Boolean)
@@ -531,7 +533,14 @@ window.deleteAccount = async function(id) {
             userRef.collection('recurringTransactions').where('accountId', '==', id).get()
         ]);
         transactions = txSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        transfers = [...transferFromSnap.docs, ...transferToSnap.docs];
+        // Ayni transfer iki sorgudan da gelebilir (from == to); sayac tekilmeli.
+        const seenTransferIds = new Set();
+        transfers = [];
+        for (const doc of [...transferFromSnap.docs, ...transferToSnap.docs]) {
+            if (seenTransferIds.has(doc.id)) continue;
+            seenTransferIds.add(doc.id);
+            transfers.push({ id: doc.id, ...doc.data() });
+        }
         recurrings = recurringSnap.docs;
     } catch (e) {
         showToast('Silme hatası: ' + e.message, 'error');
@@ -551,11 +560,47 @@ window.deleteAccount = async function(id) {
     if (transfers.length) reasons.push(`${transfers.length} transfer kaydı`);
     if (generatedTransactions.length) reasons.push(`${generatedTransactions.length} otomatik işlem`);
     if (recurrings.length) reasons.push(`${recurrings.length} tekrarlayan kayıt`);
-    const detail = reasons.length ? `\n\nBağlı kayıtlar: ${reasons.join(', ')}.` : '';
+
+    // Engeli anlasilir kil: "1 transfer kaydi var" deyip nerede oldugu belirsiz
+    // kalmasin; tarih, guncel hesap adlari ve tutar dogrudan gosterilsin.
+    const currencySymbolFor = (currency) => ({ TRY: '₺', USD: '$', EUR: '€' }[currency] || '₺');
+    const listingLines = [];
+    if (manualTransactions.length) {
+        listingLines.push(`${manualTransactions.length} elle eklenmiş işlem:`);
+        manualTransactions.slice(0, 5).forEach(t => {
+            const account = accounts.find(item => item.id === t.accountId);
+            listingLines.push(`• ${t.date || 'tarihsiz'} — ${t.description || t.category || 'İşlem'} — ${currencySymbolFor(account ? account.currency : t.accountCurrency)}${Number(t.amount || 0).toFixed(2)}`);
+        });
+        if (manualTransactions.length > 5) listingLines.push(`• ...ve ${manualTransactions.length - 5} tane daha`);
+    }
+    if (transfers.length) {
+        listingLines.push(`${transfers.length} transfer:`);
+        transfers.slice(0, 5).forEach(t => {
+            listingLines.push(`• ${t.date || 'Tarih yok'} — ${resolveAccountName(t.fromAccountId, t.fromAccountName)} → ${resolveAccountName(t.toAccountId, t.toAccountName)} — ₺${Number(t.amount || 0).toFixed(2)}${t.description ? ' — ' + t.description : ''}`);
+        });
+        if (transfers.length > 5) listingLines.push(`• ...ve ${transfers.length - 5} tane daha`);
+    }
+    if (generatedTransactions.length) {
+        listingLines.push(`${generatedTransactions.length} otomatik işlem:`);
+        generatedTransactions.slice(0, 5).forEach(t => {
+            listingLines.push(`• ${t.date || 'tarihsiz'} — ${t.description || t.category || 'İşlem'} — ₺${Number(t.amount || 0).toFixed(2)}`);
+        });
+        if (generatedTransactions.length > 5) listingLines.push(`• ...ve ${generatedTransactions.length - 5} tane daha`);
+    }
+    if (recurrings.length) {
+        listingLines.push(`${recurrings.length} tekrarlayan kayıt:`);
+        recurrings.slice(0, 5).forEach(snapshot => {
+            const data = (typeof snapshot.data === 'function' && snapshot.data()) || {};
+            listingLines.push(`• ${data.name || data.description || snapshot.id || 'Kayıt'}`);
+        });
+        if (recurrings.length > 5) listingLines.push(`• ...ve ${recurrings.length - 5} tane daha`);
+    }
+    const detail = reasons.length ? `\n\nBağlı kayıtlar: ${reasons.join(', ')}.\n\n${listingLines.join('\n')}` : '';
 
     if (hasManualHistory) {
-        if (!window.confirm(`Bu hesabı silmek istediğinize emin misiniz?${detail}`)) return;
-        showToast('Silme engellendi: geçmiş kayıtları olan hesap silinemez. Önce bu kayıtları düzenleyin veya silin.', 'error');
+        const question = `Bu hesap silinemez; hesapla bağlı geçmiş kayıtlar var.${detail}\n\nTransferleri Transferler sayfasında (Ay filtresini kaydın tarihine çevirin), işlemleri İşlemler sayfasında silin veya düzenleyin; sonra bu hesabı tekrar deneyin.`;
+        if (!window.confirm(question)) return;
+        showToast('Silme engellendi: önce bağlı kayıtları silin.', 'error');
         return;
     }
 
