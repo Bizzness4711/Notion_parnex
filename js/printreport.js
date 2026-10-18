@@ -40,6 +40,9 @@
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('printReportBtn')?.addEventListener('click', () => {
       if (!currentUser) { showToast('Önce giriş yapın.', 'error'); return; }
+      // Gizlilik modu açıkken yazdırma gerçek tutarları kâğıda basar; kullanıcı
+      // açıkça onaylamalı (özellik gizlenmez, işlev bozulmaz).
+      if (isHidden && !confirm('Gizlilik modu açık. Yazdırılacak rapor gerçek tutarları içerecek. Devam edilsin mi?')) return;
       buildPrintReport();
       setTimeout(() => window.print(), 50);
     });

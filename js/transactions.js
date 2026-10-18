@@ -54,15 +54,16 @@ function updateDashboard() {
     const monthDisplay = document.getElementById('currentMonthDisplay');
 
     if (isHidden) {
-        if (totalBalanceEl) totalBalanceEl.textContent = totalBalanceVisible ? `₺${totalBalance.toFixed(2)}` : '₺••••••';
-        if (totalIncomeEl) totalIncomeEl.textContent = '₺••••••';
-        if (totalExpenseEl) totalExpenseEl.textContent = '₺••••••';
-        if (savingsRateEl) savingsRateEl.textContent = '%••••';
-        if (investmentSummaryEl) investmentSummaryEl.textContent = '₺••••••';
-        if (investmentProfitLossEl) investmentProfitLossEl.textContent = 'Kâr/Zarar: ₺••••••';
-        if (upcomingInstallmentsEl) upcomingInstallmentsEl.textContent = '₺••••••';
-        if (statNetEl) statNetEl.textContent = '₺••••••';
+        if (totalBalanceEl) totalBalanceEl.textContent = totalBalanceVisible ? `₺${totalBalance.toFixed(2)}` : privacyAmount();
+        if (totalIncomeEl) totalIncomeEl.textContent = privacyAmount();
+        if (totalExpenseEl) totalExpenseEl.textContent = privacyAmount();
+        if (savingsRateEl) savingsRateEl.textContent = privacyPercent();
+        if (investmentSummaryEl) investmentSummaryEl.textContent = privacyAmount();
+        if (investmentProfitLossEl) investmentProfitLossEl.textContent = `Kâr/Zarar: ${privacyAmount()}`;
+        if (upcomingInstallmentsEl) upcomingInstallmentsEl.textContent = privacyAmount();
+        if (statNetEl) statNetEl.textContent = privacyAmount();
         if (statAccountCountEl) statAccountCountEl.textContent = '••';
+        [totalBalanceEl, totalIncomeEl, totalExpenseEl, savingsRateEl, investmentSummaryEl, investmentProfitLossEl, upcomingInstallmentsEl, statNetEl, statAccountCountEl].forEach(privacySyncAria);
     } else {
         if (totalBalanceEl) totalBalanceEl.textContent = `₺${totalBalance.toFixed(2)}`;
         if (totalIncomeEl) totalIncomeEl.textContent = `₺${totalIncome.toFixed(2)}`;
@@ -82,6 +83,7 @@ function updateDashboard() {
             statNetEl.classList.toggle('loss', netBalance < 0);
         }
         if (statAccountCountEl) statAccountCountEl.textContent = String(accountCount);
+        [totalBalanceEl, totalIncomeEl, totalExpenseEl, savingsRateEl, investmentSummaryEl, investmentProfitLossEl, upcomingInstallmentsEl, statNetEl, statAccountCountEl].forEach(privacySyncAria);
     }
 
     if (monthDisplay) monthDisplay.textContent = formatMonth(currentMonth);
@@ -132,7 +134,7 @@ function updateAccountsUI() {
                 const credit = account.type === 'credit' ? getCreditCardMetrics(account) : null;
                 const balance = Number(account.balance) || 0;
                 const isNegative = investment ? metrics.profitLoss < 0 : account.type === 'credit' ? credit.debt > 0 : balance < 0;
-                const balanceDisplay = isHidden ? '₺••••••' : investment
+                const balanceDisplay = isHidden ? privacyAmount(account.currency) : investment
                     ? `₺${metrics.currentValue.toFixed(2)}`
                     : credit ? `₺${credit.debt.toFixed(2)}`
                     : `${currencySymbols[account.currency] || '₺'} ${balance.toFixed(2)}`;
@@ -293,7 +295,7 @@ function updateTransactionsUI() {
         const amountClass = isExpense ? 'expense' : isTransfer ? 'transfer' : 'income';
         const currencySymbol = item.accountCurrency === 'USD' ? '$' : item.accountCurrency === 'EUR' ? '€' : item.accountCurrency === 'GRAM_ALTIN' || item.accountCurrency === 'CEYREK_ALTIN' ? '🪙' : '₺';
         const amount = Number(item.amount) || 0;
-        const amountDisplay = isHidden ? '₺••••••' : `${sign}${currencySymbol}${amount.toFixed(2)}`;
+        const amountDisplay = isHidden ? privacySignedAmount(sign, item.accountCurrency) : `${sign}${currencySymbol}${amount.toFixed(2)}`;
          const purchaseRateDisplay = !isTransfer && item.purchaseRate > 0
             ? `<div class="transaction-rate-modern">Alış kuru: ${getCurrencyRateLabel(item.accountCurrency, item.purchaseRate)}</div>`
             : '';
@@ -304,10 +306,11 @@ function updateTransactionsUI() {
             ? `<div class="transaction-rate-modern">İşlem kuru: ${getCurrencyRateLabel(item.accountCurrency, item.transactionRate)}</div>`
             : '';
         const profitLossDisplay = !isTransfer && item.profitLoss !== 0
-            ? `<div class="transaction-rate-modern">${item.profitLoss > 0 ? 'Kâr' : 'Zarar'}: ${item.profitLoss > 0 ? '+' : '-'}₺${Math.abs(item.profitLoss).toFixed(2)}</div>`
+            ? `<div class="transaction-rate-modern">${item.profitLoss > 0 ? 'Kâr' : 'Zarar'}: ${isHidden ? privacySignedAmount(item.profitLoss > 0 ? '+' : '-') : `${item.profitLoss > 0 ? '+' : '-'}₺${Math.abs(item.profitLoss).toFixed(2)}`}</div>`
             : '';
+        const installmentNextDate = new Date(new Date(`${item.date}T12:00:00`).setMonth(new Date(`${item.date}T12:00:00`).getMonth() + 1)).toLocaleDateString('tr-TR');
         const installmentDisplay = !isTransfer && item.isInstallment
-            ? `<div class="transaction-rate-modern"><i class="fas fa-credit-card"></i> ${item.installmentCount} taksit · Faiz: %${item.installmentInterestRate.toFixed(2)} · Aylık ₺${item.installmentAmount.toFixed(2)} · Toplam ₺${item.installmentTotal.toFixed(2)} · Sonraki: ${new Date(new Date(`${item.date}T12:00:00`).setMonth(new Date(`${item.date}T12:00:00`).getMonth() + 1)).toLocaleDateString('tr-TR')}</div>`
+            ? `<div class="transaction-rate-modern"><i class="fas fa-credit-card"></i> ${item.installmentCount} taksit · Faiz: ${isHidden ? privacyPercent() : `%${item.installmentInterestRate.toFixed(2)}`} · Aylık ${isHidden ? privacyAmount() : `₺${item.installmentAmount.toFixed(2)}`} · Toplam ${isHidden ? privacyAmount() : `₺${item.installmentTotal.toFixed(2)}`} · Sonraki: ${installmentNextDate}</div>`
             : '';
 
         let deleteBtn = '';
@@ -406,13 +409,16 @@ function updateGoalsUI() {
     goalsList.innerHTML = goals.map(goal => {
         const progress = goal.amount > 0 ? (goal.current / goal.amount) * 100 : 0;
         const percentage = Math.min(progress, 100).toFixed(1);
-        const currentDisplay = isHidden ? '₺••••••' : `₺${(goal.current || 0).toFixed(2)}`;
-        const targetDisplay = isHidden ? '₺••••••' : `₺${(goal.amount || 0).toFixed(2)}`;
+        const currentDisplay = isHidden ? privacyAmount() : `₺${(goal.current || 0).toFixed(2)}`;
+        const targetDisplay = isHidden ? privacyAmount() : `₺${(goal.amount || 0).toFixed(2)}`;
+        // Gizlilikte yüzde ve doluluk oranı da sızmamalı: çubuk boş, yüzde maskeli.
+        const barWidth = isHidden ? 0 : percentage;
+        const percentDisplay = isHidden ? privacyPercent() : `%${percentage}`;
         const linkedAccount = goal.accountName ? `<small class="goal-linked-account"><i class="fas fa-link"></i> ${escapeHtml(goal.accountName)}</small>` : '';
         return `<div class="goal-card">
             <div class="goal-card-header"><div><h3>${escapeHtml(goal.name)}</h3>${linkedAccount}</div><button class="delete-goal-btn" onclick="deleteGoal('${escapeHtml(goal.id)}')"><i class="fas fa-trash"></i></button></div>
-            <div class="goal-progress-bar"><div class="goal-progress-fill" style="width: ${percentage}%;"></div></div>
-            <div class="goal-amounts"><span>${currentDisplay}</span><span class="goal-percentage">%${percentage}</span><span>${targetDisplay}</span></div>
+            <div class="goal-progress-bar"><div class="goal-progress-fill" style="width: ${barWidth}%;"></div></div>
+            <div class="goal-amounts"><span>${currentDisplay}</span><span class="goal-percentage">${percentDisplay}</span><span>${targetDisplay}</span></div>
             <button class="add-btn" style="margin-top:10px; width:100%; justify-content:center;" onclick="addToGoal('${escapeHtml(goal.id)}')"><i class="fas fa-plus"></i> Para Ekle</button>
         </div>`;
     }).join('');
@@ -595,7 +601,9 @@ window.deleteAccount = async function(id) {
         });
         if (recurrings.length > 5) listingLines.push(`• ...ve ${recurrings.length - 5} tane daha`);
     }
-    const detail = reasons.length ? `\n\nBağlı kayıtlar: ${reasons.join(', ')}.\n\n${listingLines.join('\n')}` : '';
+    // Gizlilik modunda diyaloğa giren tutarlar da maskelenir; ad ve tarih
+    // korunur (kayıdın nerede olduğunu anlamak için gerekli).
+    const detail = privacyScrubText(reasons.length ? `\n\nBağlı kayıtlar: ${reasons.join(', ')}.\n\n${listingLines.join('\n')}` : '');
 
     if (hasManualHistory) {
         const question = `Bu hesap silinemez; hesapla bağlı geçmiş kayıtlar var.${detail}\n\nTransferleri Transferler sayfasında (Ay filtresini kaydın tarihine çevirin), işlemleri İşlemler sayfasında silin veya düzenleyin; sonra bu hesabı tekrar deneyin.`;

@@ -179,7 +179,7 @@ function initQuickAdd() {
             if (targetSel && targetSel.options.length <= 1) {
                 const tryAccounts = accounts.filter(a => a.currency === 'TRY' && a.id !== accSel.value);
                 targetSel.innerHTML = '<option value="">Hesap seçin</option>' +
-                    tryAccounts.map(a => `<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)} — ₺${Number(a.balance || 0).toFixed(2)}</option>`).join('');
+                    tryAccounts.map(a => `<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)} — ${isHidden ? privacyAmount() : `₺${Number(a.balance || 0).toFixed(2)}`}</option>`).join('');
             }
         }
     }
@@ -195,7 +195,7 @@ function initQuickAdd() {
         if (!account) return;
         const isCreditType = account.type === 'credit' || (account.name || '').toLowerCase().includes('kredi');
         if (quickAddType === 'expense' && !isCreditType && Number(account.balance || 0) < amount) {
-            showToast(`Yetersiz bakiye! ${account.name} hesabında ₺${Number(account.balance || 0).toFixed(2)} var.`, 'error');
+            showToast(privacyScrubText(`Yetersiz bakiye! ${account.name} hesabında ₺${Number(account.balance || 0).toFixed(2)} var.`), 'error');
             return;
         }
 
@@ -381,10 +381,19 @@ function updateSpendingVelocity() {
     const monthBudgets = budgets.filter(b => b.month === monthStr);
     const totalBudget = monthBudgets.reduce((s, b) => s + (Number(b.limit) || 0), 0);
 
-    msg.textContent = `Bugün ₺${totalSpent.toFixed(0)} harcadın — bu hızla ay sonu ₺${projected.toFixed(0)} olacak.`;
+    if (isHidden) {
+        msg.textContent = `Bugün ${privacyAmount()} harcadın — bu hızla ay sonu ${privacyAmount()} olacak.`;
+    } else {
+        msg.textContent = `Bugün ₺${totalSpent.toFixed(0)} harcadın — bu hızla ay sonu ₺${projected.toFixed(0)} olacak.`;
+    }
 
     if (totalBudget > 0) {
-        if (projected > totalBudget) {
+        if (isHidden) {
+            warn.textContent = projected > totalBudget
+                ? `Bütçen ${privacyAmount()} — aşım riski var!`
+                : `Bütçen ${privacyAmount()} — ${privacyAmount()} kaldı.`;
+            card.classList.toggle('over-budget', projected > totalBudget);
+        } else if (projected > totalBudget) {
             warn.textContent = `Bütçen ₺${totalBudget.toFixed(0)} — aşım riski var!`;
             card.classList.add('over-budget');
         } else {
@@ -424,11 +433,13 @@ function updateCategoryBudgetBars() {
         const spent = getBudgetSpent(b.category, b.month);
         const pct = limit > 0 ? Math.min(100, (spent / limit) * 100) : 0;
         const barClass = spent >= limit ? 'over' : pct >= 80 ? 'warn' : '';
-        const hidden = isHidden ? '₺••••••' : `₺${spent.toFixed(0)} / ₺${limit.toFixed(0)}`;
+        // Gizlilikte hem tutar hem doluluk oranı (çubuk genişliği) maskelenir.
+        const hidden = isHidden ? privacyAmount() : `₺${spent.toFixed(0)} / ₺${limit.toFixed(0)}`;
+        const barWidth = isHidden ? 0 : pct.toFixed(1);
         const amountClass = spent >= limit ? 'cat-amount over' : 'cat-amount';
         return `<div class="budget-category-bar">
             <span class="cat-name">${escapeHtml(b.category)}</span>
-            <div class="goal-progress-bar"><div class="goal-progress-fill budget-fill ${barClass}" style="width:${pct.toFixed(1)}%"></div></div>
+            <div class="goal-progress-bar"><div class="goal-progress-fill budget-fill ${barClass}" style="width:${barWidth}%"></div></div>
             <span class="${amountClass}">${hidden}</span>
         </div>`;
     }).join('');
@@ -502,10 +513,17 @@ function updateMonthlyComparison() {
 
     const diff = curExpenses - lastExpenses;
 
-    curExpEl.textContent = `₺${curExpenses.toFixed(0)}`;
-    lastExpEl.textContent = `₺${lastExpenses.toFixed(0)}`;
-    diffEl.textContent = `${diff >= 0 ? '+' : ''}₺${diff.toFixed(0)}`;
-    diffEl.className = 'comparison-diff ' + (diff > 0 ? 'negative' : diff < 0 ? 'positive' : '');
+    if (isHidden) {
+        curExpEl.textContent = privacyAmount();
+        lastExpEl.textContent = privacyAmount();
+        diffEl.textContent = privacyAmount();
+        diffEl.className = 'comparison-diff';
+    } else {
+        curExpEl.textContent = `₺${curExpenses.toFixed(0)}`;
+        lastExpEl.textContent = `₺${lastExpenses.toFixed(0)}`;
+        diffEl.textContent = `${diff >= 0 ? '+' : ''}₺${diff.toFixed(0)}`;
+        diffEl.className = 'comparison-diff ' + (diff > 0 ? 'negative' : diff < 0 ? 'positive' : '');
+    }
 
     card.style.display = 'block';
 }
@@ -554,13 +572,18 @@ function updateSpendingRadar() {
     const total = data.reduce((a, b) => a + b, 0);
     const maxVal = Math.max(...data);
 
+    // Gizlilik modunda grafik verisi temizlenir (charts.js ile aynı desen);
+    // kategori adları görünür kalır, yüzde ve tutar maskelenir.
+    const chartLabels = isHidden ? [] : labels;
+    const chartData = isHidden ? [] : data;
+
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const gridColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
     const labelColor = isDark ? '#a6a7bb' : '#72758a';
 
     if (spendingRadarChart) {
-        spendingRadarChart.data.labels = labels;
-        spendingRadarChart.data.datasets[0].data = data;
+        spendingRadarChart.data.labels = chartLabels;
+        spendingRadarChart.data.datasets[0].data = chartData;
         spendingRadarChart.options.scales.r.grid.color = gridColor;
         spendingRadarChart.options.scales.r.pointLabels.color = labelColor;
         spendingRadarChart.update();
@@ -568,9 +591,9 @@ function updateSpendingRadar() {
         spendingRadarChart = new Chart(canvas, {
             type: 'radar',
             data: {
-                labels,
+                labels: chartLabels,
                 datasets: [{
-                    data,
+                    data: chartData,
                     backgroundColor: 'rgba(98, 86, 217, 0.15)',
                     borderColor: '#6256d9',
                     borderWidth: 2,
@@ -611,8 +634,8 @@ function updateSpendingRadar() {
         return `<div class="radar-legend-item">
             <span class="radar-legend-dot" style="background:${dot}"></span>
             <span class="radar-legend-label">${escapeHtml(l)}</span>
-            <span class="radar-legend-pct">%${pct}</span>
-            <span class="radar-legend-value">₺${data[i].toFixed(0)}</span>
+            <span class="radar-legend-pct">${isHidden ? privacyPercent() : `%${pct}`}</span>
+            <span class="radar-legend-value">${isHidden ? privacyAmount() : `₺${data[i].toFixed(0)}`}</span>
         </div>`;
     }).join('');
 }
@@ -638,10 +661,11 @@ function checkBudgetAlerts() {
 
         if (pct >= 100) {
             const overspend = spent - b.limit;
-            showToast(`🔴 ${b.category} bütçesi aşıldı! ₺${overspend.toFixed(0)} fazla harcandı.`, 'error');
+            // privacyScrubText gizli değilken metni aynen bırakır; toast güvenli.
+            showToast(privacyScrubText(`🔴 ${b.category} bütçesi aşıldı! ₺${overspend.toFixed(0)} fazla harcandı.`), 'error');
         } else if (pct >= 80) {
             const remaining = b.limit - spent;
-            showToast(`⚠️ ${b.category} bütçesinin %${pct.toFixed(0)} kullanıldı — ₺${remaining.toFixed(0)} kaldı!`, 'error');
+            showToast(privacyScrubText(`⚠️ ${b.category} bütçesinin %${pct.toFixed(0)} kullanıldı — ₺${remaining.toFixed(0)} kaldı!`), 'error');
         }
 
         _shownBudgetAlerts.add(key);
@@ -671,7 +695,8 @@ function updateGoalRings() {
     const circumference = 2 * Math.PI * 50;
 
     container.innerHTML = top3.map((g, i) => {
-        const offset = circumference - (g.pct / 100) * circumference;
+        // Gizliyken halka boş gösterilir, yüzde ve tutarlar maskelenir.
+        const offset = isHidden ? circumference : circumference - (g.pct / 100) * circumference;
         return `<div class="ring-item">
             <svg class="ring-svg" viewBox="0 0 120 120">
                 <circle class="ring-bg" cx="60" cy="60" r="50" fill="none"/>
@@ -679,10 +704,10 @@ function updateGoalRings() {
                     stroke="${colors[i % 3]}" stroke-dasharray="${circumference}"
                     stroke-dashoffset="${offset}" transform="rotate(-90 60 60)"/>
                 <text x="60" y="60" text-anchor="middle" dominant-baseline="central"
-                    class="ring-pct" fill="var(--text-color)">%${g.pct.toFixed(0)}</text>
+                    class="ring-pct" fill="var(--text-color)">${isHidden ? privacyPercent() : `%${g.pct.toFixed(0)}`}</text>
             </svg>
             <div class="ring-label">${escapeHtml(g.name)}</div>
-            <div class="ring-amount">₺${(g.current || 0).toFixed(0)} / ₺${(g.target || 0).toFixed(0)}</div>
+            <div class="ring-amount">${isHidden ? `${privacyAmount()} / ${privacyAmount()}` : `₺${(g.current || 0).toFixed(0)} / ₺${(g.target || 0).toFixed(0)}`}</div>
         </div>`;
     }).join('');
 

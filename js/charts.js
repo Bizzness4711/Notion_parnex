@@ -124,6 +124,7 @@ function updateCharts() {
                         tooltip: {
                             callbacks: {
                                 afterLabel: function(context) {
+                                    if (isHidden) return '';
                                     if (context.dataIndex === 2) return `Getiri Oranı: %${profitPercentage.toFixed(1)}`;
                                     return '';
                                 }
@@ -137,6 +138,7 @@ function updateCharts() {
             chartVar.data.datasets[0].data = data;
             chartVar.data.datasets[0].backgroundColor = backgroundColor;
             chartVar.options.plugins.tooltip.callbacks.afterLabel = function(context) {
+                if (isHidden) return '';
                 return context.dataIndex === 2 ? `Getiri Oranı: %${profitPercentage.toFixed(1)}` : '';
             };
             chartVar.update();
@@ -213,11 +215,24 @@ async function clearAllData() {
 
 
 // GİZLİLİK MODU: Kullanıcı belgesinde saklanır ve tüm açık tarayıcılara eşitlenir.
+let privacyToggleBusy = false;
 async function togglePrivacyMode() {
+    if (privacyToggleBusy) return;
+    privacyToggleBusy = true;
+    try {
+        await togglePrivacyModeCore();
+    } finally {
+        privacyToggleBusy = false;
+    }
+}
+
+async function togglePrivacyModeCore() {
     if (!isHidden) {
         if (!currentUser) { showToast('Kullanıcı bulunamadı.', 'error'); return; }
         try {
             await db.collection('users').doc(currentUser.uid).set({ privacyModeEnabled: true }, { merge: true });
+            // Yerel durumu hemen yansıt (optimistic); onSnapshot aynı değeri doğrular.
+            setPrivacyModeUI(true);
             showToast('Gizlilik modu açıldı', 'success');
         } catch (error) {
             console.error('Gizlilik modu güncelleme hatası:', error);
@@ -244,6 +259,7 @@ async function togglePrivacyMode() {
             const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, password);
             await currentUser.reauthenticateWithCredential(credential);
             await db.collection('users').doc(currentUser.uid).set({ privacyModeEnabled: false }, { merge: true });
+            setPrivacyModeUI(false);
             showToast('Gizlilik modu kapatıldı', 'success');
         } catch (error) {
             console.error('Şifre doğrulama hatası:', error);

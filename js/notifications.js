@@ -134,7 +134,8 @@ function addNotification(id, message, icon = 'fa-bell', title = 'Parnex') {
     updateNotificationsUI();
     playNotificationSound();
     if ('Notification' in window && Notification.permission === 'granted') {
-        try { new Notification(title, { body: message, icon: 'icons/logo-192.png' }); } catch (e) { console.warn('Masaüstü bildirimi gösterilemedi.', e); }
+        // Masaüstü bildirimi gizliyken tutar sızdırmamalı (Firestore kaydı gerçek kalır).
+        try { new Notification(title, { body: privacyScrubText(message), icon: 'icons/logo-192.png' }); } catch (e) { console.warn('Masaüstü bildirimi gösterilemedi.', e); }
     }
     if (!currentUser) return;
     notifCollection().add({ key: id, message, icon, title, read: false, ts: item.ts })
@@ -149,8 +150,9 @@ function updateNotificationsUI() {
     const unread = notifications.filter(item => !item.read);
     count.textContent = unread.length > 99 ? '99+' : String(unread.length);
     count.hidden = unread.length === 0;
+    // Kayıtlı mesajlar gerçek tutar içerir; gizlilik modunda listelerken maskelenir.
     list.innerHTML = notifications.length
-        ? notifications.slice(0, 12).map(item => `<div class="notification-item"><i class="fas ${escapeHtml(item.icon)}"></i><span><strong>${escapeHtml(item.title || 'Parnex')}</strong> · ${escapeHtml(item.message)}</span><button class="delete-btn" onclick="event.stopPropagation();deleteNotification('${item.id}')" title="Bildirimi sil"><i class="fas fa-times"></i></button></div>`).join('')
+        ? notifications.slice(0, 12).map(item => `<div class="notification-item"><i class="fas ${escapeHtml(item.icon)}"></i><span><strong>${escapeHtml(item.title || 'Parnex')}</strong> · ${escapeHtml(privacyScrubText(item.message))}</span><button class="delete-btn" onclick="event.stopPropagation();deleteNotification('${item.id}')" title="Bildirimi sil"><i class="fas fa-times"></i></button></div>`).join('')
         : '<div class="notification-empty">Yeni bildiriminiz yok.</div>';
 }
 

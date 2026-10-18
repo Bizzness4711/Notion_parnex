@@ -16,12 +16,15 @@ function updateBudgetsUI() {
                 const spent = getBudgetSpent(b.category, b.month);
                 const pct = limit > 0 ? Math.min(100, (spent / limit) * 100) : 0;
                 const barClass = spent >= limit ? 'over' : (spent / limit) >= 0.8 ? 'warn' : '';
-                const hidden = isHidden ? '₺••••••' : `₺${spent.toFixed(2)} / ₺${limit.toFixed(2)}`;
+                // Gizlilikte tutar, yüzde ve çubuk doluluğu maskelenir.
+                const hidden = isHidden ? privacyAmount() : `₺${spent.toFixed(2)} / ₺${limit.toFixed(2)}`;
+                const barWidth = isHidden ? 0 : pct.toFixed(1);
+                const pctDisplay = isHidden ? privacyPercent() : `%${(limit > 0 ? (spent / limit) * 100 : 0).toFixed(0)}`;
                 return `<div class="budget-card">
                     <div class="budget-card-header"><strong>${escapeHtml(b.category)}</strong>
                     <button class="delete-btn" onclick="deleteBudget('${b.id}')" title="Bütçeyi sil"><i class="fas fa-trash"></i></button></div>
-                    <div class="goal-progress-bar"><div class="goal-progress-fill budget-fill ${barClass}" style="width:${pct.toFixed(1)}%"></div></div>
-                    <div class="goal-amounts"><span>${hidden}</span><span>%${(limit > 0 ? (spent / limit) * 100 : 0).toFixed(0)}</span></div>
+                    <div class="goal-progress-bar"><div class="goal-progress-fill budget-fill ${barClass}" style="width:${barWidth}%"></div></div>
+                    <div class="goal-amounts"><span>${hidden}</span><span>${pctDisplay}</span></div>
                 </div>`;
             }).join('');
         }
@@ -39,9 +42,10 @@ function updateBudgetsUI() {
             overviewCard.style.display = 'block';
             overview.innerHTML = ranked.map(b => {
                 const barClass = b.pct >= 1 ? 'over' : b.pct >= 0.8 ? 'warn' : '';
+                const barWidth = isHidden ? 0 : Math.min(100, b.pct * 100).toFixed(1);
                 return `<div class="budget-row"><span>${escapeHtml(b.category)}</span>
-                    <div class="goal-progress-bar budget-mini-bar"><div class="goal-progress-fill budget-fill ${barClass}" style="width:${Math.min(100, b.pct * 100).toFixed(1)}%"></div></div>
-                    <strong>%${(b.pct * 100).toFixed(0)}</strong></div>`;
+                    <div class="goal-progress-bar budget-mini-bar"><div class="goal-progress-fill budget-fill ${barClass}" style="width:${barWidth}%"></div></div>
+                    <strong>${isHidden ? privacyPercent() : `%${(b.pct * 100).toFixed(0)}`}</strong></div>`;
             }).join('');
         }
     }

@@ -610,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!accountId || !Number.isFinite(amount) || amount <= 0 || !account) { showToast('Lütfen geçerli bir hesap ve tutar seçin!', 'error'); return; }
         const isCreditType = account.type === 'credit' || (account.name || '').toLowerCase().includes('kredi');
         if (selectedType === 'expense' && !isCreditType && Number(account.balance || 0) < amount) {
-            showToast(`Yetersiz bakiye! ${account.name} hesabında ₺${Number(account.balance || 0).toFixed(2)} var, ₺${amount.toFixed(2)} harcamaya çalışıyorsunuz.`, 'error');
+            showToast(privacyScrubText(`Yetersiz bakiye! ${account.name} hesabında ₺${Number(account.balance || 0).toFixed(2)} var, ₺${amount.toFixed(2)} harcamaya çalışıyorsunuz.`), 'error');
             return;
         }
         const isInvestment = isInvestmentAccount(account);
@@ -946,7 +946,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     batch.update(txRef, { profitLoss: realizedPL });
                     await batch.commit();
                     const plLabel = realizedPL >= 0 ? `+₺${realizedPL.toFixed(2)} kâr` : `₺${realizedPL.toFixed(2)} zarar`;
-                    showToast(`Satış kaydedildi! ${plLabel}`, 'success');
+                    showToast(privacyScrubText(`Satış kaydedildi! ${plLabel}`), 'success');
                 } else {
                     const balanceAmount = isInstallment && selectedType === 'expense' ? installmentTotal : amount;
                     const newBalance = selectedType === 'income' ? account.balance + balanceAmount : account.balance - balanceAmount;

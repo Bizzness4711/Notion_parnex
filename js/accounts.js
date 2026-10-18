@@ -170,7 +170,8 @@ auth.onAuthStateChanged(async (user) => {
         if (securityTimeoutId) clearTimeout(securityTimeoutId);
         const securityLock = document.getElementById('securityLock');
         if (securityLock) securityLock.hidden = true;
-        setPrivacyModeUI(false);
+        // Çıkışta güvenli varsayılan: gizlilik AÇIK; bir sonraki giriş onSnapshot ile gerçek değeri yükler.
+        setPrivacyModeUI(true);
         document.getElementById('loginModal').style.display = 'flex';
         document.getElementById('app').style.display = 'none';
     }
@@ -502,8 +503,14 @@ function setPrivacyModeUI(enabled) {
 
     const privacyButton = document.getElementById('privacyModeBtn');
     const balanceButton = document.getElementById('toggleBalanceBtn');
-    if (privacyButton) privacyButton.innerHTML = enabled ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    if (privacyButton) {
+        privacyButton.innerHTML = enabled ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        privacyButton.setAttribute('aria-label', enabled ? 'Gizlilik modu açık — kapatmak için uzun bas' : 'Gizlilik modu kapalı');
+        privacyButton.setAttribute('title', enabled ? 'Gizlilik modu açık (kapatmak için şifre gerekir)' : 'Gizlilik modu kapalı');
+    }
     if (balanceButton) balanceButton.style.display = enabled ? 'block' : 'none';
+    // CSS ve testler için gövde sınıfı: gizlilik açıkken body.privacy-active.
+    document.body.classList.toggle('privacy-active', enabled);
     updateAllUI();
 }
 
@@ -523,6 +530,16 @@ function updateAllUI() {
     if (typeof updateAdvancedReports === 'function') updateAdvancedReports();
     if (typeof updateBalanceForecast === 'function') updateBalanceForecast();
     if (typeof updateGoalAccountSelect === 'function') updateGoalAccountSelect();
+    // Gizlilik aç/kapa'da dashboard widget'lari da tazelenmeli (sprint1.js).
+    if (typeof refreshSprint1Dashboard === 'function') refreshSprint1Dashboard();
+    else {
+        if (typeof updateSpendingVelocity === 'function') updateSpendingVelocity();
+        if (typeof updateCategoryBudgetBars === 'function') updateCategoryBudgetBars();
+        if (typeof updateMonthlyComparison === 'function') updateMonthlyComparison();
+        if (typeof updateSpendingRadar === 'function') updateSpendingRadar();
+        if (typeof updateGoalRings === 'function') updateGoalRings();
+    }
+    if (typeof updateFinanceCalendar === 'function') updateFinanceCalendar();
     const monthDisplay = document.getElementById('currentMonthDisplay');
     if (monthDisplay) monthDisplay.textContent = formatMonth(currentMonth);
 }
@@ -547,10 +564,11 @@ function updateMonthlyTransfersUI() {
     const totalEl = document.getElementById('transferMonthlyTotal');
     const countEl = document.getElementById('transferMonthlyCount');
     const total = monthTransfers.reduce((sum, t) => sum + Number(t.amount || 0), 0);
-    if (totalEl) totalEl.textContent = isHidden ? '₺••••••' : `₺${total.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (totalEl) totalEl.textContent = isHidden ? privacyAmount() : `₺${total.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     if (countEl) countEl.textContent = `${monthTransfers.length} transfer`;
 
-    if (isHidden) { list.innerHTML = '<p class="empty-state">Gizlilik modu açık.</p>'; return; }
+    // Gizlilik modunda liste tamamen kaybolmasin: hesap adlari, tarih ve
+    // aciklamalar gorunur kalir; yalnizca tutarlar maskelenir.
     if (!monthTransfers.length) {
         list.innerHTML = '<p class="empty-state">Bu ay transfer yapılmamış. Sağdaki + butonundan transfer ekleyebilirsiniz.</p>';
         return;
@@ -562,7 +580,7 @@ function updateMonthlyTransfersUI() {
                 <div class="transaction-title-modern">${escapeHtml(resolveAccountName(t.fromAccountId, t.fromAccountName))} → ${escapeHtml(resolveAccountName(t.toAccountId, t.toAccountName))}</div>
                 <div class="transaction-subtitle-modern">${escapeHtml(t.description || 'Hesap Transferi')} • ${escapeHtml(t.date || 'Tarih yok')}</div>
             </div>
-            <div class="transaction-amount-modern transfer">↔ ₺${Number(t.amount || 0).toFixed(2)}</div>
+            <div class="transaction-amount-modern transfer">↔ ${isHidden ? privacyAmount() : `₺${Number(t.amount || 0).toFixed(2)}`}</div>
             <button class="delete-btn" onclick="deleteTransfer('${t.id}')" title="Transferi sil"><i class="fas fa-trash"></i></button>
         </div>`).join('');
 }
@@ -767,9 +785,10 @@ function updateAdvancedReports() {
         monthly[month][transaction.type] += getTransactionValueTL(transaction);
     });
     const months = Object.keys(monthly).sort().slice(-6).reverse();
+    const cashHiddenValue = '<span class="report-hidden-value">₺••••••</span>';
     cashBody.innerHTML = months.length ? months.map(month => {
         const data = monthly[month];
-        return `<tr><td>${formatMonth(month)}</td><td>₺${data.income.toFixed(2)}</td><td>₺${data.expense.toFixed(2)}</td><td>${signedReportValue(data.income - data.expense)}</td></tr>`;
+        return `<tr><td>${formatMonth(month)}</td><td>${isHidden ? cashHiddenValue : `₺${data.income.toFixed(2)}`}</td><td>${isHidden ? cashHiddenValue : `₺${data.expense.toFixed(2)}`}</td><td>${isHidden ? '••••' : signedReportValue(data.income - data.expense)}</td></tr>`;
     }).join('') : '<tr><td colspan="4" class="empty-state">Henüz nakit akışı verisi yok.</td></tr>';
 
     const categories = {};
@@ -821,7 +840,7 @@ function updateGoalAccountSelect() {
     const currentValue = select.value;
     const tryAccounts = accounts.filter(account => account.currency === 'TRY');
     select.innerHTML = '<option value="">Hesap bağlama</option>' +
-        tryAccounts.map(account => `<option value="${escapeHtml(account.id)}">${escapeHtml(account.name)} (${(Number(account.balance) || 0).toFixed(2)} ₺)</option>`).join('');
+        tryAccounts.map(account => `<option value="${escapeHtml(account.id)}">${escapeHtml(account.name)} (${isHidden ? privacyAmount() : `${(Number(account.balance) || 0).toFixed(2)} ₺`})</option>`).join('');
     if (tryAccounts.some(account => account.id === currentValue)) select.value = currentValue;
 }
 
@@ -830,7 +849,7 @@ function updateRecurringTransactionsUI() {
     if (!list) return;
     const active = recurringTransactions.filter(item => item.active !== false);
     list.innerHTML = active.length ? active.map(item => `<div class="recurring-item">
-        <span><strong>${item.type === 'income' ? 'Gelir' : 'Masraf'}</strong> · ${escapeHtml(item.description)} · ${Number(item.amount || 0).toFixed(2)} ${escapeHtml(item.accountCurrency)}</span>
+        <span><strong>${item.type === 'income' ? 'Gelir' : 'Masraf'}</strong> · ${escapeHtml(item.description)} · ${isHidden ? privacyAmount(item.accountCurrency) : `${Number(item.amount || 0).toFixed(2)} ${escapeHtml(item.accountCurrency)}`}</span>
         <small>Sonraki: ${escapeHtml(item.nextDate)}</small>
         <button class="delete-btn" onclick="cancelRecurringTransaction('${item.id}')"><i class="fas fa-stop"></i></button>
     </div>`).join('') : '<p class="empty-state">Aktif tekrarlayan işlem yok.</p>';
@@ -862,6 +881,10 @@ function updateProfitLossReport() {
         const unrealized = metrics.currentValue - metrics.cost;
         const total = unrealized + realized;
         if (!currencyAccounts.length && !realized) return '';
+        if (isHidden) {
+            const masked = '<span class="report-hidden-value">₺••••••</span>';
+            return `<tr><td>${currencyLabels[currency]}</td><td>••••</td><td>${masked}</td><td>${masked}</td><td>${masked}</td><td>${masked}</td><td>${masked}</td></tr>`;
+        }
         const format = value => `₺${Math.abs(value).toFixed(2)}`;
         const signed = value => `<span class="${value >= 0 ? 'profit-loss-positive' : 'profit-loss-negative'}">${value >= 0 ? '+' : '-'}${format(value)}</span>`;
         return `<tr><td>${currencyLabels[currency]}</td><td>${metrics.quantity.toFixed(4)}</td><td>₺${metrics.cost.toFixed(2)}</td><td>₺${metrics.currentValue.toFixed(2)}</td><td>${signed(unrealized)}</td><td>${signed(realized)}</td><td>${signed(total)}</td></tr>`;

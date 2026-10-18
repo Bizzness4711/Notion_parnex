@@ -63,6 +63,7 @@
   }
 
   function downloadCSV() {
+    if (isHidden && !confirm('Gizlilik modu açık. İndirilen dosya gerçek tutarları içerecek. Devam edilsin mi?')) return;
     const rows = getExportRows();
     if (!rows.length) { showToast('İndirilecek işlem yok.', 'error'); return; }
     const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
@@ -75,6 +76,7 @@
 
   function downloadXLSX() {
     if (typeof XLSX === 'undefined') { showToast('Excel kütüphanesi yüklenemedi.', 'error'); return; }
+    if (isHidden && !confirm('Gizlilik modu açık. İndirilen dosya gerçek tutarları içerecek. Devam edilsin mi?')) return;
     const rows = getExportRows();
     if (!rows.length) { showToast('İndirilecek işlem yok.', 'error'); return; }
     const ws = XLSX.utils.json_to_sheet(rows, { header: HEADERS });
