@@ -44,11 +44,15 @@ async function verifySecurityPin(pin, storedValue) {
 }
 
 function getSecurityPinAttempts() {
-    return Number(localStorage.getItem(securityStorageKey('pin-attempts') || '') || 0);
+    const key = securityStorageKey('pin-attempts');
+    if (!key) return 0;
+    return Number(localStorage.getItem(key) || 0);
 }
 
 function getSecurityPinLockoutUntil() {
-    return Number(localStorage.getItem(securityStorageKey('pin-lockout-until') || '') || 0);
+    const key = securityStorageKey('pin-lockout-until');
+    if (!key) return 0;
+    return Number(localStorage.getItem(key) || 0);
 }
 
 function resetSecurityPinAttempts() {
@@ -76,7 +80,9 @@ function isSecurityAppLocked() {
 }
 
 function getSecurityTimeoutMinutes() {
-    const value = Number(localStorage.getItem(securityStorageKey('timeout') || '') || 0);
+    const key = securityStorageKey('timeout');
+    if (!key) return 0;
+    const value = Number(localStorage.getItem(key) || 0);
     return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
