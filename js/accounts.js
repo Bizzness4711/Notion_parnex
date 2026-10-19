@@ -1197,18 +1197,30 @@ window.migrateLegacyFirebaseData = async function migrateLegacyFirebaseData() {
 
         let total = 0;
         const copied = {};
+        const skippedExisting = {};
 
         for (const collectionName of collections) {
             const snapshot = await legacyUserRef.collection(collectionName).get();
+
+            // Aynı ID'li mevcut hedef belgeleri ASLA ezme: yeniden çalıştırmada
+            // ve kullanıcının mevcut kayıtlarında veri korunur (salt-okunur atlama).
+            const targetRef = db.collection('users').doc(currentUser.uid).collection(collectionName);
+            const existingSnap = await targetRef.get();
+            const existingIds = new Set(existingSnap.docs.map(d => d.id));
+
             let count = 0;
+            let skipped = 0;
 
             // Firestore batch limiti nedeniyle 450'lik parçalar halinde yaz.
             let batch = db.batch();
             let batchCount = 0;
 
             for (const document of snapshot.docs) {
-                const target = db.collection('users').doc(currentUser.uid)
-                    .collection(collectionName).doc(document.id);
+                if (existingIds.has(document.id)) {
+                    skipped++;
+                    continue;
+                }
+                const target = targetRef.doc(document.id);
                 batch.set(target, document.data(), { merge: true });
                 batchCount++;
                 count++;
@@ -1223,13 +1235,17 @@ window.migrateLegacyFirebaseData = async function migrateLegacyFirebaseData() {
 
             if (batchCount > 0) await batch.commit();
             copied[collectionName] = count;
+            skippedExisting[collectionName] = skipped;
         }
 
-        // Eski kullanıcı ayarlarından yalnızca uygulamanın güvenli/işlevsel alanlarını taşı.
+        // Eski kullanıcı ayarlarından yalnızca uygulamanın güvenli/işlevsel alanlarını taşı;
+        // hedefte zaten değer olan alanlar boşluk doldurma ile doldurulur, ezilmez.
         const oldSettings = legacyUserSnap.data() || {};
+        const targetUserSnap = await db.collection('users').doc(currentUser.uid).get();
+        const targetSettings = targetUserSnap && targetUserSnap.exists ? (targetUserSnap.data() || {}) : {};
         const settingsToCopy = {};
         for (const key of ['currency', 'currentMonth', 'themeColor', 'privacyModeEnabled', 'timeZone']) {
-            if (oldSettings[key] !== undefined) settingsToCopy[key] = oldSettings[key];
+            if (oldSettings[key] !== undefined && targetSettings[key] === undefined) settingsToCopy[key] = oldSettings[key];
         }
         if (Object.keys(settingsToCopy).length) {
             await db.collection('users').doc(currentUser.uid).set(settingsToCopy, { merge: true });
@@ -1242,10 +1258,11 @@ window.migrateLegacyFirebaseData = async function migrateLegacyFirebaseData() {
             .filter(([, count]) => count > 0)
             .map(([name, count]) => name + ': ' + count)
             .join(', ');
+        const skippedTotal = Object.values(skippedExisting).reduce((sum, count) => sum + count, 0);
 
         showToast(
             total
-                ? 'Eski veriler geri aktarıldı: ' + summary
+                ? 'Eski veriler geri aktarıldı: ' + summary + (skippedTotal ? ' (' + skippedTotal + ' mevcut kayıt korundu)' : '')
                 : 'Eski hesapta aktarılacak işlem/veri bulunamadı.',
             total ? 'success' : 'info'
         );
