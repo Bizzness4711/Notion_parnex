@@ -11,7 +11,7 @@
 // - FCM yanıtını send-helpers.summarizeBatchResponse özetler (sdk 12.7.0
 //   alanları doğrulanmış): yanıt token bazlıdır, gövdedeki tüm dahil edilen
 //   adaylar aynı sonucu paylaşır.
-const { buildBatchNotification, summarizeBatchResponse } = require('./send-helpers');
+const { buildBatchNotification, summarizeBatchResponse, isDeadTokenCode } = require('./send-helpers');
 
 function localDateString(date, timeZone) {
     const parts = new Intl.DateTimeFormat('en-CA', {
@@ -122,10 +122,13 @@ async function processUser({ db, messaging, uid, userDoc, serverTimestamp, logge
     }
     logger.log(`FCM: ${outcome.successCount} başarılı, ${outcome.failureCount} hatalı`);
 
-    // Geçersiz tokenları temizle, diğer hataları logla
+    // Yanıtlar token sırasıyla eşleşir (sdk: responses, MulticastMessage.tokens
+    // sırasındadır). Yalnızca KESİN geçersizlik kodlarında token belgesi silinir;
+    // invalid-argument gibi genel/müphem kodlar ve geçici hatalar token'ı KORUR
+    // (bkz. send-helpers DEAD_TOKEN_CODES yorumları).
     const dead = [];
     res.responses.forEach((r, i) => {
-        if (!r.success && r.error && r.error.code === 'messaging/registration-token-not-registered') dead.push(tokens[i]);
+        if (!r.success && isDeadTokenCode(r.error?.code)) dead.push(tokens[i]);
         if (!r.success) logger.log(`Token hata: ${tokens[i].slice(0, 12)}… ${r.error?.code} ${r.error?.message}`);
     });
     for (const t of dead) {

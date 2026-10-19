@@ -6,96 +6,14 @@ import { fileURLToPath } from 'node:url';
 
 // Gerçek FCM/Firestore KULLANILMAZ: sahte db + messaging ile izole çalışır.
 import userFlow from '../tools/push/send-user.js';
+import {
+    todayStr, tomorrowStr, monthStr, userDoc, serverTimestamp,
+    makeLogger, makeDb, makeMessaging, okBatch
+} from './fakes.mjs';
 
-const { processUser, localDateString, addDays } = userFlow;
+const { processUser } = userFlow;
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sendSrc = readFileSync(path.join(ROOT, 'tools/push/send.js'), 'utf8');
-
-const TZ = 'Europe/Istanbul';
-const todayStr = localDateString(new Date(), TZ);
-const tomorrowStr = addDays(todayStr, 1);
-const monthStr = todayStr.substring(0, 7);
-
-function snapshot(items) {
-    const docs = items.map(it => ({ id: it.id, data: () => it.data }));
-    return { docs, empty: docs.length === 0, size: docs.length, forEach: fn => { docs.forEach(fn); } };
-}
-
-// processUser'nin kullandığı Firestore alt kümesi: collection/doc/get/where/
-// batch(set+commit)/doc.delete. commit ÖNCESİNDE hiçbir yazım kalıcı değildir
-// (gerçek batch davranışıyla aynı) — bu yüzden "yazım yok" iddiası
-// commits===0 ve writes===0 ile ölçülür.
-function makeDb(seed = {}) {
-    const state = {
-        logged: new Set(seed.logged || []),
-        writes: [],
-        commits: 0,
-        deleted: [],
-        failOn: seed.failOn || null
-    };
-    function queryRef(name, filters) {
-        return {
-            where(field, op, value) { return queryRef(name, filters.concat({ field, op, value })); },
-            doc(id) { return docRef(name, id); },
-            async get() {
-                if (state.failOn === name) throw new Error(`Firestore okuma hatası: ${name}`);
-                let items = (seed[name] || []).slice();
-                for (const f of filters) {
-                    items = items.filter(it => {
-                        const v = it.data[f.field];
-                        if (f.op === '==') return v === f.value;
-                        if (f.op === '>=') return String(v) >= String(f.value);
-                        if (f.op === '<=') return String(v) <= String(f.value);
-                        return true;
-                    });
-                }
-                return snapshot(items);
-            }
-        };
-    }
-    function docRef(name, id) {
-        return {
-            id,
-            collection: child => queryRef(child, []),
-            async get() {
-                if (state.failOn === name) throw new Error(`Firestore okuma hatası: ${name}`);
-                if (name === 'pushLog') return { exists: state.logged.has(id) };
-                const found = (seed[name] || []).find(it => it.id === id);
-                return { exists: !!found, data: () => found && found.data };
-            },
-            async delete() { state.deleted.push({ name, id }); }
-        };
-    }
-    return {
-        collection: name => ({ doc: id => docRef(name, id) }),
-        batch: () => ({
-            set(ref, data) { state.writes.push({ ref, data }); },
-            async commit() { state.commits += 1; }
-        }),
-        _state: state
-    };
-}
-
-function makeMessaging(impl) {
-    const calls = [];
-    return {
-        calls,
-        async sendEachForMulticast(message) {
-            calls.push(message);
-            return impl(message);
-        }
-    };
-}
-
-const okBatch = n => ({
-    successCount: n,
-    failureCount: 0,
-    responses: Array.from({ length: n }, () => ({ success: true, messageId: 'm-ok' }))
-});
-
-const userDoc = { id: 'u-test', data: () => ({ timeZone: TZ }) };
-const serverTimestamp = () => ({ fakeTs: true });
-const makeLogger = () => { const lines = []; return { lines, log: (...a) => lines.push(a.join(' ')), error: (...a) => lines.push(a.join(' ')) }; };
 
 test('bozuk kullanıcı belgesi koşturmayı öldürmez ve hiçbir pushLog yazmaz', async () => {
     const db = makeDb({

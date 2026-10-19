@@ -20,6 +20,36 @@
 // sonraki koşuya devredilir — böylece "gönderilmeyen ama loglanan" kayıp yok olur.
 const DEFAULT_BODY_LIMIT_BYTES = 3000;
 
+// Token belgesinin artık geçersiz olduğunun KESİN kanıtı sayılan kodlar.
+// firebase-admin 12.7.0 lib/utils/error.js kaynak kodundan doğrulandı:
+// - 'invalid-registration-token' (MessagingClientErrorCode.
+//   INVALID_REGISTRATION_TOKEN; sunucu 'InvalidRegistration' eşlemesi):
+//   "Invalid registration token provided."
+// - 'registration-token-not-registered' (REGISTRATION_TOKEN_NOT_REGISTERED;
+//   sunucu eşlemeleri: 'NotRegistered', v1 'NOT_FOUND'/'UNREGISTERED'):
+//   "...Remove this registration token and stop using it to send messages."
+// Runtime kod = 'messaging/<kod>' (PrefixedFirebaseError, super('messaging', ...)).
+//
+// BİLİNÇLİ OLARAK LİSTEDE OLMAYANLAR (token korunur):
+// - messaging/invalid-argument: payload/argüman kaynaklı olabilir → silme.
+// - messaging/mismatched-credential: yanlış secret vb. düzeltilebilir durum →
+//   silme (silinirse geçerli token'lar toplu kaybedilir).
+// - messaging/invalid-package-name, messaging/invalid-payload,
+//   messaging/invalid-data-payload-key, messaging/payload-size-limit-exceeded,
+//   messaging/invalid-options: token'ın kendisiyle ilgisiz → silme.
+// - messaging/server-unavailable, messaging/internal-error,
+//   messaging/unknown-error, messaging/message-rate-exceeded,
+//   messaging/device-message-rate-exceeded: geçici → koru.
+// SDK'da var olmayan kodlar (örn. 'registration-token-not-valid') KULLANILMAZ.
+const DEAD_TOKEN_CODES = new Set([
+    'messaging/invalid-registration-token',
+    'messaging/registration-token-not-registered'
+]);
+
+function isDeadTokenCode(code) {
+    return typeof code === 'string' && DEAD_TOKEN_CODES.has(code);
+}
+
 function utf8Bytes(str) {
     return Buffer.byteLength(String(str), 'utf8');
 }
@@ -128,6 +158,8 @@ function summarizeBatchResponse(res) {
 
 module.exports = {
     DEFAULT_BODY_LIMIT_BYTES,
+    DEAD_TOKEN_CODES,
+    isDeadTokenCode,
     buildBatchNotification,
     summarizeBatchResponse
 };
