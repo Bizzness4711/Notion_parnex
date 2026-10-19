@@ -5,27 +5,10 @@
 // 3) %100'e ulaşan hedefler
 // Aynı uyarı iki kez gitmez: users/{uid}/pushLog altına id yazılır, varsa atlanır.
 // Tutarlar sunucuda kura çevrilmeden toplanır (yaklaşık değerdir).
+// Per-user akış tools/push/send-user.js içinde; bu dosya sayfalama, hata
+// yalıtımı ve CI çıkış kodundan sorumludur.
 const admin = require('firebase-admin');
-const { buildBatchNotification, summarizeBatchResponse } = require('./send-helpers');
-
-function localDateString(date, timeZone) {
-    const parts = new Intl.DateTimeFormat('en-CA', {
-        timeZone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).formatToParts(date).reduce((result, part) => {
-        if (part.type !== 'literal') result[part.type] = part.value;
-        return result;
-    }, {});
-    return `${parts.year}-${parts.month}-${parts.day}`;
-}
-
-function addDays(dateString, days) {
-    const date = new Date(`${dateString}T12:00:00Z`);
-    date.setUTCDate(date.getUTCDate() + days);
-    return date.toISOString().slice(0, 10);
-}
+const { processUser } = require('./send-user');
 
 async function main() {
     const keyJson = process.env.FIREBASE_SERVICE_ACCOUNT;
@@ -33,7 +16,12 @@ async function main() {
     admin.initializeApp({ credential: admin.credential.cert(JSON.parse(keyJson)) });
     const db = admin.firestore();
     const messaging = admin.messaging();
+    const serverTimestamp = () => admin.firestore.FieldValue.serverTimestamp();
 
+    // Tek kullanıcının bozuk belgesi/token'ı/hesabı koşturmayı SONLANDIRMAZ:
+    // hata yalıtılır, özetlenir ve işin sonunda CI kısmi başarısız olur
+    // (process.exitCode = 1) — hiçbir hata sessizce başarılı sayılmaz.
+    let userErrors = 0;
     let usersSnap;
     let lastUserDoc = null;
     do {
@@ -41,107 +29,25 @@ async function main() {
         if (lastUserDoc) usersQuery = usersQuery.startAfter(lastUserDoc);
         usersSnap = await usersQuery.get();
         for (const userDoc of usersSnap.docs) {
-        const uid = userDoc.id;
-        const timeZone = userDoc.data().timeZone || 'UTC';
-        const todayStr = localDateString(new Date(), timeZone);
-        const tomorrowStr = addDays(todayStr, 1);
-        const month = todayStr.substring(0, 7);
-        const monthStart = `${month}-01`;
-        const monthEnd = `${month}-31`;
-        const tokensSnap = await db.collection('users').doc(uid).collection('pushTokens').get();
-        const tokens = tokensSnap.docs.map(d => d.id);
-        if (!tokens.length) continue;
-
-        // Adaylar gönderim SONUNDA değerlendirilir: pushLog, o adayın dahil
-        // edildiği gövde FCM tarafından kabul edilince yazılır (bkz. send-helpers).
-        const candidates = [];
-        const batch = db.batch();
-        const logRef = (id) => db.collection('users').doc(uid).collection('pushLog').doc(id);
-        const isLogged = async (id) => (await logRef(id).get()).exists;
-
-        // 1) Yarın vadesi gelen tekrarlayanlar
-        const recSnap = await db.collection('users').doc(uid).collection('recurringTransactions').get();
-        for (const doc of recSnap.docs) {
-            const r = doc.data();
-            if (r.active === false || r.nextDate !== tomorrowStr) continue;
-            const id = `rec-${doc.id}-${r.nextDate}`;
-            if (await isLogged(id)) continue;
-            candidates.push({ logRef: logRef(id), title: '⏰ Yarın vade', body: `${r.description || r.category || 'Tekrarlayan işlem'} (₺${Number(r.amount || 0).toFixed(2)})` });
-        }
-
-        // 2) Aşan bütçeler (yaklaşık: kur çevrimi yok)
-        const budgetSnap = await db.collection('users').doc(uid).collection('budgets').where('month', '==', month).get();
-        if (!budgetSnap.empty) {
-            const txSnap = await db.collection('users').doc(uid).collection('transactions')
-                .where('type', '==', 'expense').where('date', '>=', monthStart).where('date', '<=', monthEnd).get();
-            const spentByCat = {};
-            txSnap.forEach(d => {
-                const t = d.data();
-                spentByCat[t.category] = (spentByCat[t.category] || 0) + Number(t.amount || 0);
-            });
-            for (const doc of budgetSnap.docs) {
-                const b = doc.data();
-                const limit = Number(b.limit) || 0;
-                if (!(limit > 0)) continue;
-                const spent = spentByCat[b.category] || 0;
-                if (spent >= limit) {
-                    const id = `bud-${month}-${b.category}-over`;
-                    if (await isLogged(id)) continue;
-                    candidates.push({ logRef: logRef(id), title: '⚠️ Bütçe aşıldı', body: `${b.category}: ₺${spent.toFixed(2)} / ₺${limit.toFixed(2)}.` });
-                }
+            const uid = userDoc.id;
+            try {
+                await processUser({ db, messaging, uid, userDoc, serverTimestamp, logger: console });
+            } catch (err) {
+                userErrors += 1;
+                // Güvenli özet: mesaj en fazla 200 karakter, içerdiği uid
+                // gizlenir; tutar, token ve e-posta asla loglanmaz.
+                const raw = String((err && err.message) || err);
+                const safe = raw.split(uid).join('[uid]').slice(0, 200);
+                console.error(`Kullanıcı akışı başarısız (#${userErrors}): ${(err && err.name) || 'Error'}: ${safe}`);
             }
-        }
-
-        // 3) Tamamlanan hedefler
-        const goalsSnap = await db.collection('users').doc(uid).collection('goals').get();
-        for (const doc of goalsSnap.docs) {
-            const g = doc.data();
-            if (Number(g.amount) > 0 && Number(g.current) >= Number(g.amount)) {
-                const id = `goal-${doc.id}-100`;
-                if (await isLogged(id)) continue;
-                candidates.push({ logRef: logRef(id), title: '🎉 Hedef tamamlandı', body: `${g.name} hedefine ulaştın!` });
-            }
-        }
-
-        if (!candidates.length) continue;
-        // Tek aday birebir gönderilir (payload korunur); çok adayda bayt
-        // sınırına kadar TÜMÜ sığdırılır. Sığmayan aday loglanmaz → sonraki
-        // koşuya devredilir; böylece "gönderilmeyen ama loglanan" kayıp olmaz.
-        const { notification, included, excludedCount } = buildBatchNotification(candidates);
-        const res = await messaging.sendEachForMulticast({ tokens, notification });
-        const outcome = summarizeBatchResponse(res);
-        // Yanıtlar token bazlıdır; gövdedeki tüm dahil edilen adaylar aynı
-        // sonucu paylaşır. successCount > 0 ise (kısmi başarı dahil) dahil
-        // edilen adaylar kabul sayılır ve pushLog'a yazılır; 0 ise hiçbir
-        // aday loglanmaz (FCM hiçbir token'a teslim etmediğini bildirdi).
-        if (outcome.accepted) {
-            for (const c of included) {
-                batch.set(c.logRef, { at: admin.firestore.FieldValue.serverTimestamp() });
-            }
-        }
-        if (excludedCount > 0) {
-            console.log(`Bilgi: ${excludedCount} aday gövdeye sığmadı, sonraki koşuya devredildi.`);
-        }
-        console.log(`FCM: ${outcome.successCount} başarılı, ${outcome.failureCount} hatalı`);
-        // Geçersiz tokenları temizle, diğer hataları logla
-        // Geçersiz tokenları temizle
-        const dead = [];
-        res.responses.forEach((r, i) => {
-            if (!r.success && r.error && r.error.code === 'messaging/registration-token-not-registered') dead.push(tokens[i]);
-            if (!r.success) console.log(`Token hata: ${tokens[i].slice(0, 12)}… ${r.error?.code} ${r.error?.message}`);
-        });
-        for (const t of dead) {
-            await db.collection('users').doc(uid).collection('pushTokens').doc(t).delete();
-        }
-        await batch.commit();
-        if (outcome.accepted) {
-            console.log(`Gönderildi: ${uid} (${included.length} uyarı)`);
-        } else {
-            console.log(`Gönderilemedi: ${uid} (FCM kabul etmedi; adaylar sonraki koşuya devredildi)`);
-        }
         }
         lastUserDoc = usersSnap.docs[usersSnap.docs.length - 1] || null;
     } while (usersSnap.size === 200);
+
+    if (userErrors > 0) {
+        console.error(`Özet: ${userErrors} kullanıcı işlenemedi — kısmi başarısızlık olarak raporlanır.`);
+        process.exitCode = 1;
+    }
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

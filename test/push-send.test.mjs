@@ -10,7 +10,9 @@ import helpers from '../tools/push/send-helpers.js';
 
 const { buildBatchNotification, summarizeBatchResponse } = helpers;
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const sendSrc = readFileSync(path.join(ROOT, 'tools/push/send.js'), 'utf8');
+// Yapısal güvenceler akışın evi olan send-user.js içindedir (send.js yalnızca
+// sayfalama + hata yalıtımı tutar).
+const flowSrc = readFileSync(path.join(ROOT, 'tools/push/send-user.js'), 'utf8');
 
 const cand = (title, body) => ({ title, body });
 
@@ -113,25 +115,25 @@ test('summarize: sayaçlar yoksa responses üzerinden yeniden sayılır', () => 
     assert.deepEqual(outcome.errorCodes, ['messaging/invalid-registration-token']);
 });
 
-test('send.js: pushLog gönderim sonuna ertelendi (tarama sırasında yazılmıyor)', () => {
+test('send-user.js: pushLog gönderim sonuna ertelendi (tarama sırasında yazılmıyor)', () => {
     // Tarama döngülerinde anında batch.set KALMAMALI: log yalnızca FCM
     // kabul ederse yazılır. Toplam tek batch.set: kabul dalı.
-    const sets = sendSrc.match(/batch\.set\(/g) || [];
+    const sets = flowSrc.match(/batch\.set\(/g) || [];
     assert.equal(sets.length, 1, `beklenen 1 batch.set, bulunan: ${sets.length}`);
-    assert.match(sendSrc, /if \(outcome\.accepted\) \{[\s\S]{0,200}for \(const c of included\)/);
+    assert.match(flowSrc, /if \(outcome\.accepted\) \{[\s\S]{0,200}for \(const c of included\)/);
 });
 
-test('send.js: eski slice(0,3) özet kaybı ve bodies yapısı kaldırıldı', () => {
-    assert.doesNotMatch(sendSrc, /slice\(0, 3\)/);
-    assert.doesNotMatch(sendSrc, /bodies/);
-    assert.match(sendSrc, /require\('\.\/send-helpers'\)/);
-    assert.match(sendSrc, /buildBatchNotification\(candidates\)/);
-    assert.match(sendSrc, /summarizeBatchResponse\(res\)/);
+test('send-user.js: eski slice(0,3) özet kaybı ve bodies yapısı kaldırıldı', () => {
+    assert.doesNotMatch(flowSrc, /slice\(0, 3\)/);
+    assert.doesNotMatch(flowSrc, /bodies/);
+    assert.match(flowSrc, /require\('\.\/send-helpers'\)/);
+    assert.match(flowSrc, /buildBatchNotification\(candidates\)/);
+    assert.match(flowSrc, /summarizeBatchResponse\(res\)/);
 });
 
-test('send.js: başarısız gönderim "Gönderildi" diye raporlanmaz', () => {
+test('send-user.js: başarısız gönderim "Gönderildi" diye raporlanmaz', () => {
     // Kabul yokken log satırı yanıltıcı olmamalı.
-    assert.match(sendSrc, /Gönderilemedi: \$\{uid\}/);
-    const acceptedLog = sendSrc.match(/if \(outcome\.accepted\) \{[\s\S]*?Gönderildi: \$\{uid\}/);
+    assert.match(flowSrc, /Gönderilemedi: \$\{uid\}/);
+    const acceptedLog = flowSrc.match(/if \(outcome\.accepted\) \{[\s\S]*?Gönderildi: \$\{uid\}/);
     assert.ok(acceptedLog, 'Gönderildi logu accepted dalının içinde olmalı');
 });
