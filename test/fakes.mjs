@@ -57,6 +57,7 @@ export function makeDb(seed = {}) {
     function docRef(name, id) {
         return {
             id,
+            name,
             collection: child => queryRef(child, []),
             async get() {
                 if (state.failOn === name) throw new Error(`Firestore okuma hatası: ${name}`);
@@ -69,10 +70,22 @@ export function makeDb(seed = {}) {
     }
     return {
         collection: name => ({ doc: id => docRef(name, id) }),
-        batch: () => ({
-            set(ref, data) { state.writes.push({ ref, data }); },
-            async commit() { state.commits += 1; }
-        }),
+        batch: () => {
+            const pending = [];
+            return {
+                set(ref, data) { const entry = { ref, data }; pending.push(entry); state.writes.push(entry); },
+                async commit() {
+                    state.commits += 1;
+                    // Gerçek Firestore gibi: COMMIT edilen pushLog belgeleri
+                    // sonraki koşularda "loglanmış" görünür (saatlik koşular
+                    // arası dedup zinciri testleri). Commit edilmeyen yazım
+                    // hiçbir zaman logged'a geçmez.
+                    for (const w of pending) {
+                        if (w.ref && w.ref.name === 'pushLog') state.logged.add(w.ref.id);
+                    }
+                }
+            };
+        },
         _state: state
     };
 }
