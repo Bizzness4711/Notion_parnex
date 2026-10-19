@@ -109,14 +109,8 @@
     'hedef hesap': 'to', 'hedef': 'to', to: 'to'
   };
 
-  function parseAmount(raw) {
-    let s = String(raw ?? '').trim().replace(/\s|₺|\$/g, '');
-    if (!s) return NaN;
-    if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.'); // 1.234,56
-    else if (s.includes(',')) s = s.replace(',', '.'); // 250,00
-    const n = Number(s);
-    return Number.isFinite(n) ? n : NaN;
-  }
+  // Tutar ayrıştırma merkezi katmandadır (js/utils.js parseAmount); yerel kopya bilinçli olarak yok.
+  // Sözleşmesi: geçersiz girdi → null; geçerli → para birimi hassasiyetine yuvarlanmış sayı.
 
   function parseDate(raw) {
     const s = String(raw ?? '').trim().slice(0, 10);
@@ -235,8 +229,8 @@
               toAccountId: v.toAcc.id, toAccountName: v.toAcc.name,
               amount: v.amount, description: v.desc, date: v.date, createdAt: ts
             });
-            balances[v.fromAcc.id] -= v.amount;
-            balances[v.toAcc.id] = (balances[v.toAcc.id] ?? Number(v.toAcc.balance || 0)) + v.amount;
+            balances[v.fromAcc.id] = subMoney(balances[v.fromAcc.id], v.amount, v.fromAcc.currency || 'TRY');
+            balances[v.toAcc.id] = addMoney(balances[v.toAcc.id] ?? Number(v.toAcc.balance || 0), v.amount, v.toAcc.currency || 'TRY');
           } else {
             const ref = userRef.collection('transactions').doc();
             batch.set(ref, {
@@ -244,7 +238,9 @@
               date: v.date, accountId: v.fromAcc.id, accountName: v.fromAcc.name,
               accountCurrency: v.fromAcc.currency || 'TRY', createdAt: ts
             });
-            balances[v.fromAcc.id] += v.type === 'income' ? v.amount : -v.amount;
+            balances[v.fromAcc.id] = v.type === 'income'
+              ? addMoney(balances[v.fromAcc.id], v.amount, v.fromAcc.currency || 'TRY')
+              : subMoney(balances[v.fromAcc.id], v.amount, v.fromAcc.currency || 'TRY');
           }
         }
         // Bakiye güncellemeleri (bu chunk'ta dokunulan hesaplar)

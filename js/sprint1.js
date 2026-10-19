@@ -170,12 +170,15 @@ function initQuickAdd() {
         const account = accSel ? accounts.find(a => a.id === accSel.value) : null;
         const isInvest = account && isInvestmentAccount(account);
         const isSell = quickAddType === 'sell';
+        const showSell = isInvest && isSell;
+        const targetSel = document.getElementById('quickAddSellTarget');
+        // Gizli satış alanı required kalırsa form yerel doğrulamada hep reddedilir (rates.js:320 ile aynı desen).
+        if (targetSel) targetSel.required = showSell;
         const sd = document.getElementById('quickAddSellDetails');
-        if (sd) sd.hidden = !(isInvest && isSell);
+        if (sd) sd.hidden = !showSell;
         const pd = document.getElementById('quickAddPurchaseDetails');
         if (pd) pd.hidden = !(isInvest && !isSell);
-        if (isSell && isInvest) {
-            const targetSel = document.getElementById('quickAddSellTarget');
+        if (showSell) {
             if (targetSel && targetSel.options.length <= 1) {
                 const tryAccounts = accounts.filter(a => a.currency === 'TRY' && a.id !== accSel.value);
                 targetSel.innerHTML = '<option value="">Hesap seçin</option>' +
@@ -184,12 +187,14 @@ function initQuickAdd() {
         }
     }
 
+    updateQuickAddSellFields();
+
     form && form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const amount = parseFloat(document.getElementById('quickAddAmount').value);
+        const amount = parseAmount(document.getElementById('quickAddAmount').value, { allowNegative: false });
         const category = document.getElementById('quickAddCategory').value;
         const accountId = document.getElementById('quickAddAccount').value;
-        if (!amount || !category || !accountId || !currentUser) return;
+        if (!isPositiveMoney(amount) || !category || !accountId || !currentUser) return;
 
         const account = accounts.find(a => a.id === accountId);
         if (!account) return;
@@ -201,8 +206,8 @@ function initQuickAdd() {
 
         const isInvest = isInvestmentAccount(account);
         const isSell = quickAddType === 'sell';
-        const purchaseRate = isInvest && !isSell ? parseFloat(document.getElementById('quickAddPurchaseRate')?.value) : 0;
-        const sellRate = isInvest && isSell ? parseFloat(document.getElementById('quickAddSellRate')?.value) : 0;
+        const purchaseRate = isInvest && !isSell ? parseAmount(document.getElementById('quickAddPurchaseRate')?.value, { allowNegative: false }) : 0;
+        const sellRate = isInvest && isSell ? parseAmount(document.getElementById('quickAddSellRate')?.value, { allowNegative: false }) : 0;
         const sellTargetId = isSell ? document.getElementById('quickAddSellTarget')?.value : '';
         if (isInvest && !isSell && !(purchaseRate > 0)) {
             showToast('Döviz/altın işlemi için alış fiyatını girin.', 'error');
@@ -216,8 +221,8 @@ function initQuickAdd() {
         const isInstallment = isCreditType && document.getElementById('quickAddIsInstallment')?.checked;
         const installmentCount = isInstallment ? Math.max(2, parseInt(document.getElementById('quickAddInstallmentCount')?.value, 10) || 2) : 1;
         const installmentInterestRate = isInstallment ? Math.min(100, Math.max(0, parseFloat(document.getElementById('quickAddInstallmentInterestRate')?.value) || 0)) : 0;
-        const installmentInterestAmount = isInstallment ? amount * installmentInterestRate / 100 : 0;
-        const installmentTotal = amount + installmentInterestAmount;
+        const installmentInterestAmount = isInstallment ? roundMoney(amount * installmentInterestRate / 100, 'TRY') : 0;
+        const installmentTotal = addMoney(amount, installmentInterestAmount, 'TRY');
 
         const isRecurring = document.getElementById('quickAddIsRecurring')?.checked;
         const frequency = document.getElementById('quickAddRecurringFrequency')?.value;
@@ -231,7 +236,7 @@ function initQuickAdd() {
 
         const openingRate = getAccountOpeningRate(account);
         const transactionRate = isInvest ? Number(exchangeRates[account.currency] || openingRate) : 0;
-        const profitLoss = isInvest && transactionRate > 0 ? (transactionRate - purchaseRate) * amount : 0;
+        const profitLoss = isInvest && transactionRate > 0 ? mulMoney(transactionRate - (purchaseRate || 0), amount, 'TRY') : 0;
 
         const description = document.getElementById('quickAddDescription')?.value || '';
 
@@ -271,21 +276,21 @@ function initQuickAdd() {
             if (isSell && sellTargetId) {
                 const sellAccount = accounts.find(a => a.id === sellTargetId);
                 if (!sellAccount) { showToast('Hedef hesap bulunamadı.', 'error'); return; }
-                const investNewBalance = account.balance - amount;
-                const costBasis = amount * (account.openingRate || account.buyPrice || purchaseRate);
-                const proceeds = amount * sellRate;
+                const investNewBalance = subMoney(account.balance, amount, account.currency || 'TRY');
+                const costBasis = mulMoney(amount, (account.openingRate || account.buyPrice || purchaseRate), 'TRY');
+                const proceeds = mulMoney(amount, sellRate, 'TRY');
                 batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(accountId), {
                     balance: investNewBalance,
                     quantity: investNewBalance
                 });
                 batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(sellTargetId), {
-                    balance: Number(sellAccount.balance || 0) + proceeds
+                    balance: addMoney(Number(sellAccount.balance || 0), proceeds, sellAccount.currency || 'TRY')
                 });
-                batch.update(txRef, { profitLoss: proceeds - costBasis });
+                batch.update(txRef, { profitLoss: subMoney(proceeds, costBasis, 'TRY') });
             } else {
                 const newBalance = quickAddType === 'income'
-                    ? account.balance + amount
-                    : account.balance - amount;
+                    ? addMoney(account.balance, amount, account.currency || 'TRY')
+                    : subMoney(account.balance, amount, account.currency || 'TRY');
                 const accountUpdates = { balance: newBalance };
                 if (isInvest) {
                     accountUpdates.quantity = newBalance;
@@ -379,7 +384,7 @@ function updateSpendingVelocity() {
 
     // Find relevant budget
     const monthBudgets = budgets.filter(b => b.month === monthStr);
-    const totalBudget = monthBudgets.reduce((s, b) => s + (Number(b.limit) || 0), 0);
+    const totalBudget = sumMoney(monthBudgets.map(b => Number(b.limit) || 0), 'TRY');
 
     if (isHidden) {
         msg.textContent = `Bugün ${privacyAmount()} harcadın — bu hızla ay sonu ${privacyAmount()} olacak.`;
@@ -686,7 +691,7 @@ function updateGoalRings() {
         .map(g => {
             // Hedef alanı: goalForm 'amount' yazar; eski kayıtlar için 'target'a düş.
             const target = Number(g.amount ?? g.target) || 0;
-            return { ...g, target, pct: target > 0 ? Math.min(100, ((Number(g.current) || 0) / target) * 100) : 0 };
+            return { ...g, target, pct: target > 0 ? Math.min(100, percentOf(Number(g.current) || 0, target)) : 0 };
         })
         .sort((a, b) => b.pct - a.pct)
         .slice(0, 3);

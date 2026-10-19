@@ -1,13 +1,13 @@
 function updateDashboard() {
     const selectedAccountsList = accounts.filter(a => selectedAccounts.has(a.id) && a.currency === 'TRY');
-    const totalBalance = selectedAccountsList.reduce((sum, a) => sum + getAccountValueTL(a), 0);
+    const totalBalance = roundMoney(selectedAccountsList.reduce((sum, a) => sum + getAccountValueTL(a), 0), 'TRY');
 
-    const totalIncome = transactions.filter(t => t.type === 'income' && String(t.date || '').startsWith(currentMonth)).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-    const totalExpense = transactions.filter(t => t.type === 'expense' && String(t.date || '').startsWith(currentMonth)).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-    const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpense) / totalIncome * 100) : 0;
-    const netBalance = totalIncome - totalExpense;
+    const totalIncome = roundMoney(transactions.filter(t => t.type === 'income' && String(t.date || '').startsWith(currentMonth)).reduce((sum, t) => sum + (Number(t.amount) || 0), 0), 'TRY');
+    const totalExpense = roundMoney(transactions.filter(t => t.type === 'expense' && String(t.date || '').startsWith(currentMonth)).reduce((sum, t) => sum + (Number(t.amount) || 0), 0), 'TRY');
+    const savingsRate = totalIncome > 0 ? roundPercent((totalIncome - totalExpense) / totalIncome * 100) : 0;
+    const netBalance = subMoney(totalIncome, totalExpense, 'TRY');
     const accountCount = accounts.length;
-    const upcomingInstallments = getCurrentCreditCardInstallments().reduce((sum, item) => sum + item.amount, 0);
+    const upcomingInstallments = roundMoney(getCurrentCreditCardInstallments().reduce((sum, item) => sum + item.amount, 0), 'TRY');
     updateFinancialHealth({ totalIncome, totalExpense, savingsRate, netBalance });
     const dashboardGreetingEl = document.getElementById('dashboardGreeting');
     const dashboardSummaryNoteEl = document.getElementById('dashboardSummaryNote');
@@ -36,11 +36,12 @@ function updateDashboard() {
         totals.profitLoss += metrics.profitLoss;
         return totals;
     }, { currentValue: 0, profitLoss: 0 });
-    const realizedProfitLoss = transactions
+    const realizedProfitLoss = roundMoney(transactions
         .filter(transaction => isInvestmentAccount(accounts.find(account => account.id === transaction.accountId)))
         .filter(transaction => transaction.type === 'expense' || transaction.type === 'sell')
-        .reduce((sum, transaction) => sum + Number(transaction.profitLoss || 0), 0);
-    investmentTotals.profitLoss += realizedProfitLoss;
+        .reduce((sum, transaction) => sum + Number(transaction.profitLoss || 0), 0), 'TRY');
+    investmentTotals.currentValue = roundMoney(investmentTotals.currentValue, 'TRY');
+    investmentTotals.profitLoss = addMoney(roundMoney(investmentTotals.profitLoss, 'TRY'), realizedProfitLoss, 'TRY');
 
     const totalBalanceEl = document.getElementById('totalBalance');
     const totalIncomeEl = document.getElementById('totalIncome');
@@ -407,7 +408,7 @@ function updateGoalsUI() {
     if (!goalsList) return;
     if (goals.length === 0) { goalsList.innerHTML = '<p class="empty-state">Henüz hedef eklenmemiş</p>'; return; }
     goalsList.innerHTML = goals.map(goal => {
-        const progress = goal.amount > 0 ? (goal.current / goal.amount) * 100 : 0;
+        const progress = goal.amount > 0 ? percentOf(Number(goal.current) || 0, goal.amount) : 0;
         const percentage = Math.min(progress, 100).toFixed(1);
         const currentDisplay = isHidden ? privacyAmount() : `₺${(goal.current || 0).toFixed(2)}`;
         const targetDisplay = isHidden ? privacyAmount() : `₺${(goal.amount || 0).toFixed(2)}`;
@@ -438,9 +439,9 @@ window.addToGoal = async function(goalId) {
         step: '0.01',
         placeholder: '0,00'
     });
-    const amount = parseFloat((amountInput || '').replace(',', '.'));
-    if (!amount || amount <= 0) return;
-    const newCurrent = (goal.current || 0) + amount;
+    const amount = parseAmount(amountInput, { allowNegative: false });
+    if (!isPositiveMoney(amount)) return;
+    const newCurrent = addMoney(goal.current || 0, amount, 'TRY');
     const linkedAccount = goal.accountId ? accounts.find(account => account.id === goal.accountId) : null;
     if (linkedAccount && Number(linkedAccount.balance || 0) < amount) {
         showToast('Bağlı hesapta yeterli bakiye yok.', 'error');
@@ -450,7 +451,7 @@ window.addToGoal = async function(goalId) {
         const batch = db.batch();
         batch.update(db.collection('users').doc(currentUser.uid).collection('goals').doc(goalId), { current: newCurrent });
         if (linkedAccount) {
-            batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(linkedAccount.id), { balance: Number(linkedAccount.balance || 0) - amount });
+            batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(linkedAccount.id), { balance: subMoney(Number(linkedAccount.balance || 0), amount, linkedAccount.currency || 'TRY') });
         }
         await batch.commit();
         if (newCurrent >= goal.target) showToast(`🎉 "${goal.name}" hedefine ulaştın!`, 'success');
@@ -646,16 +647,16 @@ window.deleteTransaction = async function(id) {
             const batch = db.batch();
             if (account) {
                 if (transaction.type === 'sell' && transaction.sellTargetAccountId) {
-                    const revertInvestBalance = Number(account.balance || 0) + Number(transaction.amount || 0);
+                    const revertInvestBalance = addMoney(Number(account.balance || 0), Number(transaction.amount || 0), account.currency || 'TRY');
                     batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(account.id), {
                         balance: revertInvestBalance,
                         quantity: revertInvestBalance
                     });
                     const sellTarget = accounts.find(a => a.id === transaction.sellTargetAccountId);
                     if (sellTarget) {
-                        const revertProceeds = Number(transaction.amount || 0) * Number(transaction.sellRate || transaction.transactionRate || 0);
+                        const revertProceeds = mulMoney(Number(transaction.amount || 0), Number(transaction.sellRate || transaction.transactionRate || 0), 'TRY');
                         batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(transaction.sellTargetAccountId), {
-                            balance: Number(sellTarget.balance || 0) - revertProceeds
+                            balance: subMoney(Number(sellTarget.balance || 0), revertProceeds, sellTarget.currency || 'TRY')
                         });
                     }
                 } else {
@@ -665,8 +666,8 @@ window.deleteTransaction = async function(id) {
                             ? (transaction.installmentTotal || transaction.amount)
                             : transaction.amount || 0);
                     const newBalance = transaction.type === 'income'
-                        ? Number(account.balance || 0) - impact
-                        : Number(account.balance || 0) + impact;
+                        ? subMoney(Number(account.balance || 0), impact, account.currency || 'TRY')
+                        : addMoney(Number(account.balance || 0), impact, account.currency || 'TRY');
                     const updates = { balance: newBalance };
                     if (isInvestmentAccount(account)) {
                         updates.quantity = newBalance;
@@ -712,11 +713,11 @@ window.deleteTransfer = async function(id) {
             const amount = Number(transfer.amount || 0);
             if (fromAccount) batch.update(
                 db.collection('users').doc(currentUser.uid).collection('accounts').doc(fromAccount.id),
-                { balance: Number(fromAccount.balance || 0) + amount }
+                { balance: addMoney(Number(fromAccount.balance || 0), amount, fromAccount.currency || 'TRY') }
             );
             if (toAccount) batch.update(
                 db.collection('users').doc(currentUser.uid).collection('accounts').doc(toAccount.id),
-                { balance: Number(toAccount.balance || 0) - amount }
+                { balance: subMoney(Number(toAccount.balance || 0), amount, toAccount.currency || 'TRY') }
             );
             batch.delete(db.collection('users').doc(currentUser.uid).collection('transfers').doc(id));
             const linkedPayment = transactions.find(item => item.transferId === id);

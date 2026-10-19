@@ -439,7 +439,7 @@ async function loadUserData() {
                 const purchaseRate = Number(recurring.purchaseRate || 0);
                 const transactionRate = isInvestmentAccount(account) ? Number(exchangeRates[account.currency] || getAccountOpeningRate(account)) : 0;
                 const profitLoss = isInvestmentAccount(account) && transactionRate > 0 && purchaseRate > 0
-                    ? (transactionRate - purchaseRate) * amount
+                    ? mulMoney(transactionRate - purchaseRate, amount, 'TRY')
                     : 0;
                 const transactionRef = db.collection('users').doc(currentUser.uid).collection('transactions').doc(`${document.id}_${nextDate}`);
                 const existingTransaction = await transactionRef.get();
@@ -462,7 +462,9 @@ async function loadUserData() {
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 const balanceAmount = isInstallment && recurring.type === 'expense' ? installmentTotal : amount;
-                const newBalance = recurring.type === 'income' ? Number(account.balance) + balanceAmount : Number(account.balance) - balanceAmount;
+                const newBalance = recurring.type === 'income'
+                    ? addMoney(Number(account.balance), balanceAmount, account.currency || 'TRY')
+                    : subMoney(Number(account.balance), balanceAmount, account.currency || 'TRY');
                 const updates = { balance: newBalance };
                 if (isInvestmentAccount(account)) {
                     updates.quantity = newBalance;
@@ -599,9 +601,9 @@ function updateAdminVisibility() {
 
 function getTransactionValueTL(transaction) {
     const account = accounts.find(item => item.id === transaction.accountId);
-    if (!isInvestmentAccount(account)) return Number(transaction.amount || 0);
+    if (!isInvestmentAccount(account)) return roundMoney(Number(transaction.amount || 0), 'TRY');
     const rate = Number(transaction.transactionRate || exchangeRates[transaction.accountCurrency] || getAccountOpeningRate(account) || 0);
-    return Number(transaction.amount || 0) * rate;
+    return roundMoney(Number(transaction.amount || 0) * rate, 'TRY');
 }
 
 function updateBalanceForecast() {
@@ -742,12 +744,19 @@ function updateAdvancedReports() {
     if (!netWorthEl || !cashFlowEl || !profitLossEl || !cashBody || !categoryBody) return;
 
     const netWorthSummary = getNetWorthSummary();
-    const netWorth = netWorthSummary.assets - netWorthSummary.liabilities;
-    const totalProfitLoss = accounts.filter(isInvestmentAccount).reduce((sum, account) => sum + getInvestmentMetrics(account).profitLoss, 0)
-        + transactions
+    const netWorth = subMoney(netWorthSummary.assets, netWorthSummary.liabilities, 'TRY');
+    const unrealizedTotal = sumMoney(
+        accounts.filter(isInvestmentAccount).map(account => getInvestmentMetrics(account).profitLoss),
+        'TRY'
+    );
+    const realizedTotal = sumMoney(
+        transactions
             .filter(transaction => transaction.type === 'expense' || transaction.type === 'sell')
             .filter(transaction => isInvestmentAccount(accounts.find(account => account.id === transaction.accountId)))
-            .reduce((sum, transaction) => sum + Number(transaction.profitLoss || 0), 0);
+            .map(transaction => Number(transaction.profitLoss || 0)),
+        'TRY'
+    );
+    const totalProfitLoss = addMoney(unrealizedTotal, realizedTotal, 'TRY');
     const ranges = getReportRanges();
     const currentTransactions = reportTransactions(ranges.current);
     const previousTransactions = reportTransactions(ranges.previous);
@@ -878,11 +887,13 @@ function updateProfitLossReport() {
             totals.currentValue += value.currentValue;
             return totals;
         }, { quantity: 0, cost: 0, currentValue: 0 });
-        const realized = transactions
+        metrics.cost = roundMoney(metrics.cost, 'TRY');
+        metrics.currentValue = roundMoney(metrics.currentValue, 'TRY');
+        const realized = sumMoney(transactions
             .filter(transaction => (transaction.type === 'expense' || transaction.type === 'sell') && transaction.accountCurrency === currency)
-            .reduce((sum, transaction) => sum + Number(transaction.profitLoss || 0), 0);
-        const unrealized = metrics.currentValue - metrics.cost;
-        const total = unrealized + realized;
+            .map(transaction => Number(transaction.profitLoss || 0)), 'TRY');
+        const unrealized = subMoney(metrics.currentValue, metrics.cost, 'TRY');
+        const total = addMoney(unrealized, realized, 'TRY');
         if (!currencyAccounts.length && !realized) return '';
         if (isHidden) {
             const masked = '<span class="report-hidden-value">₺••••••</span>';
@@ -905,25 +916,31 @@ function getInvestmentMetrics(account) {
     const quantity = Number(account.quantity ?? account.balance ?? 0);
     const buyPrice = getAccountOpeningRate(account);
     const currentPrice = Number(exchangeRates[account.currency] || buyPrice);
-    const cost = quantity * buyPrice;
-    const currentValue = quantity * currentPrice;
-    return { quantity, buyPrice, currentPrice, cost, currentValue, profitLoss: currentValue - cost };
+    // maliyet/güncel değer TL tutarıdır → kuruş hassasiyetine yuvarlanır; miktar ve birim fiyat ham kalır.
+    const cost = roundMoney(quantity * buyPrice, 'TRY');
+    const currentValue = roundMoney(quantity * currentPrice, 'TRY');
+    return { quantity, buyPrice, currentPrice, cost, currentValue, profitLoss: subMoney(currentValue, cost, 'TRY') };
 }
 
 function getAccountValueTL(account) {
     if (isInvestmentAccount(account)) return getInvestmentMetrics(account).currentValue;
     const balance = Number(account.balance || 0);
-    if (account.currency === 'TRY') return balance;
+    if (account.currency === 'TRY') return roundMoney(balance, 'TRY');
 
     // Net varlık ve hesap dağılımı tüm hesapları TL karşılığıyla toplar.
     const rate = Number(exchangeRates[account.currency] || 0);
-    return rate > 0 ? balance * rate : balance;
+    return rate > 0 ? roundMoney(balance * rate, 'TRY') : roundMoney(balance, 'TRY');
 }
 
 function getCreditCardMetrics(account) {
     const limit = Math.max(0, Number(account.creditLimit || 0));
     const debt = Math.max(0, Math.abs(Number(account.balance || 0)));
-    return { limit, debt, available: Math.max(0, limit - debt), minimum: debt * (Number(account.minimumPaymentRate || 20) / 100) };
+    return {
+        limit,
+        debt,
+        available: Math.max(0, subMoney(limit, debt, 'TRY')),
+        minimum: roundMoney(debt * (Number(account.minimumPaymentRate || 20) / 100), 'TRY')
+    };
 }
 
 const liabilityAccountTypes = ['credit', 'debt'];
@@ -1078,17 +1095,20 @@ function showInstallmentSummary() {
 }
 
 function getNetWorthSummary() {
-    return accounts.reduce((summary, account) => {
+    const summary = accounts.reduce((totals, account) => {
         const value = getAccountValueTL(account);
         if (liabilityAccountTypes.includes(account.type)) {
             // Eski kredi kartı kayıtları borcu negatif saklar; pozitif girilmiş
             // yeni kayıtları da net varlıktan borç olarak düşür.
-            summary.liabilities += Math.abs(value);
+            totals.liabilities += Math.abs(value);
         } else {
-            summary.assets += value;
+            totals.assets += value;
         }
-        return summary;
+        return totals;
     }, { assets: 0, liabilities: 0 });
+    summary.assets = roundMoney(summary.assets, 'TRY');
+    summary.liabilities = roundMoney(summary.liabilities, 'TRY');
+    return summary;
 }
 
 function updateEditAccountFields() {

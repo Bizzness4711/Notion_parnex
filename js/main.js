@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentUser) return;
         const currency = document.getElementById('accountCurrency').value;
         const isInvestment = investmentCurrencies.includes(currency);
-        const quantity = parseFloat(document.getElementById('accountQuantity').value);
-        const buyPrice = parseFloat(document.getElementById('accountBuyPrice').value);
+        const quantity = parseAmount(document.getElementById('accountQuantity').value, { allowNegative: false });
+        const buyPrice = parseAmount(document.getElementById('accountBuyPrice').value, { allowNegative: false });
         if (isInvestment && (!(quantity > 0) || !(buyPrice > 0))) {
             showToast('Yatırım hesabı için alınan miktar ve birim alış fiyatı girin.', 'error');
             return;
@@ -81,14 +81,14 @@ document.addEventListener('DOMContentLoaded', () => {
             color: document.getElementById('accountColor').value,
             type: isInvestment ? 'investment' : document.getElementById('accountType').value,
             currency: currency,
-            balance: isInvestment ? quantity : (parseFloat(document.getElementById('accountBalance').value) || 0),
+            balance: isInvestment ? quantity : (parseAmount(document.getElementById('accountBalance').value) || 0),
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         if (accountData.type === 'credit') {
-            accountData.creditLimit = parseFloat(document.getElementById('accountCreditLimit').value) || 0;
+            accountData.creditLimit = parseAmount(document.getElementById('accountCreditLimit').value, { allowNegative: false }) || 0;
             accountData.statementDay = parseInt(document.getElementById('accountStatementDay').value, 10) || null;
             accountData.dueDay = parseInt(document.getElementById('accountDueDay').value, 10) || null;
-            accountData.minimumPaymentRate = parseFloat(document.getElementById('accountMinimumPaymentRate').value) || 20;
+            accountData.minimumPaymentRate = Math.min(100, Math.max(0, parseFloat(document.getElementById('accountMinimumPaymentRate').value) || 20));
             accountData.balance = -(Math.abs(accountData.balance));
         }
         if (isInvestment) {
@@ -408,8 +408,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const account = accounts.find(item => item.id === id);
         const currency = document.getElementById('editAccountCurrency').value;
         const isInvestment = investmentCurrencies.includes(currency);
-        const quantity = parseFloat(document.getElementById('editAccountQuantity').value);
-        const buyPrice = parseFloat(document.getElementById('editAccountBuyPrice').value);
+        const quantity = parseAmount(document.getElementById('editAccountQuantity').value, { allowNegative: false });
+        const buyPrice = parseAmount(document.getElementById('editAccountBuyPrice').value, { allowNegative: false });
         if (isInvestment && (!(quantity > 0) || !(buyPrice > 0))) {
             showToast('Yatırım hesabı için alınan miktar ve birim alış fiyatı girin.', 'error');
             return;
@@ -421,13 +421,13 @@ document.addEventListener('DOMContentLoaded', () => {
             color: document.getElementById('editAccountColor').value,
             currency,
             type: isInvestment ? 'investment' : document.getElementById('editAccountType').value,
-            balance: isInvestment ? quantity : (parseFloat(document.getElementById('editAccountBalance').value) || 0)
+            balance: isInvestment ? quantity : (parseAmount(document.getElementById('editAccountBalance').value) || 0)
         };
         if (updates.type === 'credit') {
-            updates.creditLimit = parseFloat(document.getElementById('editAccountCreditLimit').value) || 0;
+            updates.creditLimit = parseAmount(document.getElementById('editAccountCreditLimit').value, { allowNegative: false }) || 0;
             updates.statementDay = parseInt(document.getElementById('editAccountStatementDay').value, 10) || null;
             updates.dueDay = parseInt(document.getElementById('editAccountDueDay').value, 10) || null;
-            updates.minimumPaymentRate = parseFloat(document.getElementById('editAccountMinimumPaymentRate').value) || 20;
+            updates.minimumPaymentRate = Math.min(100, Math.max(0, parseFloat(document.getElementById('editAccountMinimumPaymentRate').value) || 20));
             updates.balance = -(Math.abs(updates.balance));
         } else {
             updates.creditLimit = firebase.firestore.FieldValue.delete();
@@ -545,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (!currentUser) return;
             const category = document.getElementById('budgetCategory').value;
-            const limit = parseFloat(document.getElementById('budgetLimit').value);
+            const limit = parseAmount(document.getElementById('budgetLimit').value, { allowNegative: false });
             const month = document.getElementById('budgetMonth').value || currentMonth;
             if (!category || !(limit > 0)) { showToast('Kategori ve limit girin.', 'error'); return; }
             try {
@@ -577,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (!currentUser) return;
         const category = document.getElementById('budgetModalCategory').value;
-        const limit = parseFloat(document.getElementById('budgetModalLimit').value);
+        const limit = parseAmount(document.getElementById('budgetModalLimit').value, { allowNegative: false });
         const month = document.getElementById('budgetModalMonth').value || currentMonth;
         if (!category || !(limit > 0)) { showToast('Kategori ve limit girin.', 'error'); return; }
         try {
@@ -605,9 +605,9 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (!currentUser) return;
         const accountId = document.getElementById('accountSelect').value;
-        const amount = parseFloat(document.getElementById('amount').value);
+        const amount = parseAmount(document.getElementById('amount').value, { allowNegative: false });
         const account = accounts.find(a => a.id === accountId);
-        if (!accountId || !Number.isFinite(amount) || amount <= 0 || !account) { showToast('Lütfen geçerli bir hesap ve tutar seçin!', 'error'); return; }
+        if (!accountId || !isPositiveMoney(amount) || !account) { showToast('Lütfen geçerli bir hesap ve tutar seçin!', 'error'); return; }
         const isCreditType = account.type === 'credit' || (account.name || '').toLowerCase().includes('kredi');
         if (selectedType === 'expense' && !isCreditType && Number(account.balance || 0) < amount) {
             showToast(privacyScrubText(`Yetersiz bakiye! ${account.name} hesabında ₺${Number(account.balance || 0).toFixed(2)} var, ₺${amount.toFixed(2)} harcamaya çalışıyorsunuz.`), 'error');
@@ -616,10 +616,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const isInvestment = isInvestmentAccount(account);
         const isSell = selectedType === 'sell';
         const purchaseRate = isInvestment && !isSell
-            ? parseFloat(document.getElementById('transactionPurchaseRate').value)
+            ? parseAmount(document.getElementById('transactionPurchaseRate').value, { allowNegative: false })
             : 0;
         const sellRate = isInvestment && isSell
-            ? parseFloat(document.getElementById('transactionSellRate').value)
+            ? parseAmount(document.getElementById('transactionSellRate').value, { allowNegative: false })
             : 0;
         const sellTargetId = isSell ? document.getElementById('transactionSellTarget')?.value : '';
         if (isInvestment && !isSell && !(purchaseRate > 0)) {
@@ -640,8 +640,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const installmentInterestRate = isInstallment
             ? Math.min(100, Math.max(0, parseFloat(document.getElementById('installmentInterestRate').value) || 0))
             : 0;
-        const installmentInterestAmount = isInstallment ? amount * installmentInterestRate / 100 : 0;
-        const installmentTotal = amount + installmentInterestAmount;
+        const installmentInterestAmount = isInstallment ? roundMoney(amount * installmentInterestRate / 100, 'TRY') : 0;
+        const installmentTotal = addMoney(amount, installmentInterestAmount, 'TRY');
+        // installmentAmount ham bölünür: kalan kuruş son taksitte toplamı dengeler, toplam asla kaymaz.
         const installmentAmount = isInstallment ? installmentTotal / installmentCount : amount;
         if (isRecurring && endDate && endDate < transactionDate) {
             showToast('Tekrarlayan işlemin bitiş tarihi başlangıç tarihinden önce olamaz.', 'error');
@@ -655,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ? Number(exchangeRates[account.currency] || openingRate)
             : 0;
         const profitLoss = isInvestment && transactionRate > 0
-            ? (transactionRate - purchaseRate) * amount
+            ? mulMoney(transactionRate - (purchaseRate || 0), amount, 'TRY')
             : 0;
         try {
             if (editingTransactionId) {
@@ -738,32 +739,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (oldSellTarget) {
                         const revertAmount = Number(oldTransaction.amount || 0);
                         const revertRate = Number(oldTransaction.sellRate || oldTransaction.transactionRate || 0);
-                        const revertProceeds = revertAmount * revertRate;
+                        const revertProceeds = mulMoney(revertAmount, revertRate, 'TRY');
                         batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(oldSellTargetId), {
-                            balance: Number(oldSellTarget.balance || 0) - revertProceeds
+                            balance: subMoney(Number(oldSellTarget.balance || 0), revertProceeds, oldSellTarget.currency || 'TRY')
                         });
                     }
                     if (oldAccount) {
-                        const revertInvestBalance = Number(oldAccount.balance || 0) + Number(oldTransaction.amount || 0);
+                        const revertInvestBalance = addMoney(Number(oldAccount.balance || 0), Number(oldTransaction.amount || 0), oldAccount.currency || 'TRY');
                         batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(oldAccount.id), {
                             balance: revertInvestBalance,
                             quantity: revertInvestBalance
                         });
                     }
                     if (newSellTarget) {
-                        const newProceeds = amount * sellRate;
+                        const newProceeds = mulMoney(amount, sellRate, 'TRY');
                         batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(newSellTargetId), {
-                            balance: Number(newSellTarget.balance || 0) + newProceeds
+                            balance: addMoney(Number(newSellTarget.balance || 0), newProceeds, newSellTarget.currency || 'TRY')
                         });
                     }
-                    const investNewBalance = Number(account.balance || 0) - amount;
+                    const investNewBalance = subMoney(account.balance, amount, account.currency || 'TRY');
                     batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(account.id), {
                         balance: investNewBalance,
                         quantity: investNewBalance
                     });
                 } else if (oldAccount && oldAccount.id === account.id) {
-                    const restoredBalance = Number(oldAccount.balance || 0) + (oldTransaction.type === 'income' ? -oldImpact : oldImpact);
-                    const adjustedBalance = restoredBalance + (selectedType === 'income' ? newImpact : -newImpact);
+                    const restoredBalance = addMoney(Number(oldAccount.balance || 0), (oldTransaction.type === 'income' ? -oldImpact : oldImpact), account.currency || 'TRY');
+                    const adjustedBalance = addMoney(restoredBalance, (selectedType === 'income' ? newImpact : -newImpact), account.currency || 'TRY');
                     const accountUpdates = { balance: adjustedBalance };
 
                     if (isInvestment) {
@@ -797,7 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(account.id), accountUpdates);
                 } else {
                     if (oldAccount) {
-                        const oldBalance = Number(oldAccount.balance || 0) + (oldTransaction.type === 'income' ? -oldImpact : oldImpact);
+                        const oldBalance = addMoney(Number(oldAccount.balance || 0), (oldTransaction.type === 'income' ? -oldImpact : oldImpact), oldAccount.currency || 'TRY');
                         const oldUpdates = { balance: oldBalance };
 
                         if (isInvestmentAccount(oldAccount)) {
@@ -822,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(oldAccount.id), oldUpdates);
                     }
 
-                    const newBalance = Number(account.balance || 0) + (selectedType === 'income' ? newImpact : -newImpact);
+                    const newBalance = addMoney(Number(account.balance || 0), (selectedType === 'income' ? newImpact : -newImpact), account.currency || 'TRY');
                     const accountUpdates = { balance: newBalance };
 
                     if (isInvestment) {
@@ -929,11 +930,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isSell && account && sellTargetId) {
                     const sellAccount = accounts.find(a => a.id === sellTargetId);
                     if (!sellAccount) { showToast('Hedef hesap bulunamadı.', 'error'); return; }
-                    const investNewBalance = account.balance - amount;
-                    const costBasis = amount * (account.openingRate || account.buyPrice || purchaseRate);
-                    const proceeds = amount * sellRate;
-                    const realizedPL = proceeds - costBasis;
-                    const tryNewBalance = Number(sellAccount.balance || 0) + proceeds;
+                    const investNewBalance = subMoney(account.balance, amount, account.currency || 'TRY');
+                    const costBasis = mulMoney(amount, (account.openingRate || account.buyPrice || purchaseRate), 'TRY');
+                    const proceeds = mulMoney(amount, sellRate, 'TRY');
+                    const realizedPL = subMoney(proceeds, costBasis, 'TRY');
+                    const tryNewBalance = addMoney(Number(sellAccount.balance || 0), proceeds, sellAccount.currency || 'TRY');
                     const batch = db.batch();
                     batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(accountId), {
                         balance: investNewBalance,
@@ -949,7 +950,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast(privacyScrubText(`Satış kaydedildi! ${plLabel}`), 'success');
                 } else {
                     const balanceAmount = isInstallment && selectedType === 'expense' ? installmentTotal : amount;
-                    const newBalance = selectedType === 'income' ? account.balance + balanceAmount : account.balance - balanceAmount;
+                    const newBalance = selectedType === 'income'
+                        ? addMoney(account.balance, balanceAmount, account.currency || 'TRY')
+                        : subMoney(account.balance, balanceAmount, account.currency || 'TRY');
                     const updates = { balance: newBalance };
                     if (isInvestment) {
                         updates.quantity = newBalance;
@@ -1031,8 +1034,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentUser) return;
         const fromAccountId = document.getElementById('fromAccount').value;
         const toAccountId = document.getElementById('toAccount').value;
-        const amount = parseFloat(document.getElementById('transferAmount').value);
-        if (!Number.isFinite(amount) || amount <= 0) {
+        const amount = parseAmount(document.getElementById('transferAmount').value, { allowNegative: false });
+        if (!isPositiveMoney(amount)) {
             showToast('Transfer tutarı sıfırdan büyük olmalı.', 'error');
             return;
         }
@@ -1056,8 +1059,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 date: document.getElementById('transferDate').value,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(fromAccountId), { balance: Number(fromAccount.balance || 0) - amount });
-            batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(toAccountId), { balance: Number(toAccount.balance || 0) + amount });
+            batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(fromAccountId), { balance: subMoney(Number(fromAccount.balance || 0), amount, fromAccount.currency || 'TRY') });
+            batch.update(db.collection('users').doc(currentUser.uid).collection('accounts').doc(toAccountId), { balance: addMoney(Number(toAccount.balance || 0), amount, toAccount.currency || 'TRY') });
             if (isCreditCard) {
                 const paymentRef = db.collection('users').doc(currentUser.uid).collection('transactions').doc();
                 batch.set(paymentRef, {
@@ -1189,8 +1192,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await db.collection('users').doc(currentUser.uid).collection('goals').add({
                 name: document.getElementById('goalName').value,
-                amount: parseFloat(document.getElementById('goalAmount').value),
-                current: parseFloat(document.getElementById('goalCurrent').value) || 0,
+                amount: parseAmount(document.getElementById('goalAmount').value, { allowNegative: false }) || 0,
+                current: parseAmount(document.getElementById('goalCurrent').value, { allowNegative: false }) || 0,
                 accountId: document.getElementById('goalAccount').value || null,
                 accountName: accounts.find(account => account.id === document.getElementById('goalAccount').value)?.name || null,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
