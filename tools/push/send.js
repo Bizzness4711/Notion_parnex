@@ -13,7 +13,15 @@ const { processUser } = require('./send-user');
 async function main() {
     const keyJson = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (!keyJson) throw new Error('FIREBASE_SERVICE_ACCOUNT secret yok.');
-    admin.initializeApp({ credential: admin.credential.cert(JSON.parse(keyJson)) });
+    let credential;
+    try {
+        credential = admin.credential.cert(JSON.parse(keyJson));
+    } catch {
+        // Node 20 JSON.parse hataları girdinin bir parçasını basabilir;
+        // secret içeriği public Actions loguna ASLA sızmamalı.
+        throw new Error('FIREBASE_SERVICE_ACCOUNT JSON çözümlenemedi (içerik loglanmaz).');
+    }
+    admin.initializeApp({ credential });
     const db = admin.firestore();
     const messaging = admin.messaging();
     const serverTimestamp = () => admin.firestore.FieldValue.serverTimestamp();
@@ -35,9 +43,11 @@ async function main() {
             } catch (err) {
                 userErrors += 1;
                 // Güvenli özet: mesaj en fazla 200 karakter, içerdiği uid
-                // gizlenir; tutar, token ve e-posta asla loglanmaz.
+                // gizlenir ve ₺ tutarlar maskelenir; token/e-posta loglanmaz.
                 const raw = String((err && err.message) || err);
-                const safe = raw.split(uid).join('[uid]').slice(0, 200);
+                const safe = raw.split(uid).join('[uid]')
+                    .replace(/₺\s?[\d.,]+/g, '[tutar]')
+                    .slice(0, 200);
                 console.error(`Kullanıcı akışı başarısız (#${userErrors}): ${(err && err.name) || 'Error'}: ${safe}`);
             }
         }

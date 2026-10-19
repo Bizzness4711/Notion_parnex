@@ -116,8 +116,10 @@ test('send.js: kullanıcı hatası yalıtılır, özetlenir ve CI\'ı başarıs�
     assert.match(sendSrc, /catch \(err\)/);
     assert.match(sendSrc, /Kullanıcı akışı başarısız/);
     assert.match(sendSrc, /process\.exitCode = 1/);
-    // Güvenli mesaj: uid maskelenir, uzunluk kırpılır.
-    assert.match(sendSrc, /raw\.split\(uid\)\.join\('\[uid\]'\)\.slice\(0, 200\)/);
+    // Güvenli mesaj: uid maskelenir, tutar maskelenir, uzunluk kırpılır.
+    assert.match(sendSrc, /raw\.split\(uid\)\.join\('\[uid\]'\)/);
+    assert.match(sendSrc, /\.replace\(\/₺\\s\?\[\\d\.,\]\+\/g, '\[tutar\]'\)/);
+    assert.match(sendSrc, /\.slice\(0, 200\)/);
     // Yalıtım anahtarı processUser çağrısının çevresinde olmalı.
     assert.match(sendSrc, /try \{[\s\S]{0,80}await processUser\(/);
 });

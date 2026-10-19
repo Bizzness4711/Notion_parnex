@@ -132,8 +132,9 @@ test('send-user.js: eski slice(0,3) özet kaybı ve bodies yapısı kaldırıld�
 });
 
 test('send-user.js: başarısız gönderim "Gönderildi" diye raporlanmaz', () => {
-    // Kabul yokken log satırı yanıltıcı olmamalı.
-    assert.match(flowSrc, /Gönderilemedi: \$\{uid\}/);
-    const acceptedLog = flowSrc.match(/if \(outcome\.accepted\) \{[\s\S]*?Gönderildi: \$\{uid\}/);
+    // Kabul yokken log satırı yanıltıcı olmamalı. Loglar uid içermez
+    // (Adım 5 gizlilik): desenler yalnızca metnin kendisini hedefler.
+    assert.match(flowSrc, /Gönderilemedi/);
+    const acceptedLog = flowSrc.match(/if \(outcome\.accepted\) \{[\s\S]*?\$\{included\.length\} uyarı\)/);
     assert.ok(acceptedLog, 'Gönderildi logu accepted dalının içinde olmalı');
 });

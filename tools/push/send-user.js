@@ -126,19 +126,29 @@ async function processUser({ db, messaging, uid, userDoc, serverTimestamp, logge
     // sırasındadır). Yalnızca KESİN geçersizlik kodlarında token belgesi silinir;
     // invalid-argument gibi genel/müphem kodlar ve geçici hatalar token'ı KORUR
     // (bkz. send-helpers DEAD_TOKEN_CODES yorumları).
+    // Log gizliliği: token ön eki ve FCM hata MESAJI asla yazılmaz (mesajlar
+    // token içerebilir); yalnızca kod→adet sayacı basılır.
     const dead = [];
+    const failureByCode = {};
     res.responses.forEach((r, i) => {
         if (!r.success && isDeadTokenCode(r.error?.code)) dead.push(tokens[i]);
-        if (!r.success) logger.log(`Token hata: ${tokens[i].slice(0, 12)}… ${r.error?.code} ${r.error?.message}`);
+        if (!r.success) {
+            const code = (r.error && r.error.code) || 'bilinmeyen-kod';
+            failureByCode[code] = (failureByCode[code] || 0) + 1;
+        }
     });
+    const codeSummary = Object.entries(failureByCode).map(([code, n]) => `${code}×${n}`).join(', ');
+    if (codeSummary) logger.log(`Token hataları: ${codeSummary}`);
+    if (dead.length) logger.log(`Geçersiz token silindi: ${dead.length}`);
     for (const t of dead) {
         await db.collection('users').doc(uid).collection('pushTokens').doc(t).delete();
     }
     await batch.commit();
+    // Loglar uid/tutar içermez; yalnızca sayaçlar.
     if (outcome.accepted) {
-        logger.log(`Gönderildi: ${uid} (${included.length} uyarı)`);
+        logger.log(`Gönderildi (${included.length} uyarı)`);
     } else {
-        logger.log(`Gönderilemedi: ${uid} (FCM kabul etmedi; adaylar sonraki koşuya devredildi)`);
+        logger.log('Gönderilemedi: FCM kabul etmedi; adaylar sonraki koşuya devredildi');
     }
     return {
         sent: outcome.accepted,
