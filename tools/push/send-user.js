@@ -56,14 +56,25 @@ async function processUser({ db, messaging, uid, userDoc, serverTimestamp, logge
     const logRef = (id) => db.collection('users').doc(uid).collection('pushLog').doc(id);
     const isLogged = async (id) => (await logRef(id).get()).exists;
 
-    // 1) Yarın vadesi gelen tekrarlayanlar
+    // 1) Vadesi gelen tekrarlayanlar — pencere: {yarın, bugün}
+    // - yarın: normal hatırlatma (başlık/payload mevcut davranışla birebir).
+    // - bugün: önceki günün cron koşuları tümüyle kaçtıysa yakalama; tek
+    //   günlük "yarın" eşitliği kaçırılan koşuda hatırlatmayı kalıcı
+    //   kaybettiriyordu (bkz. test/push-due-window.test.mjs).
+    // Dün ve öncesi ASLA eşleşmez → eski vade için toplu bildirim seli yok.
+    // Her iki gün de `rec-…-${nextDate}` anahtarını üretir: dün gönderilen
+    // kayıt bugün pushLog tarafından engellenir (tekrar yok).
     const recSnap = await db.collection('users').doc(uid).collection('recurringTransactions').get();
     for (const doc of recSnap.docs) {
         const r = doc.data();
-        if (r.active === false || r.nextDate !== tomorrowStr) continue;
+        if (r.active === false) continue;
+        const title = r.nextDate === tomorrowStr ? '⏰ Yarın vade'
+            : r.nextDate === todayStr ? '⏰ Bugün vade'
+            : null;
+        if (!title) continue;
         const id = `rec-${doc.id}-${r.nextDate}`;
         if (await isLogged(id)) continue;
-        candidates.push({ logRef: logRef(id), title: '⏰ Yarın vade', body: `${r.description || r.category || 'Tekrarlayan işlem'} (₺${Number(r.amount || 0).toFixed(2)})` });
+        candidates.push({ logRef: logRef(id), title, body: `${r.description || r.category || 'Tekrarlayan işlem'} (₺${Number(r.amount || 0).toFixed(2)})` });
     }
 
     // 2) Aşan bütçeler (yaklaşık: kur çevrimi yok)

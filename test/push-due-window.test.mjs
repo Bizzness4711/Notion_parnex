@@ -55,3 +55,98 @@ test('aynı vade için sonraki saatlik koşu tekrar göndermez (pushLog + commit
     assert.equal(messaging.calls.length, 1, 'yalnızca bir FCM gönderimi');
     assert.equal(db._state.commits, 1, 'ikinci koşu yazmamalı');
 });
+
+// ————— Kaçırılan koşu yakalama (bugün penceresi) —————
+
+test('vade bugünken ve önceki cron koşusu tamamen kaçmışsa aday yine gönderilir', async () => {
+    const today = day();
+    const db = makeDb({ pushTokens: tokens, recurringTransactions: [rec(today)] });
+    const messaging = makeMessaging(() => okBatch(1));
+    const result = await run(db, messaging);
+    assert.equal(result.sent, true, 'bugün vade = kaçırılan hatırlatma yakalanmalı (tek günlük eşitlik kaybettiriyordu)');
+    assert.equal(messaging.calls.length, 1);
+    assert.equal(messaging.calls[0].notification.title, '⏰ Bugün vade');
+    assert.equal(messaging.calls[0].notification.body, 'Kira (₺1000.00)');
+    assert.equal(wroteLog(db, `rec-r1-${today}`), true, 'log anahtarı nextDate\'den türetilir (yarınla aynı)');
+});
+
+test('dün gönderilen hatırlatma bugün tekrar gönderilmez (ortak pushLog anahtarı)', async () => {
+    const today = day();
+    // Dün bu kayıt "yarın vade" olarak gönderildi ve loglandı → anahtar:
+    const db = makeDb({
+        pushTokens: tokens,
+        recurringTransactions: [rec(today)],
+        logged: [`rec-r1-${today}`]
+    });
+    const messaging = makeMessaging(() => okBatch(1));
+    const result = await run(db, messaging);
+    assert.equal(result.sent, false);
+    assert.equal(messaging.calls.length, 0, 'yinelenen hatırlatma yasak');
+    assert.equal(db._state.commits, 0);
+});
+
+// ————— Tarih aralığı güvenliği: eski/ileri vade asla aday olmaz —————
+
+test('geçmiş vade (3 gün önce) asla aday olmaz ve koşular boyunca tekrarlanmaz', async () => {
+    const past = addDays(day(), -3);
+    const db = makeDb({ pushTokens: tokens, recurringTransactions: [rec(past)] });
+    const messaging = makeMessaging(() => okBatch(1));
+    for (let i = 0; i < 3; i++) {
+        const result = await run(db, messaging);
+        assert.equal(result.sent, false, `koşu ${i + 1}: eski vade gönderilmemeli`);
+    }
+    assert.equal(messaging.calls.length, 0, 'eski bildirim seli yok');
+    assert.equal(db._state.commits, 0);
+});
+
+test('çok ileri vade (+2 gün) henüz aday değildir', async () => {
+    const future = addDays(day(), 2);
+    const db = makeDb({ pushTokens: tokens, recurringTransactions: [rec(future)] });
+    const messaging = makeMessaging(() => okBatch(1));
+    const result = await run(db, messaging);
+    assert.equal(result.sent, false);
+    assert.equal(messaging.calls.length, 0);
+});
+
+test('pasif tekrarlayan bugün/yarın vadesi taşısa bile aday oluşturmaz', async () => {
+    const today = day();
+    const db = makeDb({
+        pushTokens: tokens,
+        recurringTransactions: [
+            rec(addDays(today, 1), { active: false }),
+            rec(today, { active: false, description: 'Kapalı kayıt' })
+        ]
+    });
+    const messaging = makeMessaging(() => okBatch(1));
+    const result = await run(db, messaging);
+    assert.equal(result.sent, false);
+    assert.equal(messaging.calls.length, 0);
+});
+
+// ————— Gün sınırı / zaman damgası hesabı (saf fonksiyonlar) —————
+
+test('localDateString Europe/Istanbul gün sınırını UTC damgalardan doğru türetir', () => {
+    // İstanbul UTC+3 → gün sınırı 21:00 UTC'dir.
+    assert.equal(localDateString(new Date('2026-10-19T20:30:00Z'), 'Europe/Istanbul'), '2026-10-19');
+    assert.equal(localDateString(new Date('2026-10-19T20:59:59Z'), 'Europe/Istanbul'), '2026-10-19');
+    assert.equal(localDateString(new Date('2026-10-19T21:00:00Z'), 'Europe/Istanbul'), '2026-10-20');
+    assert.equal(localDateString(new Date('2026-10-19T21:30:00Z'), 'Europe/Istanbul'), '2026-10-20');
+    // Aynı damga UTC kullanıcısı için farklı güne düşer (kullanıcı-yerel doğru).
+    assert.equal(localDateString(new Date('2026-10-19T21:30:00Z'), 'UTC'), '2026-10-19');
+    assert.equal(localDateString(new Date('2026-10-20T03:00:00Z'), 'UTC'), '2026-10-20');
+});
+
+test('localDateString DST geçişini (Europe/Berlin) doğru yönetir', () => {
+    // 2026-03-29 Avrupa'da DST başlangıcı (02:00→03:00).
+    assert.equal(localDateString(new Date('2026-03-28T23:30:00Z'), 'Europe/Berlin'), '2026-03-29');
+    assert.equal(localDateString(new Date('2026-03-29T01:30:00Z'), 'Europe/Berlin'), '2026-03-29');
+    assert.equal(localDateString(new Date('2026-10-25T00:30:00Z'), 'Europe/Berlin'), '2026-10-25');
+});
+
+test('addDays ay, yıl ve artik takvim sınırlarını güvenli aşar', () => {
+    assert.equal(addDays('2026-10-31', 1), '2026-11-01');
+    assert.equal(addDays('2026-12-31', 1), '2027-01-01');
+    assert.equal(addDays('2026-03-01', -1), '2026-02-28');
+    assert.equal(addDays('2028-02-28', 1), '2028-02-29');
+    assert.equal(addDays('2026-01-01', -1), '2025-12-31');
+});
