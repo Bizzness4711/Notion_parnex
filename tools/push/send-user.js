@@ -57,6 +57,11 @@ async function processUser({ db, messaging, uid, userDoc, serverTimestamp, logge
     const isLogged = async (id) => (await logRef(id).get()).exists;
 
     // 1) Vadesi gelen tekrarlayanlar — pencere: {yarın, bugün}
+    // Sorgu, yalnızca pencere içi belgeleri çeker (nextDate ∈ [bugün, yarın]):
+    // TEK ALAN aralığı → Firestore otomatik tek alan indeksi yeterli,
+    // composite indeks gerekmez. Aralı sorgu eski tam taramanın bir üst
+    // kümesidir; aşağıdaki birebir eşitlik ve active kontrolleri eski aday
+    // kümesini SAĞLAR (eşdeğerlik testi: test/push-read-cost.test.mjs).
     // - yarın: normal hatırlatma (başlık/payload mevcut davranışla birebir).
     // - bugün: önceki günün cron koşuları tümüyle kaçtıysa yakalama; tek
     //   günlük "yarın" eşitliği kaçırılan koşuda hatırlatmayı kalıcı
@@ -64,7 +69,10 @@ async function processUser({ db, messaging, uid, userDoc, serverTimestamp, logge
     // Dün ve öncesi ASLA eşleşmez → eski vade için toplu bildirim seli yok.
     // Her iki gün de `rec-…-${nextDate}` anahtarını üretir: dün gönderilen
     // kayıt bugün pushLog tarafından engellenir (tekrar yok).
-    const recSnap = await db.collection('users').doc(uid).collection('recurringTransactions').get();
+    const recSnap = await db.collection('users').doc(uid).collection('recurringTransactions')
+        .where('nextDate', '>=', todayStr)
+        .where('nextDate', '<=', tomorrowStr)
+        .get();
     for (const doc of recSnap.docs) {
         const r = doc.data();
         if (r.active === false) continue;
