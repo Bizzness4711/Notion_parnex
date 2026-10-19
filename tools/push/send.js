@@ -6,6 +6,7 @@
 // Aynı uyarı iki kez gitmez: users/{uid}/pushLog altına id yazılır, varsa atlanır.
 // Tutarlar sunucuda kura çevrilmeden toplanır (yaklaşık değerdir).
 const admin = require('firebase-admin');
+const { buildBatchNotification, summarizeBatchResponse } = require('./send-helpers');
 
 function localDateString(date, timeZone) {
     const parts = new Intl.DateTimeFormat('en-CA', {
@@ -51,7 +52,9 @@ async function main() {
         const tokens = tokensSnap.docs.map(d => d.id);
         if (!tokens.length) continue;
 
-        const bodies = [];
+        // Adaylar gönderim SONUNDA değerlendirilir: pushLog, o adayın dahil
+        // edildiği gövde FCM tarafından kabul edilince yazılır (bkz. send-helpers).
+        const candidates = [];
         const batch = db.batch();
         const logRef = (id) => db.collection('users').doc(uid).collection('pushLog').doc(id);
         const isLogged = async (id) => (await logRef(id).get()).exists;
@@ -63,8 +66,7 @@ async function main() {
             if (r.active === false || r.nextDate !== tomorrowStr) continue;
             const id = `rec-${doc.id}-${r.nextDate}`;
             if (await isLogged(id)) continue;
-            bodies.push({ title: '⏰ Yarın vade', body: `${r.description || r.category || 'Tekrarlayan işlem'} (₺${Number(r.amount || 0).toFixed(2)})` });
-            batch.set(logRef(id), { at: admin.firestore.FieldValue.serverTimestamp() });
+            candidates.push({ logRef: logRef(id), title: '⏰ Yarın vade', body: `${r.description || r.category || 'Tekrarlayan işlem'} (₺${Number(r.amount || 0).toFixed(2)})` });
         }
 
         // 2) Aşan bütçeler (yaklaşık: kur çevrimi yok)
@@ -85,8 +87,7 @@ async function main() {
                 if (spent >= limit) {
                     const id = `bud-${month}-${b.category}-over`;
                     if (await isLogged(id)) continue;
-                    bodies.push({ title: '⚠️ Bütçe aşıldı', body: `${b.category}: ₺${spent.toFixed(2)} / ₺${limit.toFixed(2)}.` });
-                    batch.set(logRef(id), { at: admin.firestore.FieldValue.serverTimestamp() });
+                    candidates.push({ logRef: logRef(id), title: '⚠️ Bütçe aşıldı', body: `${b.category}: ₺${spent.toFixed(2)} / ₺${limit.toFixed(2)}.` });
                 }
             }
         }
@@ -98,18 +99,30 @@ async function main() {
             if (Number(g.amount) > 0 && Number(g.current) >= Number(g.amount)) {
                 const id = `goal-${doc.id}-100`;
                 if (await isLogged(id)) continue;
-                bodies.push({ title: '🎉 Hedef tamamlandı', body: `${g.name} hedefine ulaştın!` });
-                batch.set(logRef(id), { at: admin.firestore.FieldValue.serverTimestamp() });
+                candidates.push({ logRef: logRef(id), title: '🎉 Hedef tamamlandı', body: `${g.name} hedefine ulaştın!` });
             }
         }
 
-        if (!bodies.length) continue;
-        // Tek uyarıda kendi başlığı, çok uyarıda özet başlık + satır başına tip.
-        const notification = bodies.length === 1
-            ? { title: bodies[0].title, body: bodies[0].body }
-            : { title: `Parnex (${bodies.length} bildirim)`, body: bodies.slice(0, 3).map(m => `${m.title} — ${m.body}`).join('\n') };
+        if (!candidates.length) continue;
+        // Tek aday birebir gönderilir (payload korunur); çok adayda bayt
+        // sınırına kadar TÜMÜ sığdırılır. Sığmayan aday loglanmaz → sonraki
+        // koşuya devredilir; böylece "gönderilmeyen ama loglanan" kayıp olmaz.
+        const { notification, included, excludedCount } = buildBatchNotification(candidates);
         const res = await messaging.sendEachForMulticast({ tokens, notification });
-        console.log(`FCM sonuç: ${res.successCount} başarılı, ${res.failureCount} hatalı`);
+        const outcome = summarizeBatchResponse(res);
+        // Yanıtlar token bazlıdır; gövdedeki tüm dahil edilen adaylar aynı
+        // sonucu paylaşır. successCount > 0 ise (kısmi başarı dahil) dahil
+        // edilen adaylar kabul sayılır ve pushLog'a yazılır; 0 ise hiçbir
+        // aday loglanmaz (FCM hiçbir token'a teslim etmediğini bildirdi).
+        if (outcome.accepted) {
+            for (const c of included) {
+                batch.set(c.logRef, { at: admin.firestore.FieldValue.serverTimestamp() });
+            }
+        }
+        if (excludedCount > 0) {
+            console.log(`Bilgi: ${excludedCount} aday gövdeye sığmadı, sonraki koşuya devredildi.`);
+        }
+        console.log(`FCM: ${outcome.successCount} başarılı, ${outcome.failureCount} hatalı`);
         // Geçersiz tokenları temizle, diğer hataları logla
         // Geçersiz tokenları temizle
         const dead = [];
@@ -121,7 +134,11 @@ async function main() {
             await db.collection('users').doc(uid).collection('pushTokens').doc(t).delete();
         }
         await batch.commit();
-        console.log(`Gönderildi: ${uid} (${bodies.length} uyarı)`);
+        if (outcome.accepted) {
+            console.log(`Gönderildi: ${uid} (${included.length} uyarı)`);
+        } else {
+            console.log(`Gönderilemedi: ${uid} (FCM kabul etmedi; adaylar sonraki koşuya devredildi)`);
+        }
         }
         lastUserDoc = usersSnap.docs[usersSnap.docs.length - 1] || null;
     } while (usersSnap.size === 200);
