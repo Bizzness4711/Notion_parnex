@@ -5,12 +5,25 @@ name: Push reminders
 
 on:
   schedule:
-    - cron: '0 * * * *' # her saat başı
+    - cron: '17 * * * *' # her saat 17. dakika (GitHub, saat başı yük zirvesinde
+                          # ertelenen/düşen scheduled koşuları farklı dakikaya almayı önerir)
   workflow_dispatch: # manuel tetikleme butonu
+
+# Job'ın çalışması için gereken en düşük izin: depoyu checkout etmek (yazma yok).
+permissions:
+  contents: read
+
+# Zamanlanmış ve manuel koşular asla eşzamanlı çalışmasın: eşzamanlı iki koşu
+# aynı pushLog adayını (isLogged okuma → gönderim → commit arası) iki kez
+# gönderebilir. cancel-in-progress: false → çalışan iş yarıda kesilmez.
+concurrency:
+  group: push-reminders
+  cancel-in-progress: false
 
 jobs:
   send:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
