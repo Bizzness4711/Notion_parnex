@@ -32,6 +32,10 @@ export function makeDb(seed = {}) {
         writes: [],
         commits: 0,
         deleted: [],
+        // Sorgu maliyet testleri için: gönderilen filtreler ve dönen belge
+        // sayıları (Firestore'ta faturalanan okuma = dönen belge sayısı).
+        queries: [],
+        reads: {},
         failOn: seed.failOn || null
     };
     function queryRef(name, filters) {
@@ -50,6 +54,8 @@ export function makeDb(seed = {}) {
                         return true;
                     });
                 }
+                state.queries.push({ name, filters: filters.slice() });
+                state.reads[name] = (state.reads[name] || 0) + items.length;
                 return snapshot(items);
             }
         };
