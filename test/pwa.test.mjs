@@ -175,14 +175,23 @@ test('sw.js kura API\'lerini önbelleğe almıyor', () => {
     assert.match(sw, /CURRENCY_HOSTS[\s\S]{0,200}return;/);
 });
 
-test('sw.js Firebase SDK\'yı install aşamasında yüklemiyor', () => {
-    // importScripts install'da çağrılırsa çevrimdışı ilk kurulumda
-    // gstatic'e ulaşılamadığı için worker hiç kurulamaz.
+test('sw.js Firebase SDK\'yı hiç importScripts ile yüklemiyor', () => {
+    // SW artık Firebase SDK'ya hiç dokunmuyor: push yalnızca
+    // self.registration.showNotification ile gösteriliyor. importScripts
+    // kalmamalı; kalsa bile install'da olmamalı (çevrimdışı kurulum güvende).
     const sw = read('sw.js');
-    const installBlock = sw.match(/addEventListener\('install'[\s\S]*?\n\}\);/);
-    assert.ok(installBlock, 'install işleyicisi bulunamadı');
-    assert.doesNotMatch(installBlock[0], /importScripts/);
-    assert.match(sw, /function loadFirebase\(\)/);
+    assert.doesNotMatch(sw, /importScripts\('https:\/\/www\.gstatic\.com\/firebasejs/);
+    assert.doesNotMatch(sw, /loadFirebase/);
+    assert.doesNotMatch(sw, /firebase\.messaging\(\)/);
+});
+
+test('sw.js push handler bildirim ve data-only payload için başlık/gövde türetir', () => {
+    const sw = read('sw.js');
+    assert.match(sw, /const title = notification\.title \|\| data\.title \|\| 'Parnex'/);
+    assert.match(sw, /const body = notification\.body \|\| data\.body \|\| 'Yeni bildiriminiz var\.'/);
+    // Kırık çağrı: onBackgroundMessage'a payload (callback değil) vermek.
+    assert.doesNotMatch(sw, /onBackgroundMessage\(/);
+    assert.match(sw, /self\.registration\.showNotification\(title/);
 });
 
 test('js/pwa.js yalnızca güvenli bağlamda kayıt yapıyor', () => {

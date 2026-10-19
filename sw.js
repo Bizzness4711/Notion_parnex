@@ -10,8 +10,9 @@
  *  - Firebase/CDN betikleri sürümlü URL olduğu için cache-first.
  *  - Kurban API'leri (döviz, altın) asla önbelleklenmez; stale kur veri yanlış bakiye demektir.
  *  - Firestore/Auth trafiği dokunulmadan geçer.
- *  - Firebase SDK yalnızca push geldiğinde yüklenir; aksi halde çevrimdışı ilk
- *    kurulumda install başarısız olurdu.
+ *  - SW kendi içinde Firebase SDK import etmez (push yalnızca
+ *    showNotification ile gösterilir); CDN_PRECACHE'deki Firebase betikleri
+ *    index.html'in kendi kullanımı için önbelleklenir, SW'a bağımlı değildir.
  */
 
 const CACHE_VERSION = 'parnex-v4';
@@ -249,32 +250,13 @@ self.addEventListener('fetch', event => {
 
 // ---------------------------------------------------------------- push (FCM)
 
-const FIREBASE_CONFIG = {
-    apiKey: 'AIzaSyDc5VzYalm9J39uHHNNpVgVA_FZolKOMQM',
-    projectId: 'parnex-97d1b',
-    messagingSenderId: '909377657628',
-    appId: '1:909377657628:web:44192bd16b27046834b8d9'
-};
-
-let firebaseLoaded = false;
-
-// importScripts yalnızca push geldiğinde çağrılır; install aşamasında değil.
-// Aksi halde çevrimdışı ilk kurulumda gstatic'e ulaşılamadığı için SW hiç
-// kurulamaz ve uygulama çevrimdışı açılmazdı.
-function loadFirebase() {
-    if (firebaseLoaded) return true;
-    try {
-        importScripts('https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js');
-        importScripts('https://www.gstatic.com/firebasejs/9.6.0/firebase-messaging-compat.js');
-        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-        firebaseLoaded = true;
-    } catch (err) {
-        console.warn('[sw] Firebase SDK yüklenemedi, push gösterilemiyor:', err.message);
-        return false;
-    }
-    return true;
-}
-
+// SW artık Firebase SDK'ya hiç dokunmuyor: tüm bildirimler (notification
+// payload — send.js'in tek gönderim biçimi — ve data-only payload)
+// self.registration.showNotification ile aynı yoldan gösterilir. Başlık/
+// gövde notification alanında yoksa payload.data alanlarından türetilir.
+// Bu, SW'ın gstatic'e network bağımlılığını tamamen kaldırır (çevrimdışı
+// ilk kurulum güvenli kalır) ve onBackgroundMessage'a payload (callback
+// değil) verilmesi gibi kırık API çağrılarını imkânsız kılar.
 self.addEventListener('push', event => {
     event.waitUntil((async () => {
         let payload = {};
@@ -284,20 +266,15 @@ self.addEventListener('push', event => {
             payload = { notification: { body: event.data ? event.data.text() : '' } };
         }
         const notification = payload.notification || {};
-        const title = notification.title || 'Parnex';
-        const body = notification.body || 'Yeni bildiriminiz var.';
-        // Veri mesajları Firebase SDK ile işlenir (data-only payload).
-        const isDataOnly = !notification.title && !notification.body;
-        if (isDataOnly && loadFirebase()) {
-            firebase.messaging().onBackgroundMessage(payload);
-            return;
-        }
+        const data = payload.data || {};
+        const title = notification.title || data.title || 'Parnex';
+        const body = notification.body || data.body || 'Yeni bildiriminiz var.';
         await self.registration.showNotification(title, {
             body,
             icon: 'icons/logo-192.png',
             badge: 'icons/logo-192.png',
             tag: 'parnex',
-            data: payload.data || {}
+            data
         });
     })());
 });
