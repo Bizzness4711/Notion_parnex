@@ -1,0 +1,37 @@
+name: Android push test
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Yalnızca FIREBASE_TEST_UID ile belirtilen kullanıcıya test bildirimi gönder"
+        required: true
+        type: choice
+        options:
+          - "no"
+          - "yes"
+        default: "no"
+
+permissions:
+  contents: read
+
+jobs:
+  test-push:
+    if: inputs.confirm == 'yes'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Firebase Admin bağımlılığını kur
+        run: npm install firebase-admin@12 --no-save
+
+      - name: Tek hedef kullanıcıya test bildirimi gönder
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FIREBASE_TEST_UID: ${{ secrets.FIREBASE_TEST_UID }}
+        run: node tools/push/send-test.js
