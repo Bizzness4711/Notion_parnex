@@ -26,9 +26,18 @@ async function main() {
     const messaging = admin.messaging();
     const serverTimestamp = () => admin.firestore.FieldValue.serverTimestamp();
 
+    // Gizlilik güvenli toplu sayaçlar: kullanıcı kimliği, token, e-posta veya
+    // finansal tutar yazdırılmaz. Böylece "Success ama bildirim yok" ayrıştırılır.
+    let usersProcessed = 0;
+    let usersWithoutTokens = 0;
+    let usersWithCandidates = 0;
+    let usersAcceptedByFcm = 0;
+    let candidateCount = 0;
+    let fcmSuccessCount = 0;
+    let fcmFailureCount = 0;
+
     // Tek kullanıcının bozuk belgesi/token'ı/hesabı koşturmayı SONLANDIRMAZ:
-    // hata yalıtılır, özetlenir ve işin sonunda CI kısmi başarısız olur
-    // (process.exitCode = 1) — hiçbir hata sessizce başarılı sayılmaz.
+    // hata yalıtılır, özetlenir ve işin sonunda CI kısmi başarısız olur.
     let userErrors = 0;
     let usersSnap;
     let lastUserDoc = null;
@@ -39,11 +48,21 @@ async function main() {
         for (const userDoc of usersSnap.docs) {
             const uid = userDoc.id;
             try {
-                await processUser({ db, messaging, uid, userDoc, serverTimestamp, logger: console });
+                const result = await processUser({ db, messaging, uid, userDoc, serverTimestamp, logger: console });
+                usersProcessed += 1;
+                if (result && result.skipped === 'no-tokens') {
+                    usersWithoutTokens += 1;
+                    continue;
+                }
+                const foundCandidates = Number(result && result.candidateCount) || 0;
+                candidateCount += foundCandidates;
+                if (foundCandidates > 0) usersWithCandidates += 1;
+                if (result && result.sent) usersAcceptedByFcm += 1;
+                if (Number.isFinite(result && result.successCount)) fcmSuccessCount += result.successCount;
+                if (Number.isFinite(result && result.failureCount)) fcmFailureCount += result.failureCount;
             } catch (err) {
                 userErrors += 1;
-                // Güvenli özet: mesaj en fazla 200 karakter, içerdiği uid
-                // gizlenir ve ₺ tutarlar maskelenir; token/e-posta loglanmaz.
+                // Hata metninden UID ve tutarları maskele; token/e-posta loglanmaz.
                 const raw = String((err && err.message) || err);
                 const safe = raw.split(uid).join('[uid]')
                     .replace(/₺\s?[\d.,]+/g, '[tutar]')
@@ -53,6 +72,14 @@ async function main() {
         }
         lastUserDoc = usersSnap.docs[usersSnap.docs.length - 1] || null;
     } while (usersSnap.size === 200);
+
+    console.log(
+        'Push özeti: ' +
+        `işlenen kullanıcı=${usersProcessed}, token bulunmayan kullanıcı=${usersWithoutTokens}, ` +
+        `uyarı adayı bulunan kullanıcı=${usersWithCandidates}, toplam uyarı adayı=${candidateCount}, ` +
+        `FCM kabulü alan kullanıcı=${usersAcceptedByFcm}, FCM başarılı token=${fcmSuccessCount}, ` +
+        `FCM hatalı token=${fcmFailureCount}, kullanıcı hatası=${userErrors}`
+    );
 
     if (userErrors > 0) {
         console.error(`Özet: ${userErrors} kullanıcı işlenemedi — kısmi başarısızlık olarak raporlanır.`);
